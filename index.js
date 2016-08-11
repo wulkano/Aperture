@@ -1,4 +1,4 @@
-const {desktopCapturer} = require('electron');
+const {desktopCapturer} = require('electron'); // eslint-disable-line import/no-extraneous-dependencies
 
 function checkProcessType(expected, msgPrefix) {
 	if (expected === 'main' && process.type !== 'browser') {
