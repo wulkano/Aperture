@@ -26,5 +26,8 @@
       "node",
       "browser"
     ]
+  },
+  "dependencies": {
+    "nodobjc": "^2.1.0"
   }
 }
