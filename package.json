@@ -5,8 +5,7 @@
   "main": "index.js",
   "scripts": {
     "test": "xo",
-    "start": "electron .",
-    "postinstall": "./node_modules/.bin/electron-rebuild -e ./node_modules/electron -m ../aperture/node_modules"
+    "start": "electron ."
   },
   "repository": {
     "type": "git",
