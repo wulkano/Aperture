@@ -1,30 +1,28 @@
 {
-  "name": "aperture",
-  "version": "0.1.0",
-  "description": "",
+  "name": "aperture.js",
+  "version": "0.0.0",
+  "description": "Record the screen on macOS",
   "main": "index.js",
   "scripts": {
-    "test": "xo",
-    "start": "electron ."
+    "test": "xo"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/CodeTheory/focus-core.git"
+    "url": "git+https://github.com/wulkano/aperture.git"
   },
   "author": "Matheus Fernandes <npm@matheus.top> (https://matheus.top/)",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/CodeTheory/focus-core/issues"
+    "url": "https://github.com/wulkano/aperture/issues"
   },
-  "homepage": "https://github.com/CodeTheory/focus-core#readme",
+  "homepage": "https://github.com/wulkano/aperture#readme",
   "devDependencies": {
     "xo": "^0.16.0"
   },
   "xo": {
     "esnext": true,
     "envs": [
-      "node",
-      "browser"
+      "node"
     ],
     "rules": {
       "babel/new-cap": "off"
