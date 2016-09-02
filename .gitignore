@@ -2,3 +2,4 @@ node_modules
 *.log
 
 swift/main
+swift/build
