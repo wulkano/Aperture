@@ -4,7 +4,9 @@
   "description": "Record the screen on macOS",
   "main": "index.js",
   "scripts": {
-    "test": "xo"
+    "test": "xo",
+    "build": "swiftc swift/Recorder.swift swift/main.swift -o swift/main",
+    "postinstall": "npm run build"
   },
   "repository": {
     "type": "git",
