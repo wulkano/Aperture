@@ -84,7 +84,7 @@ class Aperture {
 					delete this.recorder;
 
 					resolve(this.tmpPath);
-					// TODO: this file is deleted when the program is finished
+					// TODO: this file is deleted when the program exits
 					// maybe we should add a note about this on the docs or implement a workaround
 					delete this.tmpPath;
 				} else {
