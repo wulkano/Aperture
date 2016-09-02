@@ -1,109 +1,96 @@
-const {rename} = require('fs');
-
-const macOS = require('nodobjc');
-const pify = require('pify');
+const exec = require('child_process').spawn;
 const tmp = require('tmp');
 
-class Aperture {
-	constructor() {
-		macOS.framework('Foundation');
-		macOS.framework('AVFoundation');
-		macOS.framework('CoreMedia'); // we probably do not need this
-
-		this.pool = macOS.NSAutoreleasePool('alloc')('init'); // TODO move to `('autorelease')` ? && process.exit ~> pool('drain')
-		this.session = macOS.AVCaptureSession('alloc')('init');
-		this.displayId = macOS.CGMainDisplayID(); // TODO change this when we support multiple displays
-
-		this.input = macOS.AVCaptureScreenInput('alloc')('initWithDisplayID', this.displayId)('autorelease');
-		if (this.input) {
-			if (this.session('canAddInput', this.input)) {
-				this.session('addInput', this.input);
-			} else {
-				throw new Error(`can't add input`); // TODO
-			}
-		} else {
-			throw new Error(`can't create input`); // TODO
-		}
-
-		this.output = macOS.AVCaptureMovieFileOutput('alloc')('init');
-
-		if (this.session('canAddOutput', this.output)) {
-			this.session('addOutput', this.output);
-		} else {
-			throw new Error(`can't add output`); // TODO
-		}
-
-		const conn = this.output('connectionWithMediaType', macOS.AVMediaTypeVideo);
-		try {
-			if (conn('isVideoMinFrameDurationSupported')) {
-				conn('setVideoMinFrameDuration', macOS.CMTimeMake('1', '30'));
-			}
-		} catch (err) {
-			if (/FFI_BAD_TYPEDEF/.test(err.message)) {
-				console.log(`can't set min fps :(`);
-			} else {
-				throw err;
-			}
-		}
-		try {
-			if (conn('isVideoMaxFrameDurationSupported')) {
-				conn('setVideoMaxFrameDuration', macOS.CMTimeMake('1', '60'));
-			}
-		} catch (err) {
-			if (/FFI_BAD_TYPEDEF/.test(err.message)) {
-				console.log(`can't set max fps :(`);
-			} else {
-				throw err;
-			}
-		}
+function log(...msgs) {
+	if (process.env.DEBUG) {
+		console.log(...msgs);
 	}
+	// TODO: log in production with proces.env.DEBUG_APERTURE
+}
 
-	startRecording() {
+class Aperture {
+
+	// resolves if the recording started successfully
+	// rejects if the recording didn't started after 5 seconds or if some error
+	// occurs during the recording session
+	startRecording(opts) {
 		return new Promise((resolve, reject) => {
-			if (this.recording) {
-				return reject(Error('Already recording'));
-			}
-			pify(tmp.tmpName)({postfix: '.mov'})
-				.then(path => {
-					this.path = path;
-					this.NSpath = macOS.NSString('stringWithUTF8String', this.path);
-					this.NSpathURL = macOS.NSURL('fileURLWithPath', this.NSpath);
+			opts = opts || {};
 
-					this.session('startRunning');
-					this.output('startRecordingToOutputFileURL', this.NSpathURL,
-						'recordingDelegate', this.output);
-					this.recording = true;
-				})
-				.then(resolve)
-				.catch(reject);
+			this.tmpPath = tmp.tmpNameSync({postfix: '.mp4'});
+
+			opts = Object.assign({
+				fps: 30
+			}, opts);
+
+			const recorderOpts = [this.tmpPath, opts.fps];
+
+			if (opts.cropArea !== undefined) { // TODO validate this
+				const cropArea = opts.cropArea;
+				recorderOpts.push(` ${cropArea.x}:${cropArea.y}:${cropArea.width}:${cropArea.height}`);
+			}
+
+			this.recorder = exec('swift/main', recorderOpts);
+
+			const timeout = setTimeout(() => {
+				const err = new Error('unnable to start the recorder after 5 seconds');
+				err.code = 'RECORDER_TIMEOUT';
+
+				this.recorder.kill();
+
+				reject(err);
+			}, 5000);
+
+			this.recorder.stdout.on('data', data => {
+				data = data.toString();
+
+				log(data);
+
+				if (data.replace(/\n|\s/gm, '') === 'R') {
+					// `R` is printed by Swift when the recording **actually** starts
+					clearTimeout(timeout);
+					resolve();
+				}
+			});
+			this.recorder.on('error', reject); // TODO handle this;
+			this.recorder.on('exit', code => {
+				clearTimeout(timeout);
+				let err;
+				if (code === 0) {
+					return; // we're good
+				} else if (code === 1) {
+					err = new Error('malformed arguments'); // TODO
+				} else if (code === 2) {
+					err = new Error('invalid coordinates'); // TODO
+				} else {
+					err = new Error('unknown error'); // TODO
+				}
+				reject(err);
+			});
 		});
 	}
 
-	stopRecording(opts) {
+	stopRecording() {
 		return new Promise((resolve, reject) => {
-			if (!this.recording) {
-				return reject(Error('Not recording'));
+			if (this.recorder === undefined) {
+				reject('call `startRecording` first');
 			}
 
-			opts = Object.assign({
-				destinationPath: undefined,
-				override: false
-			}, opts);
+			this.recorder.on('exit', code => {
+				// at this point the movie file has been fully written to the file system
+				if (code === 0) {
+					delete this.recorder;
 
-			this.recording = false;
-			this.output('stopRecording');
-			// this.pool('drain'); // TODO why this throws an exception?
+					resolve(this.tmpPath);
+					// TODO: this file is deleted when the program is finished
+					// maybe we should add a note about this on the docs or implement a workaround
+					delete this.tmpPath;
+				} else {
+					reject(code); // TODO
+				}
+			});
 
-			if (opts.destinationPath === undefined) {
-				return resolve(this.path);
-			}
-
-			pify(rename)(this.path, opts.destinationPath)
-				.then(() => {
-					this.path = opts.destinationPath;
-					resolve(opts.destinationPath);
-				})
-				.catch(reject);
+			this.recorder.stdin.write('\n');
 		});
 	}
 }
