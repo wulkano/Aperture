@@ -51,7 +51,7 @@ class Aperture {
 				if (data.replace(/\n|\s/gm, '') === 'R') {
 					// `R` is printed by Swift when the recording **actually** starts
 					clearTimeout(timeout);
-					resolve();
+					resolve(this.tmpPath);
 				}
 			});
 			this.recorder.on('error', reject); // TODO handle this;
