@@ -3,3 +3,5 @@ node_modules
 
 swift/main
 swift/build
+
+.DS_Store
