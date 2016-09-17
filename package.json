@@ -6,7 +6,8 @@
   "scripts": {
     "test": "xo",
     "build": "cd swift && xcodebuild && mv build/release/aperture main && rm -r build",
-    "postinstall": "npm run build"
+    "download-ffmpeg": "node scripts/download-ffmpeg.js",
+    "postinstall": "npm run build && npm run download-ffmpeg"
   },
   "repository": {
     "type": "git",
