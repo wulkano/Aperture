@@ -29,7 +29,7 @@ class Aperture {
 
 			if (opts.cropArea !== undefined) { // TODO validate this
 				const cropArea = opts.cropArea;
-				recorderOpts.push(` ${cropArea.x}:${cropArea.y}:${cropArea.width}:${cropArea.height}`);
+				recorderOpts.push(`${cropArea.x}:${cropArea.y}:${cropArea.width}:${cropArea.height}`);
 			}
 
 			this.recorder = exec(path.join(__dirname, 'swift', 'main'), recorderOpts);
