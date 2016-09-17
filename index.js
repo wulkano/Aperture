@@ -1,6 +1,6 @@
 const path = require('path');
 
-const exec = require('child_process').spawn;
+const execa = require('execa');
 const tmp = require('tmp');
 
 function log(...msgs) {
@@ -32,7 +32,7 @@ class Aperture {
         recorderOpts.push(`${cropArea.x}:${cropArea.y}:${cropArea.width}:${cropArea.height}`);
       }
 
-      this.recorder = exec(path.join(__dirname, 'swift', 'main'), recorderOpts);
+      this.recorder = execa(path.join(__dirname, 'swift', 'main'), recorderOpts);
 
       const timeout = setTimeout(() => {
         const err = new Error('unnable to start the recorder after 5 seconds');
