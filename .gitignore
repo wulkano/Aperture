@@ -5,3 +5,5 @@ swift/main
 swift/build
 
 .DS_Store
+
+vendor
