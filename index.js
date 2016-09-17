@@ -23,10 +23,10 @@ class Aperture {
 
       opts = Object.assign({
         fps: 30,
-				compress: false
+        compress: false
       }, opts);
 
-			this.opts = opts;
+      this.opts = opts;
 
       const recorderOpts = [this.tmpPath, opts.fps];
 
