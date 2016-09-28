@@ -86,7 +86,8 @@ class Aperture {
         if (code === 0) {
           delete this.recorder;
 
-          if (this.opts.compress) {
+          // if (this.opts.compress) {
+          if (false) {
             console.log('compress');
             const compressedFilePath = tmp.tmpNameSync({postfix: '.mp4'});
             execa(path.join(__dirname, 'scripts', 'compress.sh'), [this.tmpPath, compressedFilePath])
