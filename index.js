@@ -1,4 +1,5 @@
 const path = require('path');
+const os = require('os');
 
 const execa = require('execa');
 const tmp = require('tmp');
@@ -35,7 +36,16 @@ class Aperture {
         recorderOpts.push(`${cropArea.x}:${cropArea.y}:${cropArea.width}:${cropArea.height}`);
       }
 
-      this.recorder = execa(path.join(__dirname, 'swift', 'main'), recorderOpts);
+      switch (os.platform()) {
+        case 'darwin':
+            // so in theory the bash script used for "linux" can be used with mac with a small modification
+            // in the future we could potentially remove all the swift code and use solely ffmpeg
+            this.recorder = execa(path.join(__dirname, 'swift', 'main'), recorderOpts);
+            break;
+        case 'linux': // technically any platform that runs ffmpeg + xserver will work atm
+          this.recorder = execa(path.join(__dirname, 'linux', 'capture.sh'), recorderOpts);
+          break;
+      }
 
       const timeout = setTimeout(() => {
         const err = new Error('unnable to start the recorder after 5 seconds');
