@@ -1,6 +1,6 @@
 {
   "name": "aperture.js",
-  "version": "0.0.0-11",
+  "version": "0.1.0",
   "description": "Record the screen on macOS",
   "main": "index.js",
   "scripts": {
