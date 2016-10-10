@@ -22,8 +22,7 @@ class Aperture {
       this.tmpPath = tmp.tmpNameSync({postfix: '.mp4'});
 
       opts = Object.assign({
-        fps: 30,
-        compress: false
+        fps: 30
       }, opts);
 
       this.opts = opts;
@@ -86,22 +85,10 @@ class Aperture {
         if (code === 0) {
           delete this.recorder;
 
-          // if (this.opts.compress) {
-          if (false) {
-            console.log('compress');
-            const compressedFilePath = tmp.tmpNameSync({postfix: '.mp4'});
-            execa(path.join(__dirname, 'scripts', 'compress.sh'), [this.tmpPath, compressedFilePath])
-              .then(() => {
-                resolve(compressedFilePath);
-                delete this.tmpPath;
-              })
-              .catch(reject); // TODO improve this
-          } else {
-            resolve(this.tmpPath);
-            // TODO: this file is deleted when the program exits
-            // maybe we should add a note about this on the docs or implement a workaround
-            delete this.tmpPath;
-          }
+          resolve(this.tmpPath);
+          // TODO: this file is deleted when the program exits
+          // maybe we should add a note about this on the docs or implement a workaround
+          delete this.tmpPath;
         } else {
           reject(code); // TODO
         }
