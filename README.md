@@ -32,7 +32,7 @@ function stopRecording() {
 `aperture.js` was built to fulfill the needs of [Kap](https://github.com/wulkano/kap), providing a JavaScript interface to the **best** available method for recording the screen.
 That's why it's currently a wrapper for a [Swift script](https://github.com/wulkano/aperture.js/blob/master/swift/aperture/main.swift) that records the screen using the [AVFoundation framework](https://developer.apple.com/av-foundation/).
 
-## But you can use `ffmpeg -f avfoundation...`
+#### But you can use `ffmpeg -f avfoundation...`
 
 Yes, we can, but the performance is terrible:
 
@@ -46,8 +46,8 @@ Yes, we can, but the performance is terrible:
 
 ## Linux and Windows
 
-We want to bring `aperture.js` to Linux and Windows, but we don't have time and resources for such tasks (we're Mac users), so **any help is more than welcome**. We just want to enforce two things: **performance** and **quality** – doesn't matter how (`ffmpeg`, custom built native lib, etc) they are achieved.
+We want to bring `aperture.js` to Linux and Windows, but we don't have time and resources for such tasks (we're Mac users), so **any help is more than welcome**. We just want to enforce two things: **performance** and **quality** – it doesn't matter how (`ffmpeg`, custom built native lib, etc) they are achieved.
 
 ## Upcoming
 
-`aperture.js` it's in its early days. We want it to have more a lot of features, such as *export to GIF*, compression options, support for multiple displays, support for audio and much more. Check out our [`aperture.js`](https://github.com/wulkano/kap/issues?q=is%3Aissue+is%3Aopen+label%3Aaperture.js) issues on **Kap**  to see what we need 😄
+`aperture.js` is in its early days. We're working on adding more features, such as *export to GIF*, compression options, support for multiple displays, support for audio and much more. Check out our [`aperture.js`](https://github.com/wulkano/kap/issues?q=is%3Aissue+is%3Aopen+label%3Aaperture.js) issues on **Kap** to learn more.
