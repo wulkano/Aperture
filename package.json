@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "test": "xo",
-    "build": "cd swift && xcodebuild && mv build/release/aperture main && rm -r build",
+    "build": "./scripts/build.sh",
     "postinstall": "npm run build"
   },
   "repository": {

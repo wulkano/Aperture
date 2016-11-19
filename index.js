@@ -1,4 +1,5 @@
 const path = require('path');
+const os = require('os');
 
 const execa = require('execa');
 const tmp = require('tmp');
@@ -34,7 +35,14 @@ class Aperture {
         recorderOpts.push(`${cropArea.x}:${cropArea.y}:${cropArea.width}:${cropArea.height}`);
       }
 
-      this.recorder = execa(path.join(__dirname, 'swift', 'main'), recorderOpts);
+      switch (os.platform()) {
+        case 'darwin':
+          this.recorder = execa(path.join(__dirname, 'swift', 'main'), recorderOpts);
+          break;
+        case 'linux':
+          this.recorder = execa(path.join(__dirname, 'linux', 'capture.sh'), recorderOpts);
+          break;
+      }
 
       const timeout = setTimeout(() => {
         const err = new Error('unnable to start the recorder after 5 seconds');
