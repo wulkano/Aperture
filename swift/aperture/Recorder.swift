@@ -4,6 +4,7 @@ public class Recorder: NSObject, AVCaptureFileOutputRecordingDelegate {
     var destination: NSURL?;
     var session: AVCaptureSession?;
     var input: AVCaptureScreenInput?
+    var audioInput: AVCaptureDeviceInput?
     var output: AVCaptureMovieFileOutput?;
 
     public init(fps: String) {
@@ -13,7 +14,19 @@ public class Recorder: NSObject, AVCaptureFileOutputRecordingDelegate {
         let displayId: CGDirectDisplayID = CGMainDisplayID();
 
         self.input = AVCaptureScreenInput(displayID: displayId);
-
+        
+        let audioDevice: AVCaptureDevice = AVCaptureDevice.defaultDeviceWithMediaType(AVMediaTypeAudio);
+        
+        do {
+            try self.audioInput = AVCaptureDeviceInput(device: audioDevice)
+        } catch{}
+        
+        if ((self.session?.canAddInput(self.audioInput)) != nil) {
+            self.session?.addInput(self.audioInput);
+        } else {
+            print("can't add audio input");
+        }
+        
         if ((self.session?.canAddInput(input)) != nil) {
             self.session?.addInput(input);
         } else {
