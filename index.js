@@ -114,7 +114,7 @@ class Aperture {
             return result.stdout.split('\n').map(str => {
               const split = str.split(':');
               return {
-                id: +split[0],
+                id: split[0],
                 name: split[1]
               }
             });
