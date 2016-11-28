@@ -1,7 +1,11 @@
 const aperture = require('./index');
 
 const instance = aperture();
-instance.startRecording()
+instance.getAudioSources()
+  .then(sources => {
+    console.log('Audio sources:', sources);
+    return instance.startRecording();
+  })
   .then(tmp => {
     console.log('Recording to', tmp);
     return new Promise((resolve, reject) => {

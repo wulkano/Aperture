@@ -105,6 +105,26 @@ class Aperture {
       this.recorder.stdin.write('\n');
     });
   }
+
+  getAudioSources() {
+    return new Promise((resolve, reject) => {
+      switch (os.platform()) {
+        case 'linux':
+          resolve(execa(path.join(__dirname, 'linux', 'audio-devices.sh')).then(result => {
+            return result.stdout.split('\n').map(str => {
+              const split = str.split(':');
+              return {
+                id: +split[0],
+                name: split[1]
+              }
+            });
+          }));
+          break;
+        default:
+          reject(new Error('Unsupported.'));
+      }
+    });
+  }
 }
 
 module.exports = () => {
