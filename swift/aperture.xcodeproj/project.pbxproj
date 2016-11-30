@@ -9,6 +9,7 @@
 /* Begin PBXBuildFile section */
 		2FC6F16E1D794A24003F258D /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2FC6F16D1D794A24003F258D /* main.swift */; };
 		2FC6F1751D794A44003F258D /* Recorder.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2FC6F1741D794A44003F258D /* Recorder.swift */; };
+		4269D1111DEF60140061675D /* AudioDeviceList.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4269D1101DEF60140061675D /* AudioDeviceList.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -27,6 +28,7 @@
 		2FC6F16A1D794A24003F258D /* aperture */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = aperture; sourceTree = BUILT_PRODUCTS_DIR; };
 		2FC6F16D1D794A24003F258D /* main.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = main.swift; sourceTree = "<group>"; };
 		2FC6F1741D794A44003F258D /* Recorder.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Recorder.swift; sourceTree = "<group>"; };
+		4269D1101DEF60140061675D /* AudioDeviceList.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AudioDeviceList.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -61,6 +63,7 @@
 			children = (
 				2FC6F16D1D794A24003F258D /* main.swift */,
 				2FC6F1741D794A44003F258D /* Recorder.swift */,
+				4269D1101DEF60140061675D /* AudioDeviceList.swift */,
 			);
 			path = aperture;
 			sourceTree = "<group>";
@@ -122,6 +125,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				4269D1111DEF60140061675D /* AudioDeviceList.swift in Sources */,
 				2FC6F16E1D794A24003F258D /* main.swift in Sources */,
 				2FC6F1751D794A44003F258D /* Recorder.swift in Sources */,
 			);
