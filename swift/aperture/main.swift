@@ -31,16 +31,20 @@ func record(){
 }
 
 func listAudioDevices() -> String {
-    return "{" + AudioDeviceList().getInputDevices().joinWithSeparator(",") + "}";
+    return "[" + AudioDeviceList().getInputDevices().joinWithSeparator(",") + "]";
 }
 
-let numberOfArgs = Process.arguments.count;
-if (numberOfArgs != 2 && numberOfArgs != 3 && numberOfArgs != 4) {
+func displayErrorAndExit(){
     print("usage: main destinationPath fps [crop rect coordinates]")
     print("examples: main ./file.mp4 30");
     print("          main ./file.mp4 30 0:0:100:100");
     print("          main lsad");
     exit(1);
+}
+
+let numberOfArgs = Process.arguments.count;
+if (numberOfArgs != 2 && numberOfArgs != 3 && numberOfArgs != 4) {
+    displayErrorAndExit();
 }
 
 if(numberOfArgs == 3 || numberOfArgs == 4){
@@ -49,11 +53,7 @@ if(numberOfArgs == 3 || numberOfArgs == 4){
     print(listAudioDevices())
     exit(0)
 }else {
-    print("usage: main destinationPath fps [crop rect coordinates]")
-    print("examples: main ./file.mp4 30");
-    print("          main ./file.mp4 30 0:0:100:100");
-    print("          main lsad");
-    exit(1);
+    displayErrorAndExit();
 }
 
 
