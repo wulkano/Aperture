@@ -7,3 +7,7 @@ swift/build
 .DS_Store
 
 vendor
+
+# IDEA
+.idea/
+*.iml

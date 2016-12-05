@@ -1,4 +1,5 @@
 const path = require('path');
+const os = require('os');
 
 const execa = require('execa');
 const tmp = require('tmp');
@@ -24,7 +25,14 @@ class Aperture {
         recorderOpts.push(`${cropArea.x}:${cropArea.y}:${cropArea.width}:${cropArea.height}`);
       }
 
-      this.recorder = execa(path.join(__dirname, 'swift', 'main'), recorderOpts);
+      switch (os.platform()) {
+        case 'darwin':
+          this.recorder = execa(path.join(__dirname, 'swift', 'main'), recorderOpts);
+          break;
+        case 'linux':
+          this.recorder = execa(path.join(__dirname, 'linux', 'capture.sh'), recorderOpts);
+          break;
+      }
 
       const timeout = setTimeout(() => {
         const err = new Error('unnable to start the recorder after 5 seconds');
@@ -85,6 +93,26 @@ class Aperture {
       });
 
       this.recorder.stdin.write('\n');
+    });
+  }
+
+  getAudioSources() {
+    return new Promise((resolve, reject) => {
+      switch (os.platform()) {
+        case 'linux':
+          resolve(execa(path.join(__dirname, 'linux', 'audio-devices.sh')).then(result => {
+            return result.stdout.split('\n').map(str => {
+              const split = str.split(':');
+              return {
+                id: split[0],
+                name: split[1]
+              }
+            });
+          }));
+          break;
+        default:
+          reject(new Error('Unsupported.'));
+      }
     });
   }
 }
