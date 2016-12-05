@@ -15,22 +15,13 @@ class Aperture {
 // resolves if the recording started successfully
 // rejects if the recording didn't started after 5 seconds or if some error
 // occurs during the recording session
-  startRecording(opts) {
+  startRecording({fps = 30, cropArea} = {}) {
     return new Promise((resolve, reject) => {
-      opts = opts || {};
-
       this.tmpPath = tmp.tmpNameSync({postfix: '.mp4'});
 
-      opts = Object.assign({
-        fps: 30
-      }, opts);
+      const recorderOpts = [this.tmpPath, fps];
 
-      this.opts = opts;
-
-      const recorderOpts = [this.tmpPath, opts.fps];
-
-      if (opts.cropArea !== undefined) { // TODO validate this
-        const cropArea = opts.cropArea;
+      if (cropArea !== undefined) { // TODO validate this
         recorderOpts.push(`${cropArea.x}:${cropArea.y}:${cropArea.width}:${cropArea.height}`);
       }
 
@@ -99,6 +90,4 @@ class Aperture {
   }
 }
 
-module.exports = () => {
-  return new Aperture();
-};
+module.exports = () => new Aperture();
