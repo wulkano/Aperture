@@ -2,23 +2,29 @@
 // 1: some argument is missing ¯\_(ツ)_/¯
 // 2: bad crop rect coordinates
 // ?: ¯\_(ツ)_/¯
+//
+// Note: `highlight-clicks` will only work if `show-cursor` is true
+// TODO: document this ^
 
 import Foundation
 import AVFoundation
 
 let numberOfArgs = Process.arguments.count;
-if (numberOfArgs != 3 && numberOfArgs != 4) {
-    print("usage: main destinationPath fps [crop rect coordinates]")
-    print("examples: main ./file.mp4 30");
-    print("          main ./file.mp4 30 0:0:100:100");
+if (numberOfArgs != 6) {
+    print("usage: main <destinationPath> <fps> <crop-rect-coordinates> <show-cursor> <highlight-clicks>")
+    print("examples: main ./file.mp4 30 0:0:100:100 true false");
+    print("examples: main ./file.mp4 30 none true false");
     exit(1);
 }
 
 let destinationPath = Process.arguments[1];
 let fps = Process.arguments[2];
+let cropArea = Process.arguments[3];
+let showCursor = Process.arguments[4] == "true" ? true : false;
+let highlightClicks = Process.arguments[5] == "true" ? true : false;
 
 var coordinates = [];
-if (numberOfArgs == 4) {
+if (cropArea != "none") {
     coordinates = Process.arguments[3].componentsSeparatedByString(":");
     if (coordinates.count - 1 != 3) { // number of ':' in the string
         print("The coordinates for the crop rect must be in the format 'originX:originY:width:height'");
@@ -26,9 +32,9 @@ if (numberOfArgs == 4) {
     }
 }
 
-let recorder = Recorder(fps: fps);
+let recorder = Recorder(destinationPath: destinationPath, fps: fps, coordinates: coordinates as! [String], showCursor: showCursor, highlightClicks: highlightClicks);
 
-recorder.start(destinationPath, coordinates: coordinates as! [String]);
+recorder.start();
 
 setbuf(__stdoutp, nil);
 
