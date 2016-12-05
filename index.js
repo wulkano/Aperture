@@ -14,15 +14,20 @@ class Aperture {
   // resolves if the recording started successfully
   // rejects if the recording didn't started after 5 seconds or if some error
   // occurs during the recording session
-  startRecording({fps = 30, cropArea} = {}) {
+  startRecording({
+    fps = 30,
+    cropArea = 'none', // can be 'none' or {x, y, width, height} – TODO: document this
+    showCursor = true,
+    highlightClicks = false
+  } = {}) {
     return new Promise((resolve, reject) => {
       this.tmpPath = tmp.tmpNameSync({postfix: '.mp4'});
 
-      const recorderOpts = [this.tmpPath, fps];
-
-      if (cropArea !== undefined) { // TODO validate this
-        recorderOpts.push(`${cropArea.x}:${cropArea.y}:${cropArea.width}:${cropArea.height}`);
+      if (typeof cropArea === 'object') { // TODO validate this
+        cropArea = `${cropArea.x}:${cropArea.y}:${cropArea.width}:${cropArea.height}`;
       }
+
+      const recorderOpts = [this.tmpPath, fps, cropArea, showCursor, highlightClicks];
 
       this.recorder = execa(path.join(__dirname, 'swift', 'main'), recorderOpts);
 

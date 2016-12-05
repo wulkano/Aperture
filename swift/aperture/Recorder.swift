@@ -6,7 +6,7 @@ public class Recorder: NSObject, AVCaptureFileOutputRecordingDelegate {
     var input: AVCaptureScreenInput?
     var output: AVCaptureMovieFileOutput?;
 
-    public init(fps: String) {
+    public init(destinationPath: String, fps: String, coordinates: [String], showCursor: Bool, highlightClicks: Bool) {
         super.init();
         self.session = AVCaptureSession();
 
@@ -33,9 +33,7 @@ public class Recorder: NSObject, AVCaptureFileOutputRecordingDelegate {
         let cmTime = CMTimeMake(1, Int32(fps)!);
         conn?.videoMinFrameDuration = cmTime; // TODO check if can set
         conn?.videoMaxFrameDuration = cmTime; // TODO ^^^^^^^^^^^^^^^^
-    }
 
-    public func start(destinationPath: String, coordinates: [String]) {
         self.destination = NSURL.fileURLWithPath(destinationPath);
 
         if (coordinates.count != 0) {
@@ -44,6 +42,11 @@ public class Recorder: NSObject, AVCaptureFileOutputRecordingDelegate {
             self.input?.cropRect = rect;
         }
 
+        self.input?.capturesCursor = showCursor;
+        self.input?.capturesMouseClicks = highlightClicks;
+    }
+
+    public func start() {
         self.session?.startRunning();
         self.output?.startRecordingToOutputFileURL(self.destination, recordingDelegate: self);
     }
