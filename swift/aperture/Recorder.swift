@@ -13,9 +13,9 @@ public class Recorder: NSObject, AVCaptureFileOutputRecordingDelegate {
 
         let displayId: CGDirectDisplayID = CGMainDisplayID();
 
-        self.input = AVCaptureScreenInput(displayID: displayId);
+        self.input = AVCaptureScreenInput(displayID: displayId)
         
-        let audioDevice: AVCaptureDevice = AVCaptureDevice.defaultDeviceWithMediaType(AVMediaTypeAudio);
+        let audioDevice: AVCaptureDevice = AVCaptureDevice.defaultDeviceWithMediaType(AVMediaTypeAudio)
         
         do {
             try self.audioInput = AVCaptureDeviceInput(device: audioDevice)
