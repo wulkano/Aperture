@@ -3,18 +3,17 @@ const path = require('path');
 const execa = require('execa');
 const tmp = require('tmp');
 
+// TODO: log in production with proces.env.DEBUG_APERTURE
 function log(...msgs) {
   if (process.env.DEBUG) {
     console.log(...msgs);
   }
-// TODO: log in production with proces.env.DEBUG_APERTURE
 }
 
 class Aperture {
-
-// resolves if the recording started successfully
-// rejects if the recording didn't started after 5 seconds or if some error
-// occurs during the recording session
+  // resolves if the recording started successfully
+  // rejects if the recording didn't started after 5 seconds or if some error
+  // occurs during the recording session
   startRecording({fps = 30, cropArea} = {}) {
     return new Promise((resolve, reject) => {
       this.tmpPath = tmp.tmpNameSync({postfix: '.mp4'});
