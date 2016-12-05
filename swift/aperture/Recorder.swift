@@ -24,13 +24,13 @@ public class Recorder: NSObject, AVCaptureFileOutputRecordingDelegate {
         if ((self.session?.canAddInput(self.audioInput)) != nil) {
             self.session?.addInput(self.audioInput);
         } else {
-            print("can't add audio input");
+            print("Can't add audio input");
         }
         
         if ((self.session?.canAddInput(input)) != nil) {
             self.session?.addInput(input);
         } else {
-            print("can't add input"); // TODO
+            print("Can't add input"); // TODO
         }
 
         self.output = AVCaptureMovieFileOutput();
