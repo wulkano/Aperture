@@ -13,11 +13,7 @@ function log(...msgs) {
 class Aperture {
   getAudioSources() {
     return execa(path.join(__dirname, 'swift', 'main'),['lsad']).then(result => {
-      try{
         return JSON.parse(result.stdout);
-      } catch(err) {
-        throw(err)
-      }
     })
   }
   // resolves if the recording started successfully
