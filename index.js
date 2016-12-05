@@ -24,7 +24,22 @@ class Aperture {
         recorderOpts.push(`${cropArea.x}:${cropArea.y}:${cropArea.width}:${cropArea.height}`);
       }
 
-      this.recorder = execa(path.join(__dirname, 'swift', 'main'), recorderOpts);
+      if (process.platform === 'darwin') {
+        this.recorder = execa(path.join(__dirname, 'swift', 'main'), recorderOpts);
+      } else if (process.platform === 'linux') {
+        let args = ['-f', 'x11grab', '-i'];
+
+        if (opts.cropArea) {
+          args.push(':0+' + opts.cropArea.x + ',' + opts.cropArea.y);
+          args.push('-video_size', opts.cropArea.width + 'x' + opts.cropArea.height);
+        } else {
+          args.push(':0');
+        }
+
+        args.push('-framerate', opts.fps, this.tmpPath);
+
+        this.recorder = execa('ffmpeg', args);
+      }
 
       const timeout = setTimeout(() => {
         const err = new Error('unnable to start the recorder after 5 seconds');

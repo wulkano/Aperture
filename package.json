@@ -5,8 +5,8 @@
   "main": "index.js",
   "scripts": {
     "test": "xo",
-    "build": "cd swift && xcodebuild && mv build/release/aperture main && rm -r build",
-    "postinstall": "npm run build"
+    "build-macos": "cd swift && xcodebuild && mv build/release/aperture main && rm -r build",
+    "postinstall": "case $OSTYPE in darwin*) npm run build-macos ;; esac"
   },
   "repository": {
     "type": "git",
