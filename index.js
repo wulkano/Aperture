@@ -12,15 +12,14 @@ function log(...msgs) {
 
 class Aperture {
   getAudioSources() {
-    return execa(path.join(__dirname, 'swift', 'main'),['lsad']).then(result => {
-        return JSON.parse(result.stdout);
-    })
+    return execa(path.join(__dirname, 'swift', 'main'), ['lsad']).then(result => {
+      return JSON.parse(result.stdout);
+    });
   }
   // resolves if the recording started successfully
   // rejects if the recording didn't started after 5 seconds or if some error
   // occurs during the recording session
   startRecording({fps = 30, cropArea} = {}) {
-
     return new Promise((resolve, reject) => {
       this.tmpPath = tmp.tmpNameSync({postfix: '.mp4'});
 
