@@ -18,7 +18,8 @@ class Aperture {
     fps = 30,
     cropArea = 'none', // can be 'none' or {x, y, width, height} – TODO: document this
     showCursor = true,
-    highlightClicks = false
+    highlightClicks = false,
+    displayId = 'main'
   } = {}) {
     return new Promise((resolve, reject) => {
       this.tmpPath = tmp.tmpNameSync({postfix: '.mp4'});
@@ -27,7 +28,7 @@ class Aperture {
         cropArea = `${cropArea.x}:${cropArea.y}:${cropArea.width}:${cropArea.height}`;
       }
 
-      const recorderOpts = [this.tmpPath, fps, cropArea, showCursor, highlightClicks];
+      const recorderOpts = [this.tmpPath, fps, cropArea, showCursor, highlightClicks, displayId];
 
       this.recorder = execa(path.join(__dirname, 'swift', 'main'), recorderOpts);
 
