@@ -19,7 +19,7 @@
   },
   "homepage": "https://github.com/wulkano/aperture#readme",
   "devDependencies": {
-    "xo": "^0.16.0"
+    "xo": "^0.17.1"
   },
   "xo": {
     "space": true,
