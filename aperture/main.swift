@@ -10,10 +10,10 @@ import Foundation
 import AVFoundation
 
 let numberOfArgs = Process.arguments.count;
-if (numberOfArgs != 6) {
-  print("usage: main <destinationPath> <fps> <crop-rect-coordinates> <show-cursor> <highlight-clicks>")
-  print("examples: main ./file.mp4 30 0:0:100:100 true false");
-  print("examples: main ./file.mp4 30 none true false");
+if (numberOfArgs != 7) {
+  print("usage: main <destinationPath> <fps> <crop-rect-coordinates> <show-cursor> <highlight-clicks> <display-id>")
+  print("examples: main ./file.mp4 30 0:0:100:100 true false 1846519");
+  print("examples: main ./file.mp4 30 none true false main");
   exit(1);
 }
 
@@ -22,6 +22,7 @@ let fps = Process.arguments[2];
 let cropArea = Process.arguments[3];
 let showCursor = Process.arguments[4] == "true" ? true : false;
 let highlightClicks = Process.arguments[5] == "true" ? true : false;
+let displayId = Process.arguments[6] == "main" ? CGMainDisplayID() : UInt32(Process.arguments[6]);
 
 var coordinates = [];
 if (cropArea != "none") {
@@ -32,7 +33,7 @@ if (cropArea != "none") {
   }
 }
 
-let recorder = Recorder(destinationPath: destinationPath, fps: fps, coordinates: coordinates as! [String], showCursor: showCursor, highlightClicks: highlightClicks);
+let recorder = Recorder(destinationPath: destinationPath, fps: fps, coordinates: coordinates as! [String], showCursor: showCursor, highlightClicks: highlightClicks, displayId: displayId!);
 
 recorder.start();
 
