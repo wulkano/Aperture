@@ -6,11 +6,9 @@ public class Recorder: NSObject, AVCaptureFileOutputRecordingDelegate {
   var input: AVCaptureScreenInput?
   var output: AVCaptureMovieFileOutput?;
 
-  public init(destinationPath: String, fps: String, coordinates: [String], showCursor: Bool, highlightClicks: Bool) {
+  public init(destinationPath: String, fps: String, coordinates: [String], showCursor: Bool, highlightClicks: Bool, displayId: UInt32) {
     super.init();
     self.session = AVCaptureSession();
-
-    let displayId: CGDirectDisplayID = CGMainDisplayID();
 
     self.input = AVCaptureScreenInput(displayID: displayId);
 
