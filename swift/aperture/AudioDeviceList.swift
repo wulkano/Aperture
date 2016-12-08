@@ -17,18 +17,20 @@ import AudioToolbox
 class AudioDeviceList {
 
 func getInputDevices() -> NSString? {
-    
+
     var inputDevices: [[String:String]] = []
-    let captureDevices: [AnyObject] = AVCaptureDevice.devicesWithMediaType(AVMediaTypeAudio) as [AnyObject]
-    
+    let captureDevices: [AnyObject] = AVCaptureDevice.devices(withMediaType: AVMediaTypeAudio) as [AnyObject]
+
     for device in captureDevices {
-        let obj: AnyObject = ["id": (device.uniqueID as String!), "name":(device.localizedName)]
-        inputDevices.append(obj as! [String : String])
+      inputDevices.append([
+        "id": device.uniqueID,
+        "name":device.localizedName
+      ])
     }
-    
+
     do {
-        let parsedData = try NSJSONSerialization.dataWithJSONObject(inputDevices, options: [])
-        return NSString(data: parsedData, encoding: NSUTF8StringEncoding)
+        let parsedData = try JSONSerialization.data(withJSONObject: inputDevices, options: [])
+        return NSString(data: parsedData, encoding: String.Encoding.utf8.rawValue)
     } catch _ as NSError {
         return nil
     }
