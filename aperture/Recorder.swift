@@ -11,6 +11,7 @@ public class Recorder: NSObject, AVCaptureFileOutputRecordingDelegate {
     self.session = AVCaptureSession();
 
     self.input = AVCaptureScreenInput(displayID: displayId);
+    self.input!.minFrameDuration = CMTimeMake(1, Int32(fps)!);
 
     if ((self.session?.canAddInput(input)) != nil) {
       self.session?.addInput(input);
@@ -26,11 +27,6 @@ public class Recorder: NSObject, AVCaptureFileOutputRecordingDelegate {
     } else {
       print("can't add output"); // TODO
     }
-
-    let conn = self.output?.connectionWithMediaType(AVMediaTypeVideo);
-    let cmTime = CMTimeMake(1, Int32(fps)!);
-    conn?.videoMinFrameDuration = cmTime; // TODO check if can set
-    conn?.videoMaxFrameDuration = cmTime; // TODO ^^^^^^^^^^^^^^^^
 
     self.destination = NSURL.fileURLWithPath(destinationPath);
 
