@@ -35,10 +35,15 @@ if (cropArea != "none") {
 
 let recorder = Recorder(destinationPath: destinationPath, fps: fps, coordinates: coordinates as! [String], showCursor: showCursor, highlightClicks: highlightClicks, displayId: displayId!);
 
+func quit(_: Int32) {
+	recorder.stop();
+}
+
+signal(SIGHUP, quit);
+signal(SIGINT, quit);
+signal(SIGTERM, quit);
+signal(SIGQUIT, quit);
+
 recorder.start();
 
-setbuf(__stdoutp, nil);
-
-readLine();
-
-recorder.stop();
+NSRunLoop.mainRunLoop().run();
