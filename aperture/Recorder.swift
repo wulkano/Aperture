@@ -20,7 +20,6 @@ public class Recorder: NSObject, AVCaptureFileOutputRecordingDelegate {
     }
 
     self.output = AVCaptureMovieFileOutput();
-    self.output?.movieFragmentInterval = CMTimeMake(1,1); // write data to file every 1 second
 
     if ((self.session?.canAddOutput(self.output)) != nil) {
       self.session?.addOutput(self.output);
@@ -55,6 +54,16 @@ public class Recorder: NSObject, AVCaptureFileOutputRecordingDelegate {
   }
 
   public func captureOutput(captureOutput: AVCaptureFileOutput!, didFinishRecordingToOutputFileAtURL outputFileURL: NSURL!, fromConnections connections: [AnyObject]!, error: NSError!) {
-    print(error);
+    if error != nil {
+      // don't print useless "Stop Recording" error
+      if (error.code != -11806) {
+        print(error);
+      }
+
+      // TODO: Make `stop()` accept a callback that is called when this method is called and do the exiting in `main.swift`
+      exit(1);
+    } else {
+      exit(0);
+    }
   }
 }
