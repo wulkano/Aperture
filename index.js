@@ -11,6 +11,11 @@ function log(...msgs) {
 }
 
 class Aperture {
+  getAudioSources() {
+    return execa(path.join(__dirname, 'swift', 'main'), ['list-audio-devices']).then(result => {
+      return JSON.parse(result.stdout);
+    });
+  }
   // resolves if the recording started successfully
   // rejects if the recording didn't started after 5 seconds or if some error
   // occurs during the recording session
@@ -19,7 +24,8 @@ class Aperture {
     cropArea = 'none', // can be 'none' or {x, y, width, height} – TODO: document this
     showCursor = true,
     highlightClicks = false,
-    displayId = 'main'
+    displayId = 'main',
+    audioSourceId = 'none' // one of the `id`s from getAudioSources()
   } = {}) {
     return new Promise((resolve, reject) => {
       this.tmpPath = tmp.tmpNameSync({postfix: '.mp4'});
@@ -28,7 +34,7 @@ class Aperture {
         cropArea = `${cropArea.x}:${cropArea.y}:${cropArea.width}:${cropArea.height}`;
       }
 
-      const recorderOpts = [this.tmpPath, fps, cropArea, showCursor, highlightClicks, displayId];
+      const recorderOpts = [this.tmpPath, fps, cropArea, showCursor, highlightClicks, displayId, audioSourceId];
 
       this.recorder = execa(path.join(__dirname, 'swift', 'main'), recorderOpts);
 
