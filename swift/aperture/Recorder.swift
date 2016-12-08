@@ -7,23 +7,25 @@ public class Recorder: NSObject, AVCaptureFileOutputRecordingDelegate {
   var audioInput: AVCaptureDeviceInput?
   var output: AVCaptureMovieFileOutput?;
 
-  public init(destinationPath: String, fps: String, coordinates: [String], showCursor: Bool, highlightClicks: Bool, displayId: UInt32) {
+  public init(destinationPath: String, fps: String, coordinates: [String], showCursor: Bool, highlightClicks: Bool, displayId: UInt32, audioDeviceId: String) {
     super.init();
     self.session = AVCaptureSession();
 
     self.input = AVCaptureScreenInput(displayID: displayId);
     self.input!.minFrameDuration = CMTimeMake(1, Int32(fps)!);
 
-    let audioDevice: AVCaptureDevice = AVCaptureDevice.defaultDeviceWithMediaType(AVMediaTypeAudio)
+    if (audioDeviceId != "none") {
+      let audioDevice: AVCaptureDevice = AVCaptureDevice.init(uniqueID: audioDeviceId);
 
-    do {
-      try self.audioInput = AVCaptureDeviceInput(device: audioDevice)
-    } catch{}
+      do {
+        try self.audioInput = AVCaptureDeviceInput(device: audioDevice);
 
-    if ((self.session?.canAddInput(self.audioInput)) != nil) {
-      self.session?.addInput(self.audioInput);
-    } else {
-      print("Can't add audio input");
+        if ((self.session?.canAddInput(self.audioInput)) != nil) {
+          self.session?.addInput(self.audioInput);
+        } else {
+          print("Can't add audio input");
+        }
+      } catch {} // TODO
     }
 
     if ((self.session?.canAddInput(input)) != nil) {

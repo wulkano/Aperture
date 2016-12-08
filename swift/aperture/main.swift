@@ -9,16 +9,20 @@
 import Foundation
 import AVFoundation
 
+var recorder: Recorder?;
+
 func quit(_: Int32) {
-	recorder.stop();
+  recorder?.stop();
 }
 
-func record(){
+func record() {
   let destinationPath = Process.arguments[1];
   let fps = Process.arguments[2];
   let cropArea = Process.arguments[3];
   let showCursor = Process.arguments[4] == "true" ? true : false;
   let highlightClicks = Process.arguments[5] == "true" ? true : false;
+  let displayId = Process.arguments[6] == "main" ? CGMainDisplayID() : UInt32(Process.arguments[6]);
+  let audioDeviceId = Process.arguments[7];
 
   var coordinates = [];
   if (cropArea != "none") {
@@ -29,14 +33,22 @@ func record(){
     }
   }
 
-  let recorder = Recorder(destinationPath: destinationPath, fps: fps, coordinates: coordinates as! [String], showCursor: showCursor, highlightClicks: highlightClicks);
+  recorder = Recorder(
+    destinationPath: destinationPath,
+    fps: fps,
+    coordinates: coordinates as! [String],
+    showCursor: showCursor,
+    highlightClicks: highlightClicks,
+    displayId: displayId!,
+    audioDeviceId: audioDeviceId
+  );
 
   signal(SIGHUP, quit);
   signal(SIGINT, quit);
   signal(SIGTERM, quit);
   signal(SIGQUIT, quit);
 
-  recorder.start();
+  recorder?.start();
 
   NSRunLoop.mainRunLoop().run();
 }
@@ -46,15 +58,15 @@ func listAudioDevices() {
 }
 
 func usage() {
-  print("usage: main <list-audio-devices | <destinationPath> <fps> <crop-rect-coordinates> <show-cursor> <highlight-clicks> >");
-  print("examples: main ./file.mp4 30 0:0:100:100 true false");
-  print("          main ./file.mp4 30 none true false");
+  print("usage: main <list-audio-devices | <destinationPath> <fps> <crop-rect-coordinates> <show-cursor> <highlight-clicks> <display-id> <audio-device-id>>");
+  print("examples: main ./file.mp4 30 0:0:100:100 true false 1846519 'AppleHDAEngineInput:1B,0,1,0:1'");
+  print("          main ./file.mp4 30 none true false main none");
   print("          main list-audio-devices");
 }
 
 let numberOfArgs = Process.arguments.count
 
-if (numberOfArgs == 6) {
+if (numberOfArgs == 8) {
   record();
   exit(0);
 }
