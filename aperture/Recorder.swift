@@ -69,16 +69,17 @@ public class Recorder: NSObject, AVCaptureFileOutputRecordingDelegate {
   }
 
   public func captureOutput(captureOutput: AVCaptureFileOutput!, didFinishRecordingToOutputFileAtURL outputFileURL: NSURL!, fromConnections connections: [AnyObject]!, error: NSError!) {
+    // TODO: Make `stop()` accept a callback that is called when this method is called and do the exiting in `main.swift`
     if error != nil {
       // don't print useless "Stop Recording" error
       if (error.code != -11806) {
         print(error);
+        exit(1);
+      } else {
+        exit(0);
       }
-
-      // TODO: Make `stop()` accept a callback that is called when this method is called and do the exiting in `main.swift`
-      exit(1);
     } else {
-      exit(0);
+      exit(0); // TODO: this will probably never happen, check if we can remove the if-else
     }
   }
 }

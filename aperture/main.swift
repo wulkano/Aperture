@@ -49,6 +49,7 @@ func record() {
   signal(SIGQUIT, quit);
 
   recorder?.start();
+  setbuf(__stdoutp, nil);
 
   NSRunLoop.mainRunLoop().run();
 }
