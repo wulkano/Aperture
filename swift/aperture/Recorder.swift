@@ -7,13 +7,12 @@ public class Recorder: NSObject, AVCaptureFileOutputRecordingDelegate {
   var audioInput: AVCaptureDeviceInput?
   var output: AVCaptureMovieFileOutput?;
 
-  public init(destinationPath: String, fps: String, coordinates: [String], showCursor: Bool, highlightClicks: Bool) {
+  public init(destinationPath: String, fps: String, coordinates: [String], showCursor: Bool, highlightClicks: Bool, displayId: UInt32) {
     super.init();
     self.session = AVCaptureSession();
 
-    let displayId: CGDirectDisplayID = CGMainDisplayID();
-
     self.input = AVCaptureScreenInput(displayID: displayId);
+    self.input!.minFrameDuration = CMTimeMake(1, Int32(fps)!);
 
     let audioDevice: AVCaptureDevice = AVCaptureDevice.defaultDeviceWithMediaType(AVMediaTypeAudio)
 
@@ -35,20 +34,11 @@ public class Recorder: NSObject, AVCaptureFileOutputRecordingDelegate {
 
     self.output = AVCaptureMovieFileOutput();
 
-    // write data to file every 2 seconds
-    // writing every 1 second causes intermittent errors
-    self.output?.movieFragmentInterval = CMTimeMakeWithSeconds(2, 1);
-
     if ((self.session?.canAddOutput(self.output)) != nil) {
       self.session?.addOutput(self.output);
     } else {
       print("can't add output"); // TODO
     }
-
-    let conn = self.output?.connectionWithMediaType(AVMediaTypeVideo);
-    let cmTime = CMTimeMake(1, Int32(fps)!);
-    conn?.videoMinFrameDuration = cmTime; // TODO check if can set
-    conn?.videoMaxFrameDuration = cmTime; // TODO ^^^^^^^^^^^^^^^^
 
     self.destination = NSURL.fileURLWithPath(destinationPath);
 
@@ -77,6 +67,16 @@ public class Recorder: NSObject, AVCaptureFileOutputRecordingDelegate {
   }
 
   public func captureOutput(captureOutput: AVCaptureFileOutput!, didFinishRecordingToOutputFileAtURL outputFileURL: NSURL!, fromConnections connections: [AnyObject]!, error: NSError!) {
-    print(error);
+    if error != nil {
+      // don't print useless "Stop Recording" error
+      if (error.code != -11806) {
+        print(error);
+      }
+
+      // TODO: Make `stop()` accept a callback that is called when this method is called and do the exiting in `main.swift`
+      exit(1);
+    } else {
+      exit(0);
+    }
   }
 }

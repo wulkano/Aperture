@@ -9,6 +9,10 @@
 import Foundation
 import AVFoundation
 
+func quit(_: Int32) {
+	recorder.stop();
+}
+
 func record(){
   let destinationPath = Process.arguments[1];
   let fps = Process.arguments[2];
@@ -27,11 +31,14 @@ func record(){
 
   let recorder = Recorder(destinationPath: destinationPath, fps: fps, coordinates: coordinates as! [String], showCursor: showCursor, highlightClicks: highlightClicks);
 
-  recorder.start();
-  setbuf(__stdoutp, nil);
+  signal(SIGHUP, quit);
+  signal(SIGINT, quit);
+  signal(SIGTERM, quit);
+  signal(SIGQUIT, quit);
 
-  readLine();
-  recorder.stop();
+  recorder.start();
+
+  NSRunLoop.mainRunLoop().run();
 }
 
 func listAudioDevices() {
