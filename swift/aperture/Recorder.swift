@@ -59,5 +59,7 @@ public class Recorder: NSObject, AVCaptureFileOutputRecordingDelegate {
 
   public func captureOutput(captureOutput: AVCaptureFileOutput!, didFinishRecordingToOutputFileAtURL outputFileURL: NSURL!, fromConnections connections: [AnyObject]!, error: NSError!) {
     print(error);
+	// TODO: Make `stop()` accept a callback that is called when this method is called and do the exiting in `main.swift`
+	exit(1);
   }
 }

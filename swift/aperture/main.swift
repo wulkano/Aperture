@@ -37,7 +37,6 @@ let recorder = Recorder(destinationPath: destinationPath, fps: fps, coordinates:
 
 func quit(_: Int32) {
 	recorder.stop();
-	exit(1);
 }
 
 signal(SIGHUP, quit);
