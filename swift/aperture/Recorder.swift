@@ -19,7 +19,6 @@ public class Recorder: NSObject, AVCaptureFileOutputRecordingDelegate {
     }
 
     self.output = AVCaptureMovieFileOutput();
-    self.output?.movieFragmentInterval = CMTimeMake(1,1); // write data to file every 1 second
 
     if ((self.session?.canAddOutput(self.output)) != nil) {
       self.session?.addOutput(self.output);
