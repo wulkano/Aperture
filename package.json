@@ -2,37 +2,23 @@
   "name": "aperture.js",
   "version": "0.1.0",
   "description": "Record the screen on macOS",
-  "main": "index.js",
+  "license": "MIT",
+  "repository": "wulkano/aperture",
+  "author": "Matheus Fernandes <npm@matheus.top> (https://matheus.top)",
   "scripts": {
     "test": "xo",
     "build": "cd swift && xcodebuild && mv build/release/aperture main && rm -r build",
     "postinstall": "npm run build"
   },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/wulkano/aperture.git"
+  "dependencies": {
+    "execa": "^0.5.0",
+    "tmp": "0.0.31"
   },
-  "author": "Matheus Fernandes <npm@matheus.top> (https://matheus.top/)",
-  "license": "MIT",
-  "bugs": {
-    "url": "https://github.com/wulkano/aperture/issues"
-  },
-  "homepage": "https://github.com/wulkano/aperture#readme",
   "devDependencies": {
-    "xo": "^0.16.0"
+    "xo": "^0.17.0"
   },
   "xo": {
     "space": true,
-    "esnext": true,
-    "envs": [
-      "node"
-    ],
-    "rules": {
-      "babel/new-cap": "off"
-    }
-  },
-  "dependencies": {
-    "execa": "^0.5.0",
-    "tmp": "0.0.29"
+    "esnext": true
   }
 }
