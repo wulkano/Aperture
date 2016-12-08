@@ -90,7 +90,7 @@ class Aperture {
         }
       });
 
-      this.recorder.stdin.write('\n');
+      this.recorder.kill();
     });
   }
 }
