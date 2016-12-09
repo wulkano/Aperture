@@ -27,6 +27,76 @@ function stopRecording() {
 
 ```
 
+## API
+
+### instance = aperture()
+
+### instance.startRecording([options])
+
+Returns a promise for the path to the screen recording file.
+
+### instance.stopRecording()
+
+Returns a promise for the path to the screen recording file.
+
+### instance.getAudioSources()
+
+Get a list of audio sources.
+
+Example:
+
+```js
+[{
+  id: 'AppleHDAEngineInput:1B,0,1,0:1',
+  name: 'Built-in Microphone'
+}]
+```
+
+#### options
+
+##### fps
+
+Type: `number`<br>
+Default: `30`
+
+Number of frames per seconds.
+
+##### cropArea
+
+Type: `Object` `string`<br>
+Default: `'none'`
+
+Record only an area of the screen. Accepts an object with `x`, `y`, `width`, `height` properties.
+
+##### showCursor
+
+Type: `boolean`<br>
+Default: `true`
+
+Show the cursor in the screen recording.
+
+##### highlightClicks
+
+Type: `boolean`<br>
+Default: `false`
+
+Highlight cursor clicks in the screen recording.
+
+##### displayId
+
+Type: `string`<br>
+Default: `main`
+
+Display to record.
+
+##### audioSourceId
+
+Type: `Object` `string`<br>
+Default: `'none'`
+
+Audio source to include in the screen recording. Should be one of the `id`'s from `instance.getAudioSources()`.
+
+
 ## Why
 
 `aperture.js` was built to fulfill the needs of [Kap](https://github.com/wulkano/kap), providing a JavaScript interface to the **best** available method for recording the screen.
