@@ -16,17 +16,17 @@ func quit(_: Int32) {
 }
 
 func record() {
-  let destinationPath = Process.arguments[1];
-  let fps = Process.arguments[2];
-  let cropArea = Process.arguments[3];
-  let showCursor = Process.arguments[4] == "true" ? true : false;
-  let highlightClicks = Process.arguments[5] == "true" ? true : false;
-  let displayId = Process.arguments[6] == "main" ? CGMainDisplayID() : UInt32(Process.arguments[6]);
-  let audioDeviceId = Process.arguments[7];
+  let destinationPath = CommandLine.arguments[1];
+  let fps = CommandLine.arguments[2];
+  let cropArea = CommandLine.arguments[3];
+  let showCursor = CommandLine.arguments[4] == "true" ? true : false;
+  let highlightClicks = CommandLine.arguments[5] == "true" ? true : false;
+  let displayId = CommandLine.arguments[6] == "main" ? CGMainDisplayID() : UInt32(CommandLine.arguments[6]);
+  let audioDeviceId = CommandLine.arguments[7];
 
-  var coordinates = [];
+  var coordinates = [String]();
   if (cropArea != "none") {
-    coordinates = Process.arguments[3].componentsSeparatedByString(":");
+    coordinates = CommandLine.arguments[3].components(separatedBy: ":");
     if (coordinates.count - 1 != 3) { // number of ':' in the string
       print("The coordinates for the crop rect must be in the format 'originX:originY:width:height'");
       exit(2);
@@ -36,7 +36,7 @@ func record() {
   recorder = Recorder(
     destinationPath: destinationPath,
     fps: fps,
-    coordinates: coordinates as! [String],
+    coordinates: coordinates,
     showCursor: showCursor,
     highlightClicks: highlightClicks,
     displayId: displayId!,
@@ -51,7 +51,7 @@ func record() {
   recorder?.start();
   setbuf(__stdoutp, nil);
 
-  NSRunLoop.mainRunLoop().run();
+  RunLoop.main.run();
 }
 
 func listAudioDevices() {
@@ -65,14 +65,14 @@ func usage() {
   print("          main list-audio-devices");
 }
 
-let numberOfArgs = Process.arguments.count
+let numberOfArgs = CommandLine.arguments.count
 
 if (numberOfArgs == 8) {
   record();
   exit(0);
 }
 
-if (numberOfArgs == 2 && Process.arguments[1] == "list-audio-devices"){
+if (numberOfArgs == 2 && CommandLine.arguments[1] == "list-audio-devices"){
   listAudioDevices();
   exit(0);
 }
