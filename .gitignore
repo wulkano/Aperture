@@ -2,7 +2,7 @@ node_modules
 *.log
 
 swift/main
-swift/build
+swift/.build
 
 .DS_Store
 
