@@ -17,6 +17,10 @@
   "devDependencies": {
     "xo": "^0.17.0"
   },
+  "files": [
+      "index.js",
+      "swift/main"
+  ],
   "xo": {
     "space": true,
     "esnext": true
