@@ -4,6 +4,9 @@ node_modules
 swift/main
 swift/build
 
+xcuserdata/
+*.xcuserstate
+
 .DS_Store
 
 vendor
