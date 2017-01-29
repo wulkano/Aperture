@@ -1,5 +1,5 @@
 {
-  "name": "aperture.js",
+  "name": "aperture",
   "version": "0.1.0",
   "description": "Record the screen on macOS",
   "license": "MIT",
