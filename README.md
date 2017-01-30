@@ -11,6 +11,8 @@
 $ npm install aperture
 ```
 
+*Requires macOS 10.10 or higher*
+
 
 ## Usage
 

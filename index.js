@@ -1,7 +1,10 @@
 'use strict';
+const os = require('os');
 const path = require('path');
 const execa = require('execa');
 const tmp = require('tmp');
+
+const isYosemiteOrHigher = process.platform === 'darwin' && Number(os.release().split('.')[0]) >= 14;
 
 // TODO: Log in production with `process.env.DEBUG`
 function log(...msgs) {
@@ -11,6 +14,12 @@ function log(...msgs) {
 }
 
 class Aperture {
+  constructor() {
+    if (!isYosemiteOrHigher) {
+      throw new Error('Requires macOS 10.10 or higher');
+    }
+  }
+
   getAudioSources() {
     return execa.stdout(path.join(__dirname, 'swift/main'), ['list-audio-devices']).then(JSON.parse);
   }
