@@ -4,7 +4,7 @@
 // ?: ¯\_(ツ)_/¯
 //
 // Note: `highlight-clicks` will only work if `show-cursor` is true
-// TODO: Document this ^
+// TODO(matheuss): Document this ^
 import Foundation
 import AVFoundation
 

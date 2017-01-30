@@ -23,15 +23,23 @@ class Recorder: NSObject, AVCaptureFileOutputRecordingDelegate {
         if ((self.session?.canAddInput(self.audioInput)) != nil) {
           self.session?.addInput(self.audioInput);
         } else {
+          // TODO(matheuss): When we can't add the input, we should imediately exit
+          // With that, the JS part would be able to `reject` the `Promise`.
+          // Right now, on Kap for example, the recording will probably continue without
+          // letting the user now that no audio is being recorded
           print("Can't add audio input");
         }
-      } catch {} // TODO
+      } catch {} // TODO(matheuss): Exit when this happens
     }
 
     if ((self.session?.canAddInput(input)) != nil) {
       self.session?.addInput(input);
     } else {
-      print("Can't add input"); // TODO
+      print("Can't add input");
+      // TODO(matheuss): When we can't add the input, we should imediately exit
+      // With that, the JS part would be able to `reject` the `Promise`.
+      // Right now, on Kap for example, the recording will probably continue without
+      // letting the user now that no video is being recorded
     }
 
     self.output = AVCaptureMovieFileOutput();
@@ -39,7 +47,11 @@ class Recorder: NSObject, AVCaptureFileOutputRecordingDelegate {
     if ((self.session?.canAddOutput(self.output)) != nil) {
       self.session?.addOutput(self.output);
     } else {
-      print("can't add output"); // TODO
+      print("Can't add output");
+      // TODO(matheuss): When we can't add the input, we should imediately exit
+      // With that, the JS part would be able to `reject` the `Promise`.
+      // Right now, on Kap for example, the recording will probably continue without
+      // letting the user now that no the file will not be saved
     }
 
     self.destination = URL(fileURLWithPath: destinationPath);
@@ -79,7 +91,7 @@ class Recorder: NSObject, AVCaptureFileOutputRecordingDelegate {
         exit(0);
       }
     } else {
-      exit(0); // TODO: This will probably never happen, check if we can remove the if-else
+      exit(0); // TODO(matheuss): This will probably never happen, check if we can remove the if-else
     }
   }
 }
