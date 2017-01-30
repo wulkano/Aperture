@@ -6,7 +6,6 @@ const tmp = require('tmp');
 
 const isYosemiteOrHigher = process.platform === 'darwin' && Number(os.release().split('.')[0]) >= 14;
 
-// TODO: Log in production with `process.env.DEBUG`
 function log(...msgs) {
   if (process.env.DEBUG) {
     console.log(...msgs);
@@ -35,7 +34,9 @@ class Aperture {
     return new Promise((resolve, reject) => {
       this.tmpPath = tmp.tmpNameSync({postfix: '.mp4'});
 
-      if (typeof cropArea === 'object') { // TODO: Validate this
+      if (typeof cropArea === 'object') {
+        // TODO(matheuss): We should validate the values passed here, because AVFoundation
+        // will simply record the entire screen if it receives invalid values
         cropArea = `${cropArea.x}:${cropArea.y}:${cropArea.width}:${cropArea.height}`;
       }
 
@@ -69,20 +70,25 @@ class Aperture {
         }
       });
 
-      this.recorder.on('error', reject); // TODO: Handle this
+      // TODO(matheuss): Not sure if this will ever happen, but if it happens, we
+      // should handle it and `reject` the Promise with some useful info, or at least
+      // `Unknown Error`
+      this.recorder.on('error', reject);
 
       this.recorder.on('exit', code => {
         clearTimeout(timeout);
         let err;
 
+        // TODO(matheuss): Reject the Promise with more useful info
+        // `Malformed args`, for example, is far from enough
         if (code === 0) {
           return; // Success
         } else if (code === 1) {
-          err = new Error('Malformed arguments'); // TODO
+          err = new Error('Malformed arguments');
         } else if (code === 2) {
-          err = new Error('Invalid coordinates'); // TODO
+          err = new Error('Invalid coordinates');
         } else {
-          err = new Error('Unknown error'); // TODO
+          err = new Error('Unknown error');
         }
 
         reject(err);
@@ -102,7 +108,7 @@ class Aperture {
           delete this.recorder;
 
           resolve(this.tmpPath);
-          // TODO: This file is deleted when the program exits
+          // TODO(matheuss): This file is deleted when the program exits
           // maybe we should add a note about this on the docs or implement a workaround
           delete this.tmpPath;
         } else {
