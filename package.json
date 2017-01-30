@@ -5,22 +5,32 @@
   "license": "MIT",
   "repository": "wulkano/aperture",
   "author": "Matheus Fernandes <npm@matheus.top> (https://matheus.top)",
+  "maintainers": [
+    {
+      "name": "Sindre Sorhus",
+      "email": "sindresorhus@gmail.com",
+      "url": "sindresorhus.com"
+    }
+  ],
+  "engines": {
+    "node": ">=6"
+  },
   "scripts": {
     "test": "xo",
     "build": "cd swift && xcodebuild && mv build/release/aperture main && rm -r build",
     "prepublish": "npm run build"
   },
+  "files": [
+    "index.js",
+    "swift/main"
+  ],
   "dependencies": {
-    "execa": "^0.5.0",
+    "execa": "^0.6.0",
     "tmp": "0.0.31"
   },
   "devDependencies": {
     "xo": "^0.17.0"
   },
-  "files": [
-      "index.js",
-      "swift/main"
-  ],
   "xo": {
     "space": true,
     "esnext": true

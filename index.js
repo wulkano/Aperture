@@ -1,9 +1,9 @@
+'use strict';
 const path = require('path');
-
 const execa = require('execa');
 const tmp = require('tmp');
 
-// TODO: log in production with proces.env.DEBUG_APERTURE
+// TODO: Log in production with `process.env.DEBUG`
 function log(...msgs) {
   if (process.env.DEBUG) {
     console.log(...msgs);
@@ -12,44 +12,45 @@ function log(...msgs) {
 
 class Aperture {
   getAudioSources() {
-    return execa(path.join(__dirname, 'swift', 'main'), ['list-audio-devices']).then(result => {
-      return JSON.parse(result.stdout);
-    });
+    return execa.stdout(path.join(__dirname, 'swift/main'), ['list-audio-devices']).then(JSON.parse);
   }
-  // resolves if the recording started successfully
-  // rejects if the recording didn't started after 5 seconds or if some error
-  // occurs during the recording session
+
   startRecording({
     fps = 30,
-    cropArea = 'none', // can be 'none' or {x, y, width, height} – TODO: document this
+    cropArea = 'none',
     showCursor = true,
     highlightClicks = false,
     displayId = 'main',
-    audioSourceId = 'none' // one of the `id`s from getAudioSources()
+    audioSourceId = 'none'
   } = {}) {
     return new Promise((resolve, reject) => {
       this.tmpPath = tmp.tmpNameSync({postfix: '.mp4'});
 
-      if (typeof cropArea === 'object') { // TODO validate this
+      if (typeof cropArea === 'object') { // TODO: Validate this
         cropArea = `${cropArea.x}:${cropArea.y}:${cropArea.width}:${cropArea.height}`;
       }
 
-      const recorderOpts = [this.tmpPath, fps, cropArea, showCursor, highlightClicks, displayId, audioSourceId];
+      const recorderOpts = [
+        this.tmpPath,
+        fps,
+        cropArea,
+        showCursor,
+        highlightClicks,
+        displayId,
+        audioSourceId
+      ];
 
       this.recorder = execa(path.join(__dirname, 'swift', 'main'), recorderOpts);
 
       const timeout = setTimeout(() => {
-        const err = new Error('unnable to start the recorder after 5 seconds');
+        const err = new Error('Could not start recording within 5 seconds');
         err.code = 'RECORDER_TIMEOUT';
-
         this.recorder.kill();
-
         reject(err);
       }, 5000);
 
       this.recorder.stdout.on('data', data => {
         data = data.toString();
-
         log(data);
 
         if (data.replace(/\n|\s/gm, '') === 'R') {
@@ -58,19 +59,23 @@ class Aperture {
           resolve(this.tmpPath);
         }
       });
-      this.recorder.on('error', reject); // TODO handle this;
+
+      this.recorder.on('error', reject); // TODO: Handle this
+
       this.recorder.on('exit', code => {
         clearTimeout(timeout);
         let err;
+
         if (code === 0) {
-          return; // we're good
+          return; // Success
         } else if (code === 1) {
-          err = new Error('malformed arguments'); // TODO
+          err = new Error('Malformed arguments'); // TODO
         } else if (code === 2) {
-          err = new Error('invalid coordinates'); // TODO
+          err = new Error('Invalid coordinates'); // TODO
         } else {
-          err = new Error('unknown error'); // TODO
+          err = new Error('Unknown error'); // TODO
         }
+
         reject(err);
       });
     });
@@ -79,16 +84,16 @@ class Aperture {
   stopRecording() {
     return new Promise((resolve, reject) => {
       if (this.recorder === undefined) {
-        reject('call `startRecording` first');
+        reject(new Error('Call `.startRecording()` first'));
       }
 
       this.recorder.on('exit', code => {
-        // at this point the movie file has been fully written to the file system
+        // At this point the movie file has been fully written to the filesystem
         if (code === 0) {
           delete this.recorder;
 
           resolve(this.tmpPath);
-          // TODO: this file is deleted when the program exits
+          // TODO: This file is deleted when the program exits
           // maybe we should add a note about this on the docs or implement a workaround
           delete this.tmpPath;
         } else {
