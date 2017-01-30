@@ -55,23 +55,23 @@ class Recorder: NSObject, AVCaptureFileOutputRecordingDelegate {
   }
 
   func start() {
-      self.session?.startRunning();
-      self.output?.startRecording(toOutputFileURL: self.destination, recordingDelegate: self);
-    }
+    self.session?.startRunning();
+    self.output?.startRecording(toOutputFileURL: self.destination, recordingDelegate: self);
+  }
 
   func stop() {
-      self.output?.stopRecording();
-      self.session?.stopRunning();
+    self.output?.stopRecording();
+    self.session?.stopRunning();
   }
 
   func capture(_ captureOutput: AVCaptureFileOutput!, didStartRecordingToOutputFileAt fileURL: URL!, fromConnections connections: [Any]!) {
-    print("R"); // at this point the recording really started
+    print("R"); // At this point the recording really started
   }
 
   func capture(_ captureOutput: AVCaptureFileOutput!, didFinishRecordingToOutputFileAt outputFileURL: URL!, fromConnections connections: [Any]!, error: Error!) {
     // TODO: Make `stop()` accept a callback that is called when this method is called and do the exiting in `main.swift`
     if error != nil {
-      // don't print useless "Stop Recording" error
+      // Don't print useless "Stop Recording" error
       if (error._code != -11806) {
         print(error);
         exit(1);
@@ -79,7 +79,7 @@ class Recorder: NSObject, AVCaptureFileOutputRecordingDelegate {
         exit(0);
       }
     } else {
-      exit(0); // TODO: this will probably never happen, check if we can remove the if-else
+      exit(0); // TODO: This will probably never happen, check if we can remove the if-else
     }
   }
 }
