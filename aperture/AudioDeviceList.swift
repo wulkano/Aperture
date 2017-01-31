@@ -12,7 +12,7 @@ class AudioDeviceList {
     for device in captureDevices {
       inputDevices.append([
         "id": device.uniqueID,
-        "name":device.localizedName
+        "name": device.localizedName
       ])
     }
 
