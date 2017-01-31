@@ -44,6 +44,10 @@ class Recorder: NSObject, AVCaptureFileOutputRecordingDelegate {
 
     self.output = AVCaptureMovieFileOutput();
 
+    // Needed because otherwise there is no audio on videos longer than 10 seconds
+    // http://stackoverflow.com/a/26769529/64949
+    self.output?.movieFragmentInterval = kCMTimeInvalid
+
     if ((self.session?.canAddOutput(self.output)) != nil) {
       self.session?.addOutput(self.output);
     } else {
