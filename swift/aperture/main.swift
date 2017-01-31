@@ -23,8 +23,6 @@ func record() {
   let displayId = CommandLine.arguments[6] == "main" ? CGMainDisplayID() : UInt32(CommandLine.arguments[6])
   let audioDeviceId = CommandLine.arguments[7]
 
-  print(CommandLine.arguments[4] == "true")
-
   var coordinates = [String]()
   if cropArea != "none" {
     coordinates = CommandLine.arguments[3].components(separatedBy: ":")
@@ -56,7 +54,7 @@ func record() {
 }
 
 func listAudioDevices() {
-  print(AudioDeviceList().getInputDevices() as! String)
+  print(DeviceList().audio()!)
 }
 
 func usage() {
