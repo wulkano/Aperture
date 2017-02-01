@@ -1,27 +1,43 @@
 import AVFoundation
 
-class Recorder: NSObject, AVCaptureFileOutputRecordingDelegate {
-  var destination: URL?
-  var session: AVCaptureSession?
-  var input: AVCaptureScreenInput?
-  var audioInput: AVCaptureDeviceInput?
-  var output: AVCaptureMovieFileOutput?
+final class Recorder: NSObject, AVCaptureFileOutputRecordingDelegate {
+  private var destination: URL!
+  private var session: AVCaptureSession!
+  private var input: AVCaptureScreenInput!
+  private var audioInput: AVCaptureDeviceInput!
+  private var output: AVCaptureMovieFileOutput!
 
   init(destinationPath: String, fps: String, coordinates: [String], showCursor: Bool, highlightClicks: Bool, displayId: UInt32, audioDeviceId: String) {
     super.init()
-    self.session = AVCaptureSession()
 
-    self.input = AVCaptureScreenInput(displayID: displayId)
-    self.input!.minFrameDuration = CMTimeMake(1, Int32(fps)!)
+    destination = URL(fileURLWithPath: destinationPath)
+
+    session = AVCaptureSession()
+
+    input = AVCaptureScreenInput(displayID: displayId)
+    input.minFrameDuration = CMTimeMake(1, Int32(fps)!)
+    input.capturesCursor = showCursor
+    input.capturesMouseClicks = highlightClicks
+
+    if coordinates.count != 0 {
+      let points = coordinates.map { CGFloat((Int($0))!) }
+      let rect = CGRect(x: points[0], y: points[1], width: points[2], height: points[3]) // x, y, width, height
+      input.cropRect = rect
+    }
+
+    output = AVCaptureMovieFileOutput()
+    // Needed because otherwise there is no audio on videos longer than 10 seconds
+    // http://stackoverflow.com/a/26769529/64949
+    output.movieFragmentInterval = kCMTimeInvalid
 
     if audioDeviceId != "none" {
       let audioDevice: AVCaptureDevice = AVCaptureDevice.init(uniqueID: audioDeviceId)
 
       do {
-        try self.audioInput = AVCaptureDeviceInput(device: audioDevice)
+        try audioInput = AVCaptureDeviceInput(device: audioDevice)
 
-        if self.session?.canAddInput(self.audioInput) != nil {
-          self.session?.addInput(self.audioInput)
+        if session.canAddInput(audioInput) {
+          session.addInput(audioInput)
         } else {
           // TODO(matheuss): When we can't add the input, we should imediately exit
           // With that, the JS part would be able to `reject` the `Promise`.
@@ -32,8 +48,8 @@ class Recorder: NSObject, AVCaptureFileOutputRecordingDelegate {
       } catch {} // TODO(matheuss): Exit when this happens
     }
 
-    if self.session?.canAddInput(input) != nil {
-      self.session?.addInput(input)
+    if session.canAddInput(input) {
+      session.addInput(input)
     } else {
       print("Can't add input")
       // TODO(matheuss): When we can't add the input, we should imediately exit
@@ -42,14 +58,8 @@ class Recorder: NSObject, AVCaptureFileOutputRecordingDelegate {
       // letting the user now that no video is being recorded
     }
 
-    self.output = AVCaptureMovieFileOutput()
-
-    // Needed because otherwise there is no audio on videos longer than 10 seconds
-    // http://stackoverflow.com/a/26769529/64949
-    self.output?.movieFragmentInterval = kCMTimeInvalid
-
-    if self.session?.canAddOutput(self.output) != nil {
-      self.session?.addOutput(self.output)
+    if session.canAddOutput(output) {
+      session.addOutput(output)
     } else {
       print("Can't add output")
       // TODO(matheuss): When we can't add the input, we should imediately exit
@@ -57,34 +67,23 @@ class Recorder: NSObject, AVCaptureFileOutputRecordingDelegate {
       // Right now, on Kap for example, the recording will probably continue without
       // letting the user now that no the file will not be saved
     }
-
-    self.destination = URL(fileURLWithPath: destinationPath)
-
-    if coordinates.count != 0 {
-      let points = coordinates.map { CGFloat((Int($0))!) }
-      let rect = CGRect(x: points[0], y: points[1], width: points[2], height: points[3]) // x, y, width, height
-      self.input?.cropRect = rect
-    }
-
-    self.input?.capturesCursor = showCursor
-    self.input?.capturesMouseClicks = highlightClicks
   }
 
   func start() {
-    self.session?.startRunning()
-    self.output?.startRecording(toOutputFileURL: self.destination, recordingDelegate: self)
+    session.startRunning()
+    output.startRecording(toOutputFileURL: destination, recordingDelegate: self)
   }
 
   func stop() {
-    self.output?.stopRecording()
-    self.session?.stopRunning()
+    output.stopRecording()
+    session.stopRunning()
   }
 
-  func capture(_ captureOutput: AVCaptureFileOutput!, didStartRecordingToOutputFileAt fileURL: URL!, fromConnections connections: [Any]!) {
+  internal func capture(_ captureOutput: AVCaptureFileOutput, didStartRecordingToOutputFileAt fileURL: URL, fromConnections connections: [Any]) {
     print("R") // At this point the recording really started
   }
 
-  func capture(_ captureOutput: AVCaptureFileOutput!, didFinishRecordingToOutputFileAt outputFileURL: URL!, fromConnections connections: [Any]!, error: Error!) {
+  internal func capture(_ captureOutput: AVCaptureFileOutput, didFinishRecordingToOutputFileAt outputFileURL: URL, fromConnections connections: [Any], error: Error!) {
     // TODO: Make `stop()` accept a callback that is called when this method is called and do the exiting in `main.swift`
     if error != nil {
       // Don't print useless "Stop Recording" error
