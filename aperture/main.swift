@@ -8,10 +8,15 @@
 import Foundation
 import AVFoundation
 
-var recorder: Recorder?
+var recorder: Recorder!
+
+private func toJSON<T>(_ data: T) throws -> String {
+  let json = try JSONSerialization.data(withJSONObject: data)
+  return String(data: json, encoding: .utf8)!
+}
 
 func quit(_: Int32) {
-  recorder?.stop()
+  recorder.stop()
 }
 
 func record() {
@@ -47,14 +52,10 @@ func record() {
   signal(SIGTERM, quit)
   signal(SIGQUIT, quit)
 
-  recorder?.start()
+  recorder.start()
   setbuf(__stdoutp, nil)
 
   RunLoop.main.run()
-}
-
-func listAudioDevices() {
-  print(DeviceList().audio()!)
 }
 
 func usage() {
@@ -72,7 +73,7 @@ if numberOfArgs == 8 {
 }
 
 if numberOfArgs == 2 && CommandLine.arguments[1] == "list-audio-devices" {
-  listAudioDevices()
+  print(try! toJSON(DeviceList().audio()))
   exit(0)
 }
 
