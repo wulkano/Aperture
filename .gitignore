@@ -1,12 +1,6 @@
 node_modules
-*.log
-
+*.xcodeproj/*
+!*.xcodeproj/project.pbxproj
+!*.xcworkspace/contents.xcworkspacedata
 swift/main
 swift/build
-
-xcuserdata/
-*.xcuserstate
-
-.DS_Store
-
-vendor

@@ -17,7 +17,7 @@
   },
   "scripts": {
     "test": "xo",
-    "build": "cd swift && xcodebuild && mv build/release/aperture main && rm -r build",
+    "build": "cd swift && xcodebuild && rm -rf build",
     "prepublish": "npm run build"
   },
   "files": [
