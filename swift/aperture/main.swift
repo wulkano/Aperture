@@ -1,19 +1,7 @@
-// Exit codes:
-// 1: some argument is missing ¯\_(ツ)_/¯
-// 2: bad crop rect coordinates
-// ?: ¯\_(ツ)_/¯
-//
-// Note: `highlight-clicks` will only work if `show-cursor` is true
-// TODO(matheuss): Document this ^
 import Foundation
 import AVFoundation
 
 var recorder: Recorder!
-
-private func toJSON<T>(_ data: T) throws -> String {
-  let json = try JSONSerialization.data(withJSONObject: data)
-  return String(data: json, encoding: .utf8)!
-}
 
 func quit(_: Int32) {
   recorder.stop()
@@ -31,21 +19,35 @@ func record() {
   var coordinates = [String]()
   if cropArea != "none" {
     coordinates = CommandLine.arguments[3].components(separatedBy: ":")
-    if coordinates.count - 1 != 3 { // Number of ':' in the string
-      print("The coordinates for the crop rect must be in the format 'originX:originY:width:height'")
-      exit(2)
-    }
   }
 
-  recorder = Recorder(
-    destinationPath: destinationPath,
-    fps: fps,
-    coordinates: coordinates,
-    showCursor: showCursor,
-    highlightClicks: highlightClicks,
-    displayId: displayId!,
-    audioDeviceId: audioDeviceId
-  )
+  do {
+    recorder = try Recorder(
+      destinationPath: destinationPath,
+      fps: fps,
+      coordinates: coordinates,
+      showCursor: showCursor,
+      highlightClicks: highlightClicks,
+      displayId: displayId!,
+      audioDeviceId: audioDeviceId
+    )
+  } catch {
+    printErr(error)
+    exit(1)
+  }
+
+  recorder.onStart = {
+    print("R")
+  }
+
+  recorder.onFinish = {
+    exit(0)
+  }
+
+  recorder.onError = {
+    printErr($0)
+    exit(1)
+  }
 
   signal(SIGHUP, quit)
   signal(SIGINT, quit)
@@ -73,7 +75,7 @@ if numberOfArgs == 8 {
 }
 
 if numberOfArgs == 2 && CommandLine.arguments[1] == "list-audio-devices" {
-  print(try! toJSON(DeviceList().audio()))
+  print(try! toJson(DeviceList.audio()))
   exit(0)
 }
 

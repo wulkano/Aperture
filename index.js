@@ -1,16 +1,12 @@
 'use strict';
 const os = require('os');
+const util = require('util');
 const path = require('path');
 const execa = require('execa');
 const tmp = require('tmp');
 
+const debuglog = util.debuglog('aperture');
 const isYosemiteOrHigher = process.platform === 'darwin' && Number(os.release().split('.')[0]) >= 14;
-
-function log(...msgs) {
-  if (process.env.DEBUG) {
-    console.log(...msgs);
-  }
-}
 
 class Aperture {
   constructor() {
@@ -32,11 +28,26 @@ class Aperture {
     audioSourceId = 'none'
   } = {}) {
     return new Promise((resolve, reject) => {
+      if (this.recorder !== undefined) {
+        reject(new Error('Call `.stopRecording()` first'));
+        return;
+      }
+
+      if (highlightClicks === true) {
+        showCursor = true;
+      }
+
       this.tmpPath = tmp.tmpNameSync({postfix: '.mp4'});
 
       if (typeof cropArea === 'object') {
-        // TODO(matheuss): We should validate the values passed here, because AVFoundation
-        // will simply record the entire screen if it receives invalid values
+        if (typeof cropArea.x !== 'number' ||
+            typeof cropArea.y !== 'number' ||
+            typeof cropArea.width !== 'number' ||
+            typeof cropArea.height !== 'number') {
+          reject(new Error('Invalid `cropArea` option object'));
+          return;
+        }
+
         cropArea = `${cropArea.x}:${cropArea.y}:${cropArea.width}:${cropArea.height}`;
       }
 
@@ -56,42 +67,25 @@ class Aperture {
         const err = new Error('Could not start recording within 5 seconds');
         err.code = 'RECORDER_TIMEOUT';
         this.recorder.kill();
+        delete this.recorder;
         reject(err);
       }, 5000);
 
-      this.recorder.stdout.on('data', data => {
-        data = data.toString();
-        log(data);
+      this.recorder.catch(err => {
+        clearTimeout(timeout);
+        delete this.recorder;
+        reject(err.stderr ? new Error(err.stderr) : err);
+      });
 
-        if (data.replace(/\n|\s/gm, '') === 'R') {
+      this.recorder.stdout.setEncoding('utf8');
+      this.recorder.stdout.on('data', data => {
+        debuglog(data);
+
+        if (data.trim() === 'R') {
           // `R` is printed by Swift when the recording **actually** starts
           clearTimeout(timeout);
           resolve(this.tmpPath);
         }
-      });
-
-      // TODO(matheuss): Not sure if this will ever happen, but if it happens, we
-      // should handle it and `reject` the Promise with some useful info, or at least
-      // `Unknown Error`
-      this.recorder.on('error', reject);
-
-      this.recorder.on('exit', code => {
-        clearTimeout(timeout);
-        let err;
-
-        // TODO(matheuss): Reject the Promise with more useful info
-        // `Malformed args`, for example, is far from enough
-        if (code === 0) {
-          return; // Success
-        } else if (code === 1) {
-          err = new Error('Malformed arguments');
-        } else if (code === 2) {
-          err = new Error('Invalid coordinates');
-        } else {
-          err = new Error('Unknown error');
-        }
-
-        reject(err);
       });
     });
   }
@@ -100,20 +94,14 @@ class Aperture {
     return new Promise((resolve, reject) => {
       if (this.recorder === undefined) {
         reject(new Error('Call `.startRecording()` first'));
+        return;
       }
 
-      this.recorder.on('exit', code => {
-        // At this point the movie file has been fully written to the filesystem
-        if (code === 0) {
-          delete this.recorder;
-
-          resolve(this.tmpPath);
-          // TODO(matheuss): This file is deleted when the program exits
-          // maybe we should add a note about this on the docs or implement a workaround
-          delete this.tmpPath;
-        } else {
-          reject(code); // TODO
-        }
+      this.recorder.then(() => {
+        delete this.recorder;
+        resolve(this.tmpPath);
+      }).catch(err => {
+        reject(err.stderr ? new Error(err.stderr) : err);
       });
 
       this.recorder.kill();

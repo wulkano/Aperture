@@ -1,13 +1,22 @@
 import AVFoundation
 
+enum ApertureError: Error {
+  case couldNotAddScreen
+  case couldNotAddMic
+  case couldNotAddOutput
+}
+
 final class Recorder: NSObject, AVCaptureFileOutputRecordingDelegate {
   private var destination: URL!
   private var session: AVCaptureSession!
   private var input: AVCaptureScreenInput!
   private var audioInput: AVCaptureDeviceInput!
   private var output: AVCaptureMovieFileOutput!
+  var onStart: (() -> Void)?
+  var onFinish: (() -> Void)?
+  var onError: ((Any) -> Void)?
 
-  init(destinationPath: String, fps: String, coordinates: [String], showCursor: Bool, highlightClicks: Bool, displayId: UInt32, audioDeviceId: String) {
+  init(destinationPath: String, fps: String, coordinates: [String], showCursor: Bool, highlightClicks: Bool, displayId: UInt32, audioDeviceId: String) throws {
     super.init()
 
     destination = URL(fileURLWithPath: destinationPath)
@@ -34,38 +43,29 @@ final class Recorder: NSObject, AVCaptureFileOutputRecordingDelegate {
       let audioDevice: AVCaptureDevice = AVCaptureDevice.init(uniqueID: audioDeviceId)
 
       do {
-        try audioInput = AVCaptureDeviceInput(device: audioDevice)
+        audioInput = try AVCaptureDeviceInput(device: audioDevice)
 
         if session.canAddInput(audioInput) {
           session.addInput(audioInput)
         } else {
-          // TODO(matheuss): When we can't add the input, we should imediately exit
-          // With that, the JS part would be able to `reject` the `Promise`.
-          // Right now, on Kap for example, the recording will probably continue without
-          // letting the user now that no audio is being recorded
-          print("Can't add audio input")
+          throw ApertureError.couldNotAddMic
         }
-      } catch {} // TODO(matheuss): Exit when this happens
+      } catch {
+        // TODO(sindresorhus): Why do I have to catch this just to throw it again? Must be a better way...
+        throw error
+      }
     }
 
     if session.canAddInput(input) {
       session.addInput(input)
     } else {
-      print("Can't add input")
-      // TODO(matheuss): When we can't add the input, we should imediately exit
-      // With that, the JS part would be able to `reject` the `Promise`.
-      // Right now, on Kap for example, the recording will probably continue without
-      // letting the user now that no video is being recorded
+      throw ApertureError.couldNotAddScreen
     }
 
     if session.canAddOutput(output) {
       session.addOutput(output)
     } else {
-      print("Can't add output")
-      // TODO(matheuss): When we can't add the input, we should imediately exit
-      // With that, the JS part would be able to `reject` the `Promise`.
-      // Right now, on Kap for example, the recording will probably continue without
-      // letting the user now that no the file will not be saved
+      throw ApertureError.couldNotAddOutput
     }
   }
 
@@ -79,22 +79,16 @@ final class Recorder: NSObject, AVCaptureFileOutputRecordingDelegate {
     session.stopRunning()
   }
 
-  internal func capture(_ captureOutput: AVCaptureFileOutput, didStartRecordingToOutputFileAt fileURL: URL, fromConnections connections: [Any]) {
-    print("R") // At this point the recording really started
+  func capture(_ captureOutput: AVCaptureFileOutput, didStartRecordingToOutputFileAt fileURL: URL, fromConnections connections: [Any]) {
+    onStart?()
   }
 
-  internal func capture(_ captureOutput: AVCaptureFileOutput, didFinishRecordingToOutputFileAt outputFileURL: URL, fromConnections connections: [Any], error: Error!) {
-    // TODO: Make `stop()` accept a callback that is called when this method is called and do the exiting in `main.swift`
-    if error != nil {
-      // Don't print useless "Stop Recording" error
-      if error._code != -11806 {
-        print(error)
-        exit(1)
-      } else {
-        exit(0)
-      }
+  func capture(_ captureOutput: AVCaptureFileOutput, didFinishRecordingToOutputFileAt outputFileURL: URL, fromConnections connections: [Any], error: Error) {
+    // Don't print useless "Stop Recording" error
+    if error._code != -11806 {
+      onError?(error)
     } else {
-      exit(0) // TODO(matheuss): This will probably never happen, check if we can remove the if-else
+      onFinish?()
     }
   }
 }

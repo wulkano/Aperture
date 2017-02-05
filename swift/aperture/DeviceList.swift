@@ -10,8 +10,8 @@ private func enableDalDevices() {
   CMIOObjectSetPropertyData(CMIOObjectID(kCMIOObjectSystemObject), &property, 0, nil, UInt32(sizeOfAllow), &allow)
 }
 
-final class DeviceList {
-  func audio() -> [Dictionary<String, String>] {
+struct DeviceList {
+  static func audio() -> [Dictionary<String, String>] {
     let captureDevices = AVCaptureDevice.devices(withMediaType: AVMediaTypeAudio) as! [AVCaptureDevice]
 
     return captureDevices
@@ -21,7 +21,7 @@ final class DeviceList {
       ]}
   }
 
-  func ios() -> [Dictionary<String, String>] {
+  static func ios() -> [Dictionary<String, String>] {
     enableDalDevices()
     let captureDevices = AVCaptureDevice.devices(withMediaType: AVMediaTypeMuxed) as! [AVCaptureDevice]
     return captureDevices
