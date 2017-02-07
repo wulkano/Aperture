@@ -75,7 +75,7 @@ if numberOfArgs == 8 {
 }
 
 if numberOfArgs == 2 && CommandLine.arguments[1] == "list-audio-devices" {
-  print(try! toJson(DeviceList.audio()))
+  print(try toJson(DeviceList.audio()))
   exit(0)
 }
 

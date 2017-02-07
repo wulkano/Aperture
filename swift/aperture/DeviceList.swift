@@ -11,7 +11,7 @@ private func enableDalDevices() {
 }
 
 struct DeviceList {
-  static func audio() -> [Dictionary<String, String>] {
+  static func audio() -> [[String: String]] {
     let captureDevices = AVCaptureDevice.devices(withMediaType: AVMediaTypeAudio) as! [AVCaptureDevice]
 
     return captureDevices
@@ -21,7 +21,7 @@ struct DeviceList {
       ]}
   }
 
-  static func ios() -> [Dictionary<String, String>] {
+  static func ios() -> [[String: String]] {
     enableDalDevices()
     let captureDevices = AVCaptureDevice.devices(withMediaType: AVMediaTypeMuxed) as! [AVCaptureDevice]
     return captureDevices

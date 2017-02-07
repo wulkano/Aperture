@@ -64,6 +64,11 @@ class Aperture {
       this.recorder = execa(path.join(__dirname, 'swift', 'main'), recorderOpts);
 
       const timeout = setTimeout(() => {
+        // `.stopRecording()` was called already
+        if (this.recorder === undefined) {
+          return;
+        }
+
         const err = new Error('Could not start recording within 5 seconds');
         err.code = 'RECORDER_TIMEOUT';
         this.recorder.kill();

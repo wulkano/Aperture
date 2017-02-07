@@ -42,17 +42,12 @@ final class Recorder: NSObject, AVCaptureFileOutputRecordingDelegate {
     if audioDeviceId != "none" {
       let audioDevice: AVCaptureDevice = AVCaptureDevice.init(uniqueID: audioDeviceId)
 
-      do {
-        audioInput = try AVCaptureDeviceInput(device: audioDevice)
+      audioInput = try AVCaptureDeviceInput(device: audioDevice)
 
-        if session.canAddInput(audioInput) {
-          session.addInput(audioInput)
-        } else {
-          throw ApertureError.couldNotAddMic
-        }
-      } catch {
-        // TODO(sindresorhus): Why do I have to catch this just to throw it again? Must be a better way...
-        throw error
+      if session.canAddInput(audioInput) {
+        session.addInput(audioInput)
+      } else {
+        throw ApertureError.couldNotAddMic
       }
     }
 
@@ -83,9 +78,10 @@ final class Recorder: NSObject, AVCaptureFileOutputRecordingDelegate {
     onStart?()
   }
 
-  func capture(_ captureOutput: AVCaptureFileOutput, didFinishRecordingToOutputFileAt outputFileURL: URL, fromConnections connections: [Any], error: Error) {
-    // Don't print useless "Stop Recording" error
-    if error._code != -11806 {
+  func capture(_ captureOutput: AVCaptureFileOutput, didFinishRecordingToOutputFileAt outputFileURL: URL, fromConnections connections: [Any], error: Error!) {
+    let FINISHED_RECORDING_ERROR_CODE = -11806
+
+    if let err = error, err._code != FINISHED_RECORDING_ERROR_CODE {
       onError?(error)
     } else {
       onFinish?()
