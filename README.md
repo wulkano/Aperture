@@ -89,6 +89,8 @@ Default: `false`
 
 Highlight cursor clicks in the screen recording.
 
+Enabling this will also enable the `showCursor` option.
+
 ##### displayId
 
 Type: `string`<br>
