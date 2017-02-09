@@ -11,7 +11,7 @@
 $ npm install aperture
 ```
 
-*Requires macOS 10.10 or higher*
+*Requires macOS 10.10 or later.*
 
 
 ## Usage
@@ -19,15 +19,21 @@ $ npm install aperture
 ```js
 const aperture = require('aperture')();
 
-const cropArea = {x: 100, y: 100, width: 500, height: 500};
+const options = {
+  fps: 30,
+  cropArea: {
+    x: 100,
+    y: 100,
+    width: 500,
+    height: 500
+  }
+};
 
-function stopRecording() {
-  aperture.stopRecording().then(console.log);
-  //=> '/var/folders/r9/65knbqts47x3yg055cd739qh0000gn/T/tmp-15694AAzbYX1vzi2X.mp4'
-}
-
-aperture.startRecording({fps: 30, cropArea}).then(filePath => {
-  setTimeout(stopRecording, 3000);
+aperture.startRecording(options).then(filePath => {
+  setTimeout(() => {
+      aperture.stopRecording().then(console.log);
+      //=> '/var/folders/r9/65knbqts47x3yg055cd739qh0000gn/T/tmp-15694AAzbYX1vzi2X.mp4'
+  }, 3000);
 });
 ```
 
