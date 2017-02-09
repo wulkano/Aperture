@@ -67,9 +67,9 @@
 			isa = PBXGroup;
 			children = (
 				E3A310861E450DC800D314DD /* main.swift */,
-				E3A8F9E01E46F9C000C6C5FC /* util.swift */,
-				E3A310851E450DC800D314DD /* DeviceList.swift */,
 				E3A310871E450DC800D314DD /* Recorder.swift */,
+				E3A310851E450DC800D314DD /* DeviceList.swift */,
+				E3A8F9E01E46F9C000C6C5FC /* util.swift */,
 			);
 			path = aperture;
 			sourceTree = "<group>";

@@ -7,18 +7,16 @@ enum ApertureError: Error {
 }
 
 final class Recorder: NSObject, AVCaptureFileOutputRecordingDelegate {
-  private var destination: URL!
-  private var session: AVCaptureSession!
-  private var input: AVCaptureScreenInput!
+  private let destination: URL
+  private let session: AVCaptureSession
+  private let input: AVCaptureScreenInput
   private var audioInput: AVCaptureDeviceInput!
-  private var output: AVCaptureMovieFileOutput!
+  private let output: AVCaptureMovieFileOutput
   var onStart: (() -> Void)?
   var onFinish: (() -> Void)?
   var onError: ((Any) -> Void)?
 
   init(destinationPath: String, fps: String, coordinates: [String], showCursor: Bool, highlightClicks: Bool, displayId: UInt32, audioDeviceId: String) throws {
-    super.init()
-
     destination = URL(fileURLWithPath: destinationPath)
 
     session = AVCaptureSession()
@@ -62,6 +60,8 @@ final class Recorder: NSObject, AVCaptureFileOutputRecordingDelegate {
     } else {
       throw ApertureError.couldNotAddOutput
     }
+
+    super.init()
   }
 
   func start() {
@@ -74,11 +74,11 @@ final class Recorder: NSObject, AVCaptureFileOutputRecordingDelegate {
     session.stopRunning()
   }
 
-  func capture(_ captureOutput: AVCaptureFileOutput, didStartRecordingToOutputFileAt fileURL: URL, fromConnections connections: [Any]) {
+  func capture(_ captureOutput: AVCaptureFileOutput!, didStartRecordingToOutputFileAt fileURL: URL!, fromConnections connections: [Any]!) {
     onStart?()
   }
 
-  func capture(_ captureOutput: AVCaptureFileOutput, didFinishRecordingToOutputFileAt outputFileURL: URL, fromConnections connections: [Any], error: Error!) {
+  func capture(_ captureOutput: AVCaptureFileOutput!, didFinishRecordingToOutputFileAt outputFileURL: URL!, fromConnections connections: [Any]!, error: Error!) {
     let FINISHED_RECORDING_ERROR_CODE = -11806
 
     if let err = error, err._code != FINISHED_RECORDING_ERROR_CODE {

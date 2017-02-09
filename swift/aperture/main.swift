@@ -1,5 +1,4 @@
 import Foundation
-import AVFoundation
 
 var recorder: Recorder!
 
@@ -7,7 +6,7 @@ func quit(_: Int32) {
   recorder.stop()
 }
 
-func record() {
+func record() throws {
   let destinationPath = CommandLine.arguments[1]
   let fps = CommandLine.arguments[2]
   let cropArea = CommandLine.arguments[3]
@@ -21,20 +20,15 @@ func record() {
     coordinates = CommandLine.arguments[3].components(separatedBy: ":")
   }
 
-  do {
-    recorder = try Recorder(
-      destinationPath: destinationPath,
-      fps: fps,
-      coordinates: coordinates,
-      showCursor: showCursor,
-      highlightClicks: highlightClicks,
-      displayId: displayId!,
-      audioDeviceId: audioDeviceId
-    )
-  } catch {
-    printErr(error)
-    exit(1)
-  }
+  recorder = try Recorder(
+    destinationPath: destinationPath,
+    fps: fps,
+    coordinates: coordinates,
+    showCursor: showCursor,
+    highlightClicks: highlightClicks,
+    displayId: displayId!,
+    audioDeviceId: audioDeviceId
+  )
 
   recorder.onStart = {
     print("R")
@@ -70,7 +64,7 @@ func usage() {
 let numberOfArgs = CommandLine.arguments.count
 
 if numberOfArgs == 8 {
-  record()
+  try record()
   exit(0)
 }
 

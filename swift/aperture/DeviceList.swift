@@ -4,7 +4,11 @@ import CoreMediaIO
 
 // Enable access to iOS devices
 private func enableDalDevices() {
-  var property = CMIOObjectPropertyAddress(mSelector: CMIOObjectPropertySelector(kCMIOHardwarePropertyAllowScreenCaptureDevices), mScope: CMIOObjectPropertyScope(kCMIOObjectPropertyScopeGlobal), mElement: CMIOObjectPropertyElement(kCMIOObjectPropertyElementMaster))
+  var property = CMIOObjectPropertyAddress(
+    mSelector: CMIOObjectPropertySelector(kCMIOHardwarePropertyAllowScreenCaptureDevices),
+    mScope: CMIOObjectPropertyScope(kCMIOObjectPropertyScopeGlobal),
+    mElement: CMIOObjectPropertyElement(kCMIOObjectPropertyElementMaster)
+  )
   var allow: UInt32 = 1
   let sizeOfAllow = MemoryLayout<UInt32>.size
   CMIOObjectSetPropertyData(CMIOObjectID(kCMIOObjectSystemObject), &property, 0, nil, UInt32(sizeOfAllow), &allow)
