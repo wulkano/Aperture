@@ -6,7 +6,7 @@
   "scripts": {
     "test": "xo",
     "build-macos": "cd swift && xcodebuild && mv build/release/aperture main && rm -r build",
-    "postinstall": "case $OSTYPE in darwin*) npm run build-macos ;; esac"
+    "postinstall": "[ "$(uname) = "Darwin" ] && npm run build-macos"
   },
   "repository": {
     "type": "git",

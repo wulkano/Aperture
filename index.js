@@ -37,11 +37,13 @@ class Aperture {
       if (process.platform === 'darwin') {
         this.recorder = execa(path.join(__dirname, 'swift', 'main'), recorderOpts);
       } else if (process.platform === 'linux') {
-        let args = ['-f', 'x11grab', '-i'];
+        const args = ['-f', 'x11grab', '-i'];
 
         if (opts.cropArea) {
-          args.push(':0+' + opts.cropArea.x + ',' + opts.cropArea.y);
-          args.push('-video_size', opts.cropArea.width + 'x' + opts.cropArea.height);
+          args.push(
+            `:0+${opts.cropArea.x},${opts.cropArea.y}`,
+            '-video_size', `${opts.cropArea.width}x${opts.cropArea.height}`
+          );
         } else {
           args.push(':0');
         }
