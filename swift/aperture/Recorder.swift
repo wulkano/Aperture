@@ -1,63 +1,90 @@
-import AVFoundation;
+import AVFoundation
 
-public class Recorder: NSObject, AVCaptureFileOutputRecordingDelegate {
-    var destination: NSURL?;
-    var session: AVCaptureSession?;
-    var input: AVCaptureScreenInput?
-    var output: AVCaptureMovieFileOutput?;
+enum ApertureError: Error {
+  case couldNotAddScreen
+  case couldNotAddMic
+  case couldNotAddOutput
+}
 
-    public init(fps: String) {
-        super.init();
-        self.session = AVCaptureSession();
+final class Recorder: NSObject, AVCaptureFileOutputRecordingDelegate {
+  private let destination: URL
+  private let session: AVCaptureSession
+  private let input: AVCaptureScreenInput
+  private var audioInput: AVCaptureDeviceInput!
+  private let output: AVCaptureMovieFileOutput
+  var onStart: (() -> Void)?
+  var onFinish: (() -> Void)?
+  var onError: ((Any) -> Void)?
 
-        let displayId: CGDirectDisplayID = CGMainDisplayID();
+  init(destinationPath: String, fps: String, coordinates: [String], showCursor: Bool, highlightClicks: Bool, displayId: UInt32, audioDeviceId: String) throws {
+    destination = URL(fileURLWithPath: destinationPath)
 
-        self.input = AVCaptureScreenInput(displayID: displayId);
+    session = AVCaptureSession()
 
-        if ((self.session?.canAddInput(input)) != nil) {
-            self.session?.addInput(input);
-        } else {
-            print("can't add input"); // TODO
-        }
+    input = AVCaptureScreenInput(displayID: displayId)
+    input.minFrameDuration = CMTimeMake(1, Int32(fps)!)
+    input.capturesCursor = showCursor
+    input.capturesMouseClicks = highlightClicks
 
-        self.output = AVCaptureMovieFileOutput();
-        self.output?.movieFragmentInterval = CMTimeMake(1,1); // write data to file every 1 second
-        
-        if ((self.session?.canAddOutput(self.output)) != nil) {
-            self.session?.addOutput(self.output);
-        } else {
-            print("can't add output"); // TODO
-        }
-
-        let conn = self.output?.connectionWithMediaType(AVMediaTypeVideo);
-        let cmTime = CMTimeMake(1, Int32(fps)!);
-        conn?.videoMinFrameDuration = cmTime; // TODO check if can set
-        conn?.videoMaxFrameDuration = cmTime; // TODO ^^^^^^^^^^^^^^^^
+    if coordinates.count != 0 {
+      let points = coordinates.map { CGFloat((Int($0))!) }
+      let rect = CGRect(x: points[0], y: points[1], width: points[2], height: points[3]) // x, y, width, height
+      input.cropRect = rect
     }
 
-    public func start(destinationPath: String, coordinates: [String]) {
-        self.destination = NSURL.fileURLWithPath(destinationPath);
+    output = AVCaptureMovieFileOutput()
+    // Needed because otherwise there is no audio on videos longer than 10 seconds
+    // http://stackoverflow.com/a/26769529/64949
+    output.movieFragmentInterval = kCMTimeInvalid
 
-        if (coordinates.count != 0) {
-            let points = coordinates.map { CGFloat((Int($0))!) };
-            let rect = CGRectMake(points[0], points[1], points[2], points[3]); // x, y, width, height
-            self.input?.cropRect = rect;
-        }
+    if audioDeviceId != "none" {
+      let audioDevice: AVCaptureDevice = AVCaptureDevice.init(uniqueID: audioDeviceId)
 
-        self.session?.startRunning();
-        self.output?.startRecordingToOutputFileURL(self.destination, recordingDelegate: self);
+      audioInput = try AVCaptureDeviceInput(device: audioDevice)
+
+      if session.canAddInput(audioInput) {
+        session.addInput(audioInput)
+      } else {
+        throw ApertureError.couldNotAddMic
+      }
     }
 
-    public func stop() {
-        self.output?.stopRecording();
-        self.session?.stopRunning();
+    if session.canAddInput(input) {
+      session.addInput(input)
+    } else {
+      throw ApertureError.couldNotAddScreen
     }
 
-    public func captureOutput(captureOutput: AVCaptureFileOutput!, didStartRecordingToOutputFileAtURL fileURL: NSURL!, fromConnections connections: [AnyObject]!) {
-        print("R"); // at this point the recording really started
+    if session.canAddOutput(output) {
+      session.addOutput(output)
+    } else {
+      throw ApertureError.couldNotAddOutput
     }
 
-    public func captureOutput(captureOutput: AVCaptureFileOutput!, didFinishRecordingToOutputFileAtURL outputFileURL: NSURL!, fromConnections connections: [AnyObject]!, error: NSError!) {
-        print(error);
+    super.init()
+  }
+
+  func start() {
+    session.startRunning()
+    output.startRecording(toOutputFileURL: destination, recordingDelegate: self)
+  }
+
+  func stop() {
+    output.stopRecording()
+    session.stopRunning()
+  }
+
+  func capture(_ captureOutput: AVCaptureFileOutput!, didStartRecordingToOutputFileAt fileURL: URL!, fromConnections connections: [Any]!) {
+    onStart?()
+  }
+
+  func capture(_ captureOutput: AVCaptureFileOutput!, didFinishRecordingToOutputFileAt outputFileURL: URL!, fromConnections connections: [Any]!, error: Error!) {
+    let FINISHED_RECORDING_ERROR_CODE = -11806
+
+    if let err = error, err._code != FINISHED_RECORDING_ERROR_CODE {
+      onError?(error)
+    } else {
+      onFinish?()
     }
+  }
 }

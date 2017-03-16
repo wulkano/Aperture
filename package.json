@@ -1,38 +1,40 @@
 {
-  "name": "aperture.js",
-  "version": "0.1.0",
+  "name": "aperture",
+  "version": "2.1.0",
   "description": "Record the screen on macOS",
-  "main": "index.js",
+  "license": "MIT",
+  "repository": "wulkano/aperture",
+  "author": "Matheus Fernandes <npm@matheus.top> (https://matheus.top)",
+  "maintainers": [
+    {
+      "name": "Sindre Sorhus",
+      "email": "sindresorhus@gmail.com",
+      "url": "sindresorhus.com"
+    }
+  ],
+  "engines": {
+    "node": ">=6"
+  },
   "scripts": {
     "test": "xo",
-    "build-macos": "cd swift && xcodebuild && mv build/release/aperture main && rm -r build",
-    "postinstall": "[ "$(uname) = "Darwin" ] && npm run build-macos"
+    "build-macos": "cd swift && xcodebuild -derivedDataPath $(mktemp -d) -scheme aperture",
+    "postinstall": "[ \"$(uname)\" = \"Darwin\" ] && npm run build-macos",
+    "prepublish": "[ \"$(uname)\" = \"Darwin\" ] && npm run build-macos"
   },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/wulkano/aperture.git"
+  "files": [
+    "index.js",
+    "swift/main"
+  ],
+  "dependencies": {
+    "execa": "^0.6.0",
+    "macos-version": "^4.0.0",
+    "tmp": "0.0.31"
   },
-  "author": "Matheus Fernandes <npm@matheus.top> (https://matheus.top/)",
-  "license": "MIT",
-  "bugs": {
-    "url": "https://github.com/wulkano/aperture/issues"
-  },
-  "homepage": "https://github.com/wulkano/aperture#readme",
   "devDependencies": {
-    "xo": "^0.16.0"
+    "xo": "^0.17.0"
   },
   "xo": {
     "space": true,
-    "esnext": true,
-    "envs": [
-      "node"
-    ],
-    "rules": {
-      "babel/new-cap": "off"
-    }
-  },
-  "dependencies": {
-    "execa": "^0.5.0",
-    "tmp": "0.0.29"
+    "esnext": true
   }
 }

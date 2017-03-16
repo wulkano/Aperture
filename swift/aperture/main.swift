@@ -1,37 +1,77 @@
-// Exit codes:
-// 1: some argument is missing ¯\_(ツ)_/¯
-// 2: bad crop rect coordinates
-// ?: ¯\_(ツ)_/¯
-
 import Foundation
-import AVFoundation
 
-let numberOfArgs = Process.arguments.count;
-if (numberOfArgs != 3 && numberOfArgs != 4) {
-    print("usage: main destinationPath fps [crop rect coordinates]")
-    print("examples: main ./file.mp4 30");
-    print("          main ./file.mp4 30 0:0:100:100");
-    exit(1);
+var recorder: Recorder!
+
+func quit(_: Int32) {
+  recorder.stop()
 }
 
-let destinationPath = Process.arguments[1];
-let fps = Process.arguments[2];
+func record() throws {
+  let destinationPath = CommandLine.arguments[1]
+  let fps = CommandLine.arguments[2]
+  let cropArea = CommandLine.arguments[3]
+  let showCursor = CommandLine.arguments[4] == "true"
+  let highlightClicks = CommandLine.arguments[5] == "true"
+  let displayId = CommandLine.arguments[6] == "main" ? CGMainDisplayID() : UInt32(CommandLine.arguments[6])
+  let audioDeviceId = CommandLine.arguments[7]
 
-var coordinates = [];
-if (numberOfArgs == 4) {
-    coordinates = Process.arguments[3].componentsSeparatedByString(":");
-    if (coordinates.count - 1 != 3) { // number of ':' in the string
-        print("The coordinates for the crop rect must be in the format 'originX:originY:width:height'");
-        exit(2);
-    }
+  var coordinates = [String]()
+  if cropArea != "none" {
+    coordinates = CommandLine.arguments[3].components(separatedBy: ":")
+  }
+
+  recorder = try Recorder(
+    destinationPath: destinationPath,
+    fps: fps,
+    coordinates: coordinates,
+    showCursor: showCursor,
+    highlightClicks: highlightClicks,
+    displayId: displayId!,
+    audioDeviceId: audioDeviceId
+  )
+
+  recorder.onStart = {
+    print("R")
+  }
+
+  recorder.onFinish = {
+    exit(0)
+  }
+
+  recorder.onError = {
+    printErr($0)
+    exit(1)
+  }
+
+  signal(SIGHUP, quit)
+  signal(SIGINT, quit)
+  signal(SIGTERM, quit)
+  signal(SIGQUIT, quit)
+
+  recorder.start()
+  setbuf(__stdoutp, nil)
+
+  RunLoop.main.run()
 }
 
-let recorder = Recorder(fps: fps);
+func usage() {
+  print("usage: main <list-audio-devices | <destinationPath> <fps> <crop-rect-coordinates> <show-cursor> <highlight-clicks> <display-id> <audio-device-id>>")
+  print("examples: main ./file.mp4 30 0:0:100:100 true false 1846519 'AppleHDAEngineInput:1B,0,1,0:1'")
+  print("          main ./file.mp4 30 none true false main none")
+  print("          main list-audio-devices")
+}
 
-recorder.start(destinationPath, coordinates: coordinates as! [String]);
+let numberOfArgs = CommandLine.arguments.count
 
-setbuf(__stdoutp, nil);
+if numberOfArgs == 8 {
+  try record()
+  exit(0)
+}
 
-readLine();
+if numberOfArgs == 2 && CommandLine.arguments[1] == "list-audio-devices" {
+  print(try toJson(DeviceList.audio()))
+  exit(0)
+}
 
-recorder.stop();
+usage()
+exit(1)
