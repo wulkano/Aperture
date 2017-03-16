@@ -1,18 +1,15 @@
 'use strict';
-const os = require('os');
 const util = require('util');
 const path = require('path');
 const execa = require('execa');
 const tmp = require('tmp');
+const macosVersion = require('macos-version');
 
 const debuglog = util.debuglog('aperture');
-const isYosemiteOrHigher = process.platform === 'darwin' && Number(os.release().split('.')[0]) >= 14;
 
 class Aperture {
   constructor() {
-    if (!isYosemiteOrHigher) {
-      throw new Error('Requires macOS 10.10 or higher');
-    }
+    macosVersion.assertGreaterThanOrEqualTo('10.10');
   }
 
   getAudioSources() {
