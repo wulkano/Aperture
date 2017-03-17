@@ -9,11 +9,17 @@ const debuglog = util.debuglog('aperture');
 
 class Aperture {
   constructor() {
-    macosVersion.assertGreaterThanOrEqualTo('10.10');
+    if (process.platform === 'darwin') {
+      macosVersion.assertGreaterThanOrEqualTo('10.10');
+    }
   }
 
   getAudioSources() {
-    return execa.stdout(path.join(__dirname, 'swift/main'), ['list-audio-devices']).then(JSON.parse);
+    if (process.platform === 'darwin') {
+      return execa.stdout(path.join(__dirname, 'swift/main'), ['list-audio-devices']).then(JSON.parse);
+    } else if (process.platform === 'linux') {
+      return execa.stdout('sh', ['-c', "arecord -l | awk 'match(\$0, /card ([0-9]): ([^,]+),/, result) { print result[1] \":\" result[2] }'"]);
+    }
   }
 
   startRecording({
@@ -25,6 +31,8 @@ class Aperture {
     audioSourceId = 'none'
   } = {}) {
     return new Promise((resolve, reject) => {
+      let cropAreaOpts;
+
       if (this.recorder !== undefined) {
         reject(new Error('Call `.stopRecording()` first'));
         return;
@@ -45,14 +53,14 @@ class Aperture {
           return;
         }
 
-        cropArea = `${cropArea.x}:${cropArea.y}:${cropArea.width}:${cropArea.height}`;
+        cropAreaOpts = `${cropArea.x}:${cropArea.y}:${cropArea.width}:${cropArea.height}`;
       }
 
       if (process.platform === 'darwin') {
         const recorderOpts = [
           this.tmpPath,
           fps,
-          cropArea,
+          cropAreaOpts || cropArea,
           showCursor,
           highlightClicks,
           displayId,
@@ -63,16 +71,16 @@ class Aperture {
       } else if (process.platform === 'linux') {
         const args = ['-f', 'x11grab', '-i'];
 
-        if (opts.cropArea) {
+        if (typeof cropArea === 'object') {
           args.push(
-            `:0+${opts.cropArea.x},${opts.cropArea.y}`,
-            '-video_size', `${opts.cropArea.width}x${opts.cropArea.height}`
+            `:0+${cropArea.x},${cropArea.y}`,
+            '-video_size', `${cropArea.width}x${cropArea.height}`
           );
         } else {
           args.push(':0');
         }
 
-        args.push('-framerate', opts.fps, this.tmpPath);
+        args.push('-framerate', fps, this.tmpPath);
 
         this.recorder = execa('ffmpeg', args);
       }
@@ -97,15 +105,28 @@ class Aperture {
       });
 
       this.recorder.stdout.setEncoding('utf8');
-      this.recorder.stdout.on('data', data => {
-        debuglog(data);
+      if (process.platform === 'darwin') {
+        this.recorder.stdout.on('data', data => {
+          debuglog(data);
 
-        if (data.trim() === 'R') {
-          // `R` is printed by Swift when the recording **actually** starts
-          clearTimeout(timeout);
-          resolve(this.tmpPath);
-        }
-      });
+          if (data.trim() === 'R') {
+            // `R` is printed by Swift when the recording **actually** starts
+            clearTimeout(timeout);
+            resolve(this.tmpPath);
+          }
+        });
+      } else if (process.platform === 'linux') {
+        this.recorder.stderr.on('data', data => {
+          debuglog(data);
+
+          if (/^frame=\s*\d+\sfps=\s\d+/.test(data.trim())) {
+            // fmpeg prints lines like this while it's reocrding
+            // frame=  203 fps= 30 q=-1.0 Lsize=      54kB time=00:00:06.70 bitrate=  65.8kbits/s dup=21 drop=19 speed=0.996x
+            clearTimeout(timeout);
+            resolve(this.tmpPath);
+          }
+        });
+      }
     });
   }
 
@@ -123,7 +144,12 @@ class Aperture {
         reject(err.stderr ? new Error(err.stderr) : err);
       });
 
-      this.recorder.kill();
+      if (process.platform === 'darwin') {
+        this.recorder.kill();
+      } else if (process.platform === 'linux') {
+        this.recorder.stdin.setEncoding('utf8');
+        this.recorder.stdin.write('q');
+      }
     });
   }
 }
