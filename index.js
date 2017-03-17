@@ -7,18 +7,31 @@ const macosVersion = require('macos-version');
 
 const debuglog = util.debuglog('aperture');
 
+const IS_LINUX = process.platform === 'linux';
+const IS_MACOS = process.platform === 'darwin';
+
 class Aperture {
   constructor() {
-    if (process.platform === 'darwin') {
+    if (IS_MACOS) {
       macosVersion.assertGreaterThanOrEqualTo('10.10');
     }
   }
 
   getAudioSources() {
-    if (process.platform === 'darwin') {
+    if (IS_MACOS) {
       return execa.stdout(path.join(__dirname, 'swift/main'), ['list-audio-devices']).then(JSON.parse);
-    } else if (process.platform === 'linux') {
-      return execa.stdout('sh', ['-c', "arecord -l | awk 'match(\$0, /card ([0-9]): ([^,]+),/, result) { print result[1] \":\" result[2] }'"]);
+    } else if (IS_LINUX) {
+      return execa.stdout('arecord', ['-l']).then(
+        stdout => stdout.split('\n').reduce((result, line) => {
+          const match = line.match(/card (\d+): ([^,]+),/);
+
+          if (match) {
+            result.push(`${match[1]}:${match[2]}`);
+          }
+
+          return result;
+        }, [])
+      );
     }
   }
 
@@ -56,7 +69,7 @@ class Aperture {
         cropAreaOpts = `${cropArea.x}:${cropArea.y}:${cropArea.width}:${cropArea.height}`;
       }
 
-      if (process.platform === 'darwin') {
+      if (IS_MACOS) {
         const recorderOpts = [
           this.tmpPath,
           fps,
@@ -68,7 +81,7 @@ class Aperture {
         ];
 
         this.recorder = execa(path.join(__dirname, 'swift', 'main'), recorderOpts);
-      } else if (process.platform === 'linux') {
+      } else if (IS_LINUX) {
         const args = ['-f', 'x11grab', '-i'];
 
         if (typeof cropArea === 'object') {
@@ -80,7 +93,7 @@ class Aperture {
           args.push(':0');
         }
 
-        args.push('-framerate', fps, this.tmpPath);
+        args.push('-framerate', fps, '-draw_mouse', +(showCursor === true), this.tmpPath);
 
         this.recorder = execa('ffmpeg', args);
       }
@@ -105,7 +118,7 @@ class Aperture {
       });
 
       this.recorder.stdout.setEncoding('utf8');
-      if (process.platform === 'darwin') {
+      if (IS_MACOS) {
         this.recorder.stdout.on('data', data => {
           debuglog(data);
 
@@ -115,11 +128,11 @@ class Aperture {
             resolve(this.tmpPath);
           }
         });
-      } else if (process.platform === 'linux') {
+      } else if (IS_LINUX) {
         this.recorder.stderr.on('data', data => {
           debuglog(data);
 
-          if (/^frame=\s*\d+\sfps=\s\d+/.test(data.trim())) {
+          if (/^frame=\s*\d+\sfps=\s\d+/.test(data.toString('utf8').trim())) {
             // fmpeg prints lines like this while it's reocrding
             // frame=  203 fps= 30 q=-1.0 Lsize=      54kB time=00:00:06.70 bitrate=  65.8kbits/s dup=21 drop=19 speed=0.996x
             clearTimeout(timeout);
@@ -144,9 +157,9 @@ class Aperture {
         reject(err.stderr ? new Error(err.stderr) : err);
       });
 
-      if (process.platform === 'darwin') {
+      if (IS_MACOS) {
         this.recorder.kill();
-      } else if (process.platform === 'linux') {
+      } else if (IS_LINUX) {
         this.recorder.stdin.setEncoding('utf8');
         this.recorder.stdin.write('q');
       }

@@ -18,7 +18,6 @@
   "scripts": {
     "test": "xo",
     "build-macos": "cd swift && xcodebuild -derivedDataPath $(mktemp -d) -scheme aperture",
-    "postinstall": "[ \"$(uname)\" = \"Darwin\" ] && npm run build-macos",
     "prepublish": "[ \"$(uname)\" = \"Darwin\" ] && npm run build-macos"
   },
   "files": [
