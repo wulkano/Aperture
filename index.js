@@ -82,15 +82,15 @@ class Aperture {
 
         this.recorder = execa(path.join(__dirname, 'swift', 'main'), recorderOpts);
       } else if (IS_LINUX) {
-        const args = ['-f', 'x11grab', '-i'];
+        const args = ['-f', 'x11grab'];
 
         if (typeof cropArea === 'object') {
           args.push(
-            `:0+${cropArea.x},${cropArea.y}`,
-            '-video_size', `${cropArea.width}x${cropArea.height}`
+            '-video_size', `${cropArea.width}x${cropArea.height}`,
+            '-i', `:0+${cropArea.x},${cropArea.y}`
           );
         } else {
-          args.push(':0');
+          args.push('-i', ':0');
         }
 
         args.push('-framerate', fps, '-draw_mouse', +(showCursor === true), this.tmpPath);
@@ -109,7 +109,7 @@ class Aperture {
         this.recorder.kill();
         delete this.recorder;
         reject(err);
-      }, 5000);
+      }, 7500);
 
       this.recorder.catch(err => {
         clearTimeout(timeout);
