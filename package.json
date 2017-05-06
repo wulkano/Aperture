@@ -31,10 +31,9 @@
   },
   "devDependencies": {
     "delay": "^2.0.0",
-    "xo": "^0.17.0"
+    "xo": "^0.18.2"
   },
   "xo": {
-    "space": true,
-    "esnext": true
+    "space": true
   }
 }
