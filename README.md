@@ -37,6 +37,8 @@ aperture.startRecording(options).then(filePath => {
 });
 ```
 
+See [`example.js`](example.js) if you want to quickly try it out. *(The example requires Node.js 7+)*
+
 
 ## API
 
