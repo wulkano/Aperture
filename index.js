@@ -76,7 +76,7 @@ class Aperture {
       this.recorder.catch(err => {
         clearTimeout(timeout);
         delete this.recorder;
-        reject(err.stderr ? new Error(err.stderr) : err);
+        reject(err);
       });
 
       this.recorder.stdout.setEncoding('utf8');
@@ -102,9 +102,7 @@ class Aperture {
       this.recorder.then(() => {
         delete this.recorder;
         resolve(this.tmpPath);
-      }).catch(err => {
-        reject(err.stderr ? new Error(err.stderr) : err);
-      });
+      }).catch(reject);
 
       this.recorder.kill();
     });
