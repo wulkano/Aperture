@@ -13,7 +13,13 @@ class Aperture {
   }
 
   getAudioSources() {
-    return execa.stdout(path.join(__dirname, 'swift/main'), ['list-audio-devices']).then(JSON.parse);
+    return execa.stderr(path.join(__dirname, 'swift/main'), ['list-audio-devices']).then(stderr => {
+      try {
+        return JSON.parse(stderr);
+      } catch (err) {
+        return stderr;
+      }
+    });
   }
 
   startRecording({
