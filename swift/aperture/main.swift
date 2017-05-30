@@ -55,10 +55,11 @@ func record() throws {
 }
 
 func usage() {
-  print("usage: main <list-audio-devices | <destinationPath> <fps> <crop-rect-coordinates> <show-cursor> <highlight-clicks> <display-id> <audio-device-id>>")
-  print("examples: main ./file.mp4 30 0:0:100:100 true false 1846519 'AppleHDAEngineInput:1B,0,1,0:1'")
-  print("          main ./file.mp4 30 none true false main none")
-  print("          main list-audio-devices")
+  let name = CommandLine.arguments.first?.components(separatedBy: "/").last ?? "main"
+  print("usage: \(name) <list-audio-devices | <destinationPath> <fps> <crop-rect-coordinates> <show-cursor> <highlight-clicks> <display-id> <audio-device-id>>")
+  print("examples: \(name) ./file.mp4 30 0:0:100:100 true false 1846519 'AppleHDAEngineInput:1B,0,1,0:1'")
+  print("          \(name) ./file.mp4 30 none true false main none")
+  print("          \(name) list-audio-devices")
 }
 
 let numberOfArgs = CommandLine.arguments.count
