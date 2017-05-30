@@ -4,6 +4,7 @@ var recorder: Recorder!
 
 func quit(_: Int32) {
   recorder.stop()
+  exit(0)
 }
 
 func record() throws {
