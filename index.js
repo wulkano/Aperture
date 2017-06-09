@@ -9,6 +9,7 @@ const debuglog = util.debuglog('aperture');
 
 const IS_LINUX = process.platform === 'linux';
 const IS_MACOS = process.platform === 'darwin';
+const IS_WINDOWS = process.platform === 'win32';
 
 class Aperture {
   constructor() {
@@ -96,6 +97,28 @@ class Aperture {
         args.push('-framerate', fps, '-draw_mouse', +(showCursor === true), this.tmpPath);
 
         this.recorder = execa('ffmpeg', args);
+      } else if (IS_WINDOWS) {
+        const ffmpegArgs = [];
+
+        if (typeof cropArea === 'object') {
+          ffmpegArgs.push(
+            '-video_size', `${cropArea.width}x${cropArea.height}`,
+            '-f', 'gdigrab',
+            '-i', 'desktop',
+            '-offset_x', cropArea.x,
+            '-offset_y', cropArea.y
+          );
+        } else {
+          ffmpegArgs.push(
+            '-f', 'gdigrab',
+            '-i', 'desktop',
+            '-offset_x', 0,
+            '-offset_y', 0
+          );
+        }
+
+        ffmpegArgs.push('-framerate', fps, '-draw_mouse', +(showCursor === true), this.tmpPath.replace('mp4', 'mpg'));
+        this.recorder = execa('ffmpeg', ffmpegArgs)
       }
 
       const timeout = setTimeout(() => {
@@ -139,6 +162,15 @@ class Aperture {
             resolve(this.tmpPath);
           }
         });
+      } else if (IS_WINDOWS) {
+        this.recorder.stderr.on('data', data => {
+          debuglog(data.toString('utf8'));
+
+          if (data.toString('utf8').includes('encoder')) {
+            clearTimeout(timeout);
+            resolve(this.tmpPath);
+          }
+        })
       }
     });
   }
@@ -150,18 +182,32 @@ class Aperture {
         return;
       }
 
-      this.recorder.then(() => {
-        delete this.recorder;
-        resolve(this.tmpPath);
-      }).catch(err => {
-        reject(err.stderr ? new Error(err.stderr) : err);
-      });
+      if (IS_WINDOWS) {
+        this.recorder.stdin.write('quit\n');
+        this.recorder.then(() => {
+          delete this.recorder;
+          return execa('ffmpeg', ['-i', this.tmpPath.replace('mp4', 'mpg'), this.tmpPath]);
+        })
+        .then(() => {
+          resolve(this.tmpPath);
+        })
+        .catch(err => {
+          reject(err.stderr ? new Error(err.stderr) : err);
+        });
+      } else {
+        this.recorder.then(() => {
+          delete this.recorder;
+          resolve(this.tmpPath);
+        }).catch(err => {
+          reject(err.stderr ? new Error(err.stderr) : err);
+        });
 
-      if (IS_MACOS) {
-        this.recorder.kill();
-      } else if (IS_LINUX) {
-        this.recorder.stdin.setEncoding('utf8');
-        this.recorder.stdin.write('q');
+        if (IS_MACOS) {
+          this.recorder.kill();
+        } else if (IS_LINUX) {
+          this.recorder.stdin.setEncoding('utf8');
+          this.recorder.stdin.write('q');
+        }
       }
     });
   }
