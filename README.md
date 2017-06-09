@@ -17,6 +17,7 @@ $ npm install aperture
 ## Usage
 
 ```js
+const delay = require('delay');
 const aperture = require('aperture')();
 
 const options = {
@@ -29,12 +30,12 @@ const options = {
   }
 };
 
-aperture.startRecording(options).then(filePath => {
-  setTimeout(() => {
-      aperture.stopRecording().then(console.log);
-      //=> '/var/folders/r9/65knbqts47x3yg055cd739qh0000gn/T/tmp-15694AAzbYX1vzi2X.mp4'
-  }, 3000);
-});
+(async () => {
+  await aperture.startRecording(options);
+  await delay(3000);
+  console.log(await aperture.stopRecording());
+  //=> '/private/var/folders/3x/jf5977fn79jbglr7rk0tq4d00000gn/T/cdf4f7df426c97880f8c10a1600879f7.mp4'
+})();
 ```
 
 See [`example.js`](example.js) if you want to quickly try it out. *(The example requires Node.js 7+)*
