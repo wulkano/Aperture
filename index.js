@@ -6,20 +6,21 @@ const tmp = require('tmp');
 const macosVersion = require('macos-version');
 
 const debuglog = util.debuglog('aperture');
+const BIN = path.join(__dirname, 'aperture');
 
 class Aperture {
   constructor() {
     macosVersion.assertGreaterThanOrEqualTo('10.10');
   }
 
-  getAudioSources() {
-    return execa.stderr(path.join(__dirname, 'aperture'), ['list-audio-devices']).then(stderr => {
-      try {
-        return JSON.parse(stderr);
-      } catch (err) {
-        return stderr;
-      }
-    });
+  async getAudioSources() {
+    const stderr = execa.stderr(BIN, ['list-audio-devices']);
+
+    try {
+      return JSON.parse(stderr);
+    } catch (err) {
+      return stderr;
+    }
   }
 
   startRecording({
@@ -64,7 +65,7 @@ class Aperture {
         audioSourceId
       ];
 
-      this.recorder = execa(path.join(__dirname, 'aperture'), recorderOpts);
+      this.recorder = execa(BIN, recorderOpts);
 
       const timeout = setTimeout(() => {
         // `.stopRecording()` was called already
@@ -98,20 +99,16 @@ class Aperture {
     });
   }
 
-  stopRecording() {
-    return new Promise((resolve, reject) => {
-      if (this.recorder === undefined) {
-        reject(new Error('Call `.startRecording()` first'));
-        return;
-      }
+  async stopRecording() {
+    if (this.recorder === undefined) {
+      throw new Error('Call `.startRecording()` first');
+    }
 
-      this.recorder.then(() => {
-        delete this.recorder;
-        resolve(this.tmpPath);
-      }).catch(reject);
+    this.recorder.kill();
+    await this.recorder;
+    delete this.recorder;
 
-      this.recorder.kill();
-    });
+    return this.tmpPath;
   }
 }
 
