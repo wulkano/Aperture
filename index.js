@@ -13,16 +13,6 @@ class Aperture {
     macosVersion.assertGreaterThanOrEqualTo('10.10');
   }
 
-  async getAudioSources() {
-    const stderr = execa.stderr(BIN, ['list-audio-devices']);
-
-    try {
-      return JSON.parse(stderr);
-    } catch (err) {
-      return stderr;
-    }
-  }
-
   startRecording({
     fps = 30,
     cropArea = 'none',
@@ -113,3 +103,13 @@ class Aperture {
 }
 
 module.exports = () => new Aperture();
+
+module.exports.getAudioSources = async () => {
+  const stderr = execa.stderr(BIN, ['list-audio-devices']);
+
+  try {
+    return JSON.parse(stderr);
+  } catch (err) {
+    return stderr;
+  }
+};

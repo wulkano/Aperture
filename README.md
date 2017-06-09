@@ -42,19 +42,7 @@ See [`example.js`](example.js) if you want to quickly try it out. *(The example 
 
 ## API
 
-### instance = aperture()
-
-### instance.startRecording([options])
-
-Returns a `Promise` for the path to the screen recording file.
-
-Fullfills when the recording starts or rejects if the recording didn't start after 5 seconds.
-
-### instance.stopRecording()
-
-Returns a `Promise` for the path to the screen recording file.
-
-### instance.getAudioSources()
+### aperture.getAudioSources()
 
 Get a list of audio sources.
 
@@ -66,6 +54,18 @@ Example:
   name: 'Built-in Microphone'
 }]
 ```
+
+### instance = aperture()
+
+### instance.startRecording([options])
+
+Returns a `Promise` for the path to the screen recording file.
+
+Fullfills when the recording starts or rejects if the recording didn't start after 5 seconds.
+
+### instance.stopRecording()
+
+Returns a `Promise` for the path to the screen recording file.
 
 #### options
 
@@ -111,7 +111,7 @@ Display to record.
 Type: `Object` `string`<br>
 Default: `'none'`
 
-Audio source to include in the screen recording. Should be one of the `id`'s from `instance.getAudioSources()`.
+Audio source to include in the screen recording. Should be one of the `id`'s from `aperture.getAudioSources()`.
 
 
 ## Why
