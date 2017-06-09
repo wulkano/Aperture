@@ -1,6 +1,6 @@
 {
   "name": "aperture",
-  "version": "2.1.0",
+  "version": "2.1.1",
   "description": "Record the screen on macOS",
   "license": "MIT",
   "repository": "wulkano/aperture",
@@ -17,8 +17,8 @@
   },
   "scripts": {
     "test": "xo",
-    "build-macos": "cd swift && xcodebuild -derivedDataPath $(mktemp -d) -scheme aperture",
-    "prepublish": "[ \"$(uname)\" = \"Darwin\" ] && npm run build-macos"
+    "build": "cd swift && xcodebuild archive -derivedDataPath $(mktemp -d) -scheme aperture",
+    "prepublish": "npm run build"
   },
   "files": [
     "index.js",
@@ -30,10 +30,10 @@
     "tmp": "0.0.31"
   },
   "devDependencies": {
-    "xo": "^0.17.0"
+    "delay": "^2.0.0",
+    "xo": "^0.18.2"
   },
   "xo": {
-    "space": true,
-    "esnext": true
+    "space": true
   }
 }
