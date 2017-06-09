@@ -17,7 +17,7 @@
   },
   "scripts": {
     "test": "xo",
-    "build": "cd swift && xcodebuild archive -derivedDataPath $(mktemp -d) -scheme aperture && mv main ../aperture",
+    "build": "cd swift && xcodebuild archive -derivedDataPath $(mktemp -d) -scheme aperture",
     "prepublish": "npm run build"
   },
   "files": [
