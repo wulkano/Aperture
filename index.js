@@ -7,19 +7,33 @@ const macosVersion = require('macos-version');
 
 const debuglog = util.debuglog('aperture');
 
+const IS_LINUX = process.platform === 'linux';
+const IS_MACOS = process.platform === 'darwin';
+const IS_WINDOWS = process.platform === 'win32';
+
 class Aperture {
   constructor() {
-    macosVersion.assertGreaterThanOrEqualTo('10.10');
+    if (IS_MACOS) {
+      macosVersion.assertGreaterThanOrEqualTo('10.10');
+    }
   }
 
   getAudioSources() {
-    return execa.stderr(path.join(__dirname, 'swift/main'), ['list-audio-devices']).then(stderr => {
-      try {
-        return JSON.parse(stderr);
-      } catch (err) {
-        return stderr;
-      }
-    });
+    if (IS_MACOS) {
+      return execa.stdout(path.join(__dirname, 'swift/main'), ['list-audio-devices']).then(JSON.parse);
+    } else if (IS_LINUX) {
+      return execa.stdout('arecord', ['-l']).then(
+        stdout => stdout.split('\n').reduce((result, line) => {
+          const match = line.match(/card (\d+): ([^,]+),/);
+
+          if (match) {
+            result.push(`${match[1]}:${match[2]}`);
+          }
+
+          return result;
+        }, [])
+      );
+    }
   }
 
   startRecording({
@@ -31,6 +45,8 @@ class Aperture {
     audioSourceId = 'none'
   } = {}) {
     return new Promise((resolve, reject) => {
+      let cropAreaOpts;
+
       if (this.recorder !== undefined) {
         reject(new Error('Call `.stopRecording()` first'));
         return;
@@ -51,20 +67,59 @@ class Aperture {
           return;
         }
 
-        cropArea = `${cropArea.x}:${cropArea.y}:${cropArea.width}:${cropArea.height}`;
+        cropAreaOpts = `${cropArea.x}:${cropArea.y}:${cropArea.width}:${cropArea.height}`;
       }
 
-      const recorderOpts = [
-        this.tmpPath,
-        fps,
-        cropArea,
-        showCursor,
-        highlightClicks,
-        displayId,
-        audioSourceId
-      ];
+      if (IS_MACOS) {
+        const recorderOpts = [
+          this.tmpPath,
+          fps,
+          cropAreaOpts || cropArea,
+          showCursor,
+          highlightClicks,
+          displayId,
+          audioSourceId
+        ];
 
-      this.recorder = execa(path.join(__dirname, 'swift', 'main'), recorderOpts);
+        this.recorder = execa(path.join(__dirname, 'swift', 'main'), recorderOpts);
+      } else if (IS_LINUX) {
+        const args = ['-f', 'x11grab'];
+
+        if (typeof cropArea === 'object') {
+          args.push(
+            '-video_size', `${cropArea.width}x${cropArea.height}`,
+            '-i', `:0+${cropArea.x},${cropArea.y}`
+          );
+        } else {
+          args.push('-i', ':0');
+        }
+
+        args.push('-framerate', fps, '-draw_mouse', +(showCursor === true), this.tmpPath);
+
+        this.recorder = execa('ffmpeg', args);
+      } else if (IS_WINDOWS) {
+        const ffmpegArgs = [];
+
+        if (typeof cropArea === 'object') {
+          ffmpegArgs.push(
+            '-video_size', `${cropArea.width}x${cropArea.height}`,
+            '-f', 'gdigrab',
+            '-i', 'desktop',
+            '-offset_x', cropArea.x,
+            '-offset_y', cropArea.y
+          );
+        } else {
+          ffmpegArgs.push(
+            '-f', 'gdigrab',
+            '-i', 'desktop',
+            '-offset_x', 0,
+            '-offset_y', 0
+          );
+        }
+
+        ffmpegArgs.push('-framerate', fps, '-draw_mouse', +(showCursor === true), this.tmpPath.replace('mp4', 'mpg'));
+        this.recorder = execa('ffmpeg', ffmpegArgs)
+      }
 
       const timeout = setTimeout(() => {
         // `.stopRecording()` was called already
@@ -77,7 +132,7 @@ class Aperture {
         this.recorder.kill();
         delete this.recorder;
         reject(err);
-      }, 5000);
+      }, 7500);
 
       this.recorder.catch(err => {
         clearTimeout(timeout);
@@ -86,15 +141,37 @@ class Aperture {
       });
 
       this.recorder.stdout.setEncoding('utf8');
-      this.recorder.stdout.on('data', data => {
-        debuglog(data);
+      if (IS_MACOS) {
+        this.recorder.stdout.on('data', data => {
+          debuglog(data);
 
-        if (data.trim() === 'R') {
-          // `R` is printed by Swift when the recording **actually** starts
-          clearTimeout(timeout);
-          resolve(this.tmpPath);
-        }
-      });
+          if (data.trim() === 'R') {
+            // `R` is printed by Swift when the recording **actually** starts
+            clearTimeout(timeout);
+            resolve(this.tmpPath);
+          }
+        });
+      } else if (IS_LINUX) {
+        this.recorder.stderr.on('data', data => {
+          debuglog(data);
+
+          if (/^frame=\s*\d+\sfps=\s\d+/.test(data.toString('utf8').trim())) {
+            // fmpeg prints lines like this while it's reocrding
+            // frame=  203 fps= 30 q=-1.0 Lsize=      54kB time=00:00:06.70 bitrate=  65.8kbits/s dup=21 drop=19 speed=0.996x
+            clearTimeout(timeout);
+            resolve(this.tmpPath);
+          }
+        });
+      } else if (IS_WINDOWS) {
+        this.recorder.stderr.on('data', data => {
+          debuglog(data.toString('utf8'));
+
+          if (data.toString('utf8').includes('encoder')) {
+            clearTimeout(timeout);
+            resolve(this.tmpPath);
+          }
+        })
+      }
     });
   }
 
@@ -105,12 +182,33 @@ class Aperture {
         return;
       }
 
-      this.recorder.then(() => {
-        delete this.recorder;
-        resolve(this.tmpPath);
-      }).catch(reject);
+      if (IS_WINDOWS) {
+        this.recorder.stdin.write('quit\n');
+        this.recorder.then(() => {
+          delete this.recorder;
+          return execa('ffmpeg', ['-i', this.tmpPath.replace('mp4', 'mpg'), this.tmpPath]);
+        })
+        .then(() => {
+          resolve(this.tmpPath);
+        })
+        .catch(err => {
+          reject(err.stderr ? new Error(err.stderr) : err);
+        });
+      } else {
+        this.recorder.then(() => {
+          delete this.recorder;
+          resolve(this.tmpPath);
+        }).catch(err => {
+          reject(err.stderr ? new Error(err.stderr) : err);
+        });
 
-      this.recorder.kill();
+        if (IS_MACOS) {
+          this.recorder.kill();
+        } else if (IS_LINUX) {
+          this.recorder.stdin.setEncoding('utf8');
+          this.recorder.stdin.write('q');
+        }
+      }
     });
   }
 }
