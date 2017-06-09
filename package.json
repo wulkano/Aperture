@@ -22,7 +22,7 @@
   },
   "files": [
     "index.js",
-    "swift/main"
+    "aperture"
   ],
   "dependencies": {
     "execa": "^0.6.0",

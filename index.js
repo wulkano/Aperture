@@ -13,7 +13,7 @@ class Aperture {
   }
 
   getAudioSources() {
-    return execa.stderr(path.join(__dirname, 'swift/main'), ['list-audio-devices']).then(stderr => {
+    return execa.stderr(path.join(__dirname, 'aperture'), ['list-audio-devices']).then(stderr => {
       try {
         return JSON.parse(stderr);
       } catch (err) {
@@ -64,7 +64,7 @@ class Aperture {
         audioSourceId
       ];
 
-      this.recorder = execa(path.join(__dirname, 'swift', 'main'), recorderOpts);
+      this.recorder = execa(path.join(__dirname, 'aperture'), recorderOpts);
 
       const timeout = setTimeout(() => {
         // `.stopRecording()` was called already
