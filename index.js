@@ -2,7 +2,7 @@
 const util = require('util');
 const path = require('path');
 const execa = require('execa');
-const tmp = require('tmp');
+const tempy = require('tempy');
 const macosVersion = require('macos-version');
 
 const debuglog = util.debuglog('aperture');
@@ -31,7 +31,7 @@ class Aperture {
         showCursor = true;
       }
 
-      this.tmpPath = tmp.tmpNameSync({postfix: '.mp4'});
+      this.tmpPath = tempy.file({extension: 'mp4'});
 
       if (typeof cropArea === 'object') {
         if (typeof cropArea.x !== 'number' ||

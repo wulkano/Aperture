@@ -27,7 +27,7 @@
   "dependencies": {
     "execa": "^0.6.0",
     "macos-version": "^4.0.0",
-    "tmp": "0.0.31"
+    "tempy": "^0.1.0"
   },
   "devDependencies": {
     "delay": "^2.0.0",
