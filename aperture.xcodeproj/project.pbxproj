@@ -13,18 +13,6 @@
 		E3A8F9E11E46F9C000C6C5FC /* util.swift in Sources */ = {isa = PBXBuildFile; fileRef = E3A8F9E01E46F9C000C6C5FC /* util.swift */; };
 /* End PBXBuildFile section */
 
-/* Begin PBXCopyFilesBuildPhase section */
-		E3A310791E450D3600D314DD /* CopyFiles */ = {
-			isa = PBXCopyFilesBuildPhase;
-			buildActionMask = 2147483647;
-			dstPath = /usr/share/man/man1/;
-			dstSubfolderSpec = 0;
-			files = (
-			);
-			runOnlyForDeploymentPostprocessing = 1;
-		};
-/* End PBXCopyFilesBuildPhase section */
-
 /* Begin PBXFileReference section */
 		E3A3107B1E450D3600D314DD /* aperture */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = aperture; sourceTree = BUILT_PRODUCTS_DIR; };
 		E3A310851E450DC800D314DD /* DeviceList.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DeviceList.swift; sourceTree = "<group>"; };
@@ -83,7 +71,6 @@
 			buildPhases = (
 				E3A310771E450D3600D314DD /* Sources */,
 				E3A310781E450D3600D314DD /* Frameworks */,
-				E3A310791E450D3600D314DD /* CopyFiles */,
 				E325A4461E450E5E0016DB84 /* ShellScript */,
 			);
 			buildRules = (
@@ -141,7 +128,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/bash;
-			shellScript = "cp \"${BUILT_PRODUCTS_DIR}/${EXECUTABLE_NAME}\" main";
+			shellScript = "cp \"${BUILT_PRODUCTS_DIR}/${EXECUTABLE_NAME}\" ../aperture";
 		};
 /* End PBXShellScriptBuildPhase section */
 
