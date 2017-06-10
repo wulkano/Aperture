@@ -94,7 +94,7 @@ class Aperture {
           );
         }
 
-        ffmpegArgs.push('-framerate', fps, '-draw_mouse', Number(showCursor === true), this.tmpPath.replace('mp4', 'mpg'));
+        ffmpegArgs.push('-framerate', fps, '-draw_mouse', Number(showCursor === true), this.tmpPath);
         this.recorder = execa('ffmpeg', ffmpegArgs);
       }
 
@@ -159,10 +159,7 @@ class Aperture {
         this.recorder.stdin.write('quit\n');
         this.recorder.then(() => {
           delete this.recorder;
-          return execa('ffmpeg', ['-i', this.tmpPath.replace('mp4', 'mpg'), this.tmpPath]);
-        })
-        .then(() => {
-          resolve(this.tmpPath);
+          resolve(this.tmpPath)
         })
         .catch(err => {
           reject(err.stderr ? new Error(err.stderr) : err);
