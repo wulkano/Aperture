@@ -167,7 +167,7 @@ module.exports = () => new Aperture();
 
 module.exports.getAudioSources = async () => {
   if (IS_MACOS) {
-    const stderr = execa.stderr(BIN, ['list-audio-devices']);
+    const stderr = await execa.stderr(BIN, ['list-audio-devices']);
 
     try {
       return JSON.parse(stderr);
