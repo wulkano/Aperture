@@ -1,6 +1,6 @@
 <p>
   <h1 align="center">Aperture</h1>
-  <h4 align="center">Record the screen on macOS</h4>
+  <h4 align="center">Record the screen on macOS & Windows</h4>
   <p align="center"><a href="https://github.com/sindresorhus/xo"><img src="https://img.shields.io/badge/code_style-XO-5ed9c7.svg" alt="XO code style"></a></p>
 </p>
 
@@ -11,13 +11,16 @@
 $ npm install aperture
 ```
 
-*Requires macOS 10.10 or later.*
+requires: *macOS: 10.10 or later.* | *Windows: ffmpeg*
 
 
 ## Usage
 
 ```js
-const aperture = require('aperture')();
+const aperture = require('aperture')({
+  // ffmpegBinary is *required* on Windows
+  ffmpegBinary: process.platform === 'win32' ? 'C:\\path\\to\\ffmpeg.exe' : null,
+});
 
 const options = {
   fps: 30,
@@ -42,7 +45,16 @@ See [`example.js`](example.js) if you want to quickly try it out. *(The example 
 
 ## API
 
-### instance = aperture()
+### instance = aperture([options])
+
+#### options
+
+##### ffmpegBinary
+
+Type: `string`<br>
+**Required on windows**
+
+Absolute path to the `ffmpeg.exe` binary.
 
 ### instance.startRecording([options])
 
