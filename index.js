@@ -7,9 +7,19 @@ const macosVersion = require('macos-version');
 
 const debuglog = util.debuglog('aperture');
 
+const IS_LINUX = process.platform === 'linux';
+const IS_MACOS = process.platform === 'darwin';
+const IS_WINDOWS = process.platform === 'win32';
+
 class Aperture {
   constructor() {
-    macosVersion.assertGreaterThanOrEqualTo('10.10');
+    if (IS_MACOS) {
+      macosVersion.assertGreaterThanOrEqualTo('10.10');
+    }
+
+    if (IS_LINUX) {
+      throw new Error('Linux is not implemented yet');
+    }
   }
 
   getAudioSources() {
@@ -24,7 +34,7 @@ class Aperture {
 
   startRecording({
     fps = 30,
-    cropArea = 'none',
+    cropArea,
     showCursor = true,
     highlightClicks = false,
     displayId = 'main',
@@ -50,21 +60,43 @@ class Aperture {
           reject(new Error('Invalid `cropArea` option object'));
           return;
         }
-
-        cropArea = `${cropArea.x}:${cropArea.y}:${cropArea.width}:${cropArea.height}`;
       }
 
-      const recorderOpts = [
-        this.tmpPath,
-        fps,
-        cropArea,
-        showCursor,
-        highlightClicks,
-        displayId,
-        audioSourceId
-      ];
+      if (IS_MACOS) {
+        const recorderOpts = [
+          this.tmpPath,
+          fps,
+          cropArea ? `${cropArea.x}:${cropArea.y}:${cropArea.width}:${cropArea.height}` : 'none',
+          showCursor,
+          highlightClicks,
+          displayId,
+          audioSourceId
+        ];
 
-      this.recorder = execa(path.join(__dirname, 'swift', 'main'), recorderOpts);
+        this.recorder = execa(path.join(__dirname, 'swift', 'main'), recorderOpts);
+      } else if (IS_WINDOWS) {
+        const ffmpegArgs = [];
+
+        if (typeof cropArea === 'object') {
+          ffmpegArgs.push(
+            '-video_size', `${cropArea.width}x${cropArea.height}`,
+            '-f', 'gdigrab',
+            '-i', 'desktop',
+            '-offset_x', cropArea.x,
+            '-offset_y', cropArea.y
+          );
+        } else {
+          ffmpegArgs.push(
+            '-f', 'gdigrab',
+            '-i', 'desktop',
+            '-offset_x', 0,
+            '-offset_y', 0
+          );
+        }
+
+        ffmpegArgs.push('-framerate', fps, '-draw_mouse', Number(showCursor === true), this.tmpPath.replace('mp4', 'mpg'));
+        this.recorder = execa('ffmpeg', ffmpegArgs);
+      }
 
       const timeout = setTimeout(() => {
         // `.stopRecording()` was called already
@@ -85,16 +117,27 @@ class Aperture {
         reject(err);
       });
 
-      this.recorder.stdout.setEncoding('utf8');
-      this.recorder.stdout.on('data', data => {
-        debuglog(data);
+      if (IS_MACOS) {
+        this.recorder.stdout.setEncoding('utf8');
+        this.recorder.stdout.on('data', data => {
+          debuglog(data);
 
-        if (data.trim() === 'R') {
-          // `R` is printed by Swift when the recording **actually** starts
-          clearTimeout(timeout);
-          resolve(this.tmpPath);
-        }
-      });
+          if (data.trim() === 'R') {
+            // `R` is printed by Swift when the recording **actually** starts
+            clearTimeout(timeout);
+            resolve(this.tmpPath);
+          }
+        });
+      } else if (IS_WINDOWS) {
+        this.recorder.stderr.on('data', data => {
+          debuglog(data);
+
+          if (data.toString('utf8').includes('encoder')) {
+            clearTimeout(timeout);
+            resolve(this.tmpPath);
+          }
+        });
+      }
     });
   }
 
@@ -105,12 +148,26 @@ class Aperture {
         return;
       }
 
-      this.recorder.then(() => {
-        delete this.recorder;
-        resolve(this.tmpPath);
-      }).catch(reject);
+      if (IS_MACOS) {
+        this.recorder.then(() => {
+          delete this.recorder;
+          resolve(this.tmpPath);
+        }).catch(reject);
 
-      this.recorder.kill();
+        this.recorder.kill();
+      } else if (IS_WINDOWS) {
+        this.recorder.stdin.write('quit\n');
+        this.recorder.then(() => {
+          delete this.recorder;
+          return execa('ffmpeg', ['-i', this.tmpPath.replace('mp4', 'mpg'), this.tmpPath]);
+        })
+        .then(() => {
+          resolve(this.tmpPath);
+        })
+        .catch(err => {
+          reject(err.stderr ? new Error(err.stderr) : err);
+        });
+      }
     });
   }
 }
