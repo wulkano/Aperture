@@ -113,7 +113,7 @@ class Aperture {
         }
 
         ffmpegArgs.push('-framerate', fps, '-draw_mouse', Number(showCursor === true), this.tmpPath);
-        this.recorder = execa('ffmpeg', ffmpegArgs);
+        this.recorder = execa(this.ffmpegBinary, ffmpegArgs);
       }
 
       const timeout = setTimeout(() => {
