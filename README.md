@@ -11,14 +11,13 @@
 $ npm install aperture
 ```
 
-requires: *macOS: 10.10 or later.* | *Windows: ffmpeg*
+*Requires minimum macOS 10.10 or Windows 7.*
 
 
 ## Usage
 
 ```js
 const aperture = require('aperture')({
-  // ffmpegBinary is *required* on Windows
   ffmpegBinary: process.platform === 'win32' ? 'C:\\path\\to\\ffmpeg.exe' : null,
 });
 
@@ -52,7 +51,7 @@ See [`example.js`](example.js) if you want to quickly try it out. *(The example 
 ##### ffmpegBinary
 
 Type: `string`<br>
-**Required on windows**
+**Required on Windows**
 
 Absolute path to the `ffmpeg.exe` binary.
 
