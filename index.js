@@ -12,23 +12,23 @@ const IS_MACOS = process.platform === 'darwin';
 const IS_WINDOWS = process.platform === 'win32';
 
 class Aperture {
-  constructor({ ffmpegBinary } = {}) {
+  constructor({ffmpegBinary} = {}) {
     if (IS_MACOS) {
       macosVersion.assertGreaterThanOrEqualTo('10.10');
-      return
+      return;
     }
 
     if (IS_WINDOWS) {
       if (!ffmpegBinary) {
-        throw new Error('Missing `ffmpegBinary`')
+        throw new Error('Missing `ffmpegBinary`');
       }
 
       if (!path.isAbsolute(ffmpegBinary)) {
-        throw new Error('`ffmpegBinary` must be absolute path')
+        throw new Error('`ffmpegBinary` must be absolute path');
       }
 
-      this.ffmpegBinary = ffmpegBinary
-      return
+      this.ffmpegBinary = ffmpegBinary;
+      return;
     }
 
     if (IS_LINUX) {
@@ -47,7 +47,7 @@ class Aperture {
       });
     }
 
-    return Promise.reject(new Error('Not implemented yet'))
+    return Promise.reject(new Error('Not implemented yet'));
   }
 
   startRecording({
@@ -93,20 +93,19 @@ class Aperture {
 
         this.recorder = execa(path.join(__dirname, 'swift', 'main'), recorderOpts);
       } else if (IS_WINDOWS) {
-        const ffmpegArgs = [];
+        const ffmpegArgs = [
+          '-f', 'gdigrab',
+          '-i', 'desktop'
+        ];
 
         if (typeof cropArea === 'object') {
           ffmpegArgs.push(
             '-video_size', `${cropArea.width}x${cropArea.height}`,
-            '-f', 'gdigrab',
-            '-i', 'desktop',
             '-offset_x', cropArea.x,
             '-offset_y', cropArea.y
           );
         } else {
           ffmpegArgs.push(
-            '-f', 'gdigrab',
-            '-i', 'desktop',
             '-offset_x', 0,
             '-offset_y', 0
           );
@@ -178,7 +177,7 @@ class Aperture {
         this.recorder.stdin.write('quit\n');
         this.recorder.then(() => {
           delete this.recorder;
-          resolve(this.tmpPath)
+          resolve(this.tmpPath);
         })
         .catch(err => {
           reject(err.stderr ? new Error(err.stderr) : err);
