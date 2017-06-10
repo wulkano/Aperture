@@ -12,9 +12,23 @@ const IS_MACOS = process.platform === 'darwin';
 const IS_WINDOWS = process.platform === 'win32';
 
 class Aperture {
-  constructor() {
+  constructor({ ffmpegBinary } = {}) {
     if (IS_MACOS) {
       macosVersion.assertGreaterThanOrEqualTo('10.10');
+      return
+    }
+
+    if (IS_WINDOWS) {
+      if (!ffmpegBinary) {
+        throw new Error('Missing `ffmpegBinary`')
+      }
+
+      if (!path.isAbsolute(ffmpegBinary)) {
+        throw new Error('`ffmpegBinary` must be absolute path')
+      }
+
+      this.ffmpegBinary = ffmpegBinary
+      return
     }
 
     if (IS_LINUX) {
@@ -23,13 +37,17 @@ class Aperture {
   }
 
   getAudioSources() {
-    return execa.stderr(path.join(__dirname, 'swift/main'), ['list-audio-devices']).then(stderr => {
-      try {
-        return JSON.parse(stderr);
-      } catch (err) {
-        return stderr;
-      }
-    });
+    if (IS_MACOS) {
+      return execa.stderr(path.join(__dirname, 'swift/main'), ['list-audio-devices']).then(stderr => {
+        try {
+          return JSON.parse(stderr);
+        } catch (err) {
+          return stderr;
+        }
+      });
+    }
+
+    return Promise.reject(new Error('Not implemented yet'))
   }
 
   startRecording({
