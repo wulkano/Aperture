@@ -5,9 +5,10 @@ const aperture = require('.');
 
 async function main() {
   const recorder = aperture();
-  console.log('Audio sources:', await recorder.getAudioSources());
+  console.log('Audio sources:', await aperture.getAudioSources());
   console.log('Recording for 5 seconds');
-  recorder.startRecording();
+  await recorder.startRecording();
+  console.log('Recording started');
   await delay(5000);
   const fp = await recorder.stopRecording();
   fs.renameSync(fp, 'recording.mp4');

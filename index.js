@@ -2,10 +2,11 @@
 const util = require('util');
 const path = require('path');
 const execa = require('execa');
-const tmp = require('tmp');
+const tempy = require('tempy');
 const macosVersion = require('macos-version');
 
 const debuglog = util.debuglog('aperture');
+const BIN = path.join(__dirname, 'aperture');
 
 const IS_LINUX = process.platform === 'linux';
 const IS_MACOS = process.platform === 'darwin';
@@ -36,20 +37,6 @@ class Aperture {
     }
   }
 
-  getAudioSources() {
-    if (IS_MACOS) {
-      return execa.stderr(path.join(__dirname, 'swift/main'), ['list-audio-devices']).then(stderr => {
-        try {
-          return JSON.parse(stderr);
-        } catch (err) {
-          return stderr;
-        }
-      });
-    }
-
-    return Promise.reject(new Error('Not implemented yet'));
-  }
-
   startRecording({
     fps = 30,
     cropArea,
@@ -68,7 +55,7 @@ class Aperture {
         showCursor = true;
       }
 
-      this.tmpPath = tmp.tmpNameSync({postfix: '.mp4'});
+      this.tmpPath = tempy.file({extension: 'mp4'});
 
       if (typeof cropArea === 'object') {
         if (typeof cropArea.x !== 'number' ||
@@ -91,7 +78,7 @@ class Aperture {
           audioSourceId
         ];
 
-        this.recorder = execa(path.join(__dirname, 'swift', 'main'), recorderOpts);
+        this.recorder = execa(BIN, recorderOpts);
       } else if (IS_WINDOWS) {
         const ffmpegArgs = [
           '-f', 'gdigrab',
@@ -159,32 +146,35 @@ class Aperture {
     });
   }
 
-  stopRecording() {
-    return new Promise((resolve, reject) => {
-      if (this.recorder === undefined) {
-        reject(new Error('Call `.startRecording()` first'));
-        return;
-      }
+  async stopRecording() {
+    if (this.recorder === undefined) {
+      throw new Error('Call `.startRecording()` first');
+    }
 
-      if (IS_MACOS) {
-        this.recorder.then(() => {
-          delete this.recorder;
-          resolve(this.tmpPath);
-        }).catch(reject);
+    if (IS_MACOS) {
+      this.recorder.kill();
+    } else if (IS_WINDOWS) {
+      this.recorder.stdin.write('quit\n');
+    }
+    await this.recorder;
+    delete this.recorder;
 
-        this.recorder.kill();
-      } else if (IS_WINDOWS) {
-        this.recorder.stdin.write('quit\n');
-        this.recorder.then(() => {
-          delete this.recorder;
-          resolve(this.tmpPath);
-        })
-        .catch(err => {
-          reject(err.stderr ? new Error(err.stderr) : err);
-        });
-      }
-    });
+    return this.tmpPath;
   }
 }
 
 module.exports = () => new Aperture();
+
+module.exports.getAudioSources = async () => {
+  if (IS_MACOS) {
+    const stderr = execa.stderr(BIN, ['list-audio-devices']);
+
+    try {
+      return JSON.parse(stderr);
+    } catch (err) {
+      return stderr;
+    }
+  }
+
+  throw new Error('Not implemented');
+};
