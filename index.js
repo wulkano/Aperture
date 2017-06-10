@@ -129,10 +129,11 @@ class Aperture {
           }
         });
       } else if (IS_WINDOWS) {
+        this.recorder.stderr.setEncoding('utf8');
         this.recorder.stderr.on('data', data => {
           debuglog(data);
 
-          if (data.toString('utf8').includes('encoder')) {
+          if (data.includes('encoder')) {
             clearTimeout(timeout);
             resolve(this.tmpPath);
           }
