@@ -6,7 +6,7 @@ enum ApertureError: Error {
   case couldNotAddOutput
 }
 
-final class Recorder: NSObject, AVCaptureFileOutputRecordingDelegate {
+final class Recorder: NSObject {
   private let destination: URL
   private let session: AVCaptureSession
   private let input: AVCaptureScreenInput
@@ -14,33 +14,30 @@ final class Recorder: NSObject, AVCaptureFileOutputRecordingDelegate {
   private let output: AVCaptureMovieFileOutput
   var onStart: (() -> Void)?
   var onFinish: (() -> Void)?
-  var onError: ((Any) -> Void)?
+  var onError: ((Error) -> Void)?
 
-  init(destinationPath: String, fps: String, coordinates: [String], showCursor: Bool, highlightClicks: Bool, displayId: UInt32, audioDeviceId: String) throws {
-    destination = URL(fileURLWithPath: destinationPath)
-
+  init(destination: URL, fps: Int, cropRect: CGRect?, showCursor: Bool, highlightClicks: Bool, displayId: CGDirectDisplayID = CGMainDisplayID(), audioDeviceId: String? = DeviceList.audio().first?["id"]) throws {
+    self.destination = destination
     session = AVCaptureSession()
 
     input = AVCaptureScreenInput(displayID: displayId)
-    input.minFrameDuration = CMTimeMake(1, Int32(fps)!)
+    input.minFrameDuration = CMTimeMake(1, Int32(fps))
+
+    if let cropRect = cropRect {
+      input.cropRect = cropRect
+    }
+
     input.capturesCursor = showCursor
     input.capturesMouseClicks = highlightClicks
 
-    if coordinates.count != 0 {
-      let points = coordinates.map { CGFloat((Int($0))!) }
-      let rect = CGRect(x: points[0], y: points[1], width: points[2], height: points[3]) // x, y, width, height
-      input.cropRect = rect
-    }
-
     output = AVCaptureMovieFileOutput()
+
     // Needed because otherwise there is no audio on videos longer than 10 seconds
     // http://stackoverflow.com/a/26769529/64949
     output.movieFragmentInterval = kCMTimeInvalid
 
-    if audioDeviceId != "none" {
-      let audioDevice: AVCaptureDevice = AVCaptureDevice.init(uniqueID: audioDeviceId)
-
-      audioInput = try AVCaptureDeviceInput(device: audioDevice)
+    if let audioDeviceId = audioDeviceId {
+      audioInput = try AVCaptureDeviceInput(device: AVCaptureDevice(uniqueID: audioDeviceId))
 
       if session.canAddInput(audioInput) {
         session.addInput(audioInput)
@@ -73,7 +70,9 @@ final class Recorder: NSObject, AVCaptureFileOutputRecordingDelegate {
     output.stopRecording()
     session.stopRunning()
   }
+}
 
+extension Recorder: AVCaptureFileOutputRecordingDelegate {
   func capture(_ captureOutput: AVCaptureFileOutput!, didStartRecordingToOutputFileAt fileURL: URL!, fromConnections connections: [Any]!) {
     onStart?()
   }
