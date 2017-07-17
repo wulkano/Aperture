@@ -1,6 +1,7 @@
 import AVFoundation
 
 enum ApertureError: Error {
+  case invalidDisplayId
   case couldNotAddScreen
   case couldNotAddMic
   case couldNotAddOutput
@@ -9,8 +10,6 @@ enum ApertureError: Error {
 final class Recorder: NSObject {
   private let destination: URL
   private let session: AVCaptureSession
-  private let input: AVCaptureScreenInput
-  private var audioInput: AVCaptureDeviceInput!
   private let output: AVCaptureMovieFileOutput
   var onStart: (() -> Void)?
   var onFinish: (() -> Void)?
@@ -20,7 +19,10 @@ final class Recorder: NSObject {
     self.destination = destination
     session = AVCaptureSession()
 
-    input = AVCaptureScreenInput(displayID: displayId)
+    guard let input = AVCaptureScreenInput(displayID: displayId) else {
+      throw ApertureError.invalidDisplayId
+    }
+
     input.minFrameDuration = CMTimeMake(1, Int32(fps))
 
     if let cropRect = cropRect {
@@ -37,7 +39,7 @@ final class Recorder: NSObject {
     output.movieFragmentInterval = kCMTimeInvalid
 
     if let audioDeviceId = audioDeviceId {
-      audioInput = try AVCaptureDeviceInput(device: AVCaptureDevice(uniqueID: audioDeviceId))
+      let audioInput = try AVCaptureDeviceInput(device: AVCaptureDevice(uniqueID: audioDeviceId))
 
       if session.canAddInput(audioInput) {
         session.addInput(audioInput)
