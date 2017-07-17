@@ -1,4 +1,5 @@
 import Foundation
+import AVFoundation
 
 var recorder: Recorder!
 
@@ -31,7 +32,7 @@ func record() throws {
     showCursor: showCursor == "true",
     highlightClicks: highlightClicks == "true",
     displayId: displayId == "main" ? CGMainDisplayID() : CGDirectDisplayID(displayId)!,
-    audioDeviceId: audioDeviceId == "none" ? nil : audioDeviceId
+    audioDevice: audioDeviceId == "none" ? nil : .defaultDevice(withMediaType: AVMediaTypeAudio)
   )
 
   recorder.onStart = {

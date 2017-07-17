@@ -2,6 +2,7 @@ import AVFoundation
 
 enum ApertureError: Error {
   case invalidDisplayId
+  case invalidAudioDevice
   case couldNotAddScreen
   case couldNotAddMic
   case couldNotAddOutput
@@ -15,7 +16,7 @@ final class Recorder: NSObject {
   var onFinish: (() -> Void)?
   var onError: ((Error) -> Void)?
 
-  init(destination: URL, fps: Int, cropRect: CGRect?, showCursor: Bool, highlightClicks: Bool, displayId: CGDirectDisplayID = CGMainDisplayID(), audioDeviceId: String? = DeviceList.audio().first?["id"]) throws {
+  init(destination: URL, fps: Int, cropRect: CGRect?, showCursor: Bool, highlightClicks: Bool, displayId: CGDirectDisplayID = CGMainDisplayID(), audioDevice: AVCaptureDevice? = .defaultDevice(withMediaType: AVMediaTypeAudio)) throws {
     self.destination = destination
     session = AVCaptureSession()
 
@@ -38,8 +39,12 @@ final class Recorder: NSObject {
     // http://stackoverflow.com/a/26769529/64949
     output.movieFragmentInterval = kCMTimeInvalid
 
-    if let audioDeviceId = audioDeviceId {
-      let audioInput = try AVCaptureDeviceInput(device: AVCaptureDevice(uniqueID: audioDeviceId))
+    if let audioDevice = audioDevice {
+      if !audioDevice.hasMediaType(AVMediaTypeAudio) {
+        throw ApertureError.invalidAudioDevice
+      }
+
+      let audioInput = try AVCaptureDeviceInput(device: audioDevice)
 
       if session.canAddInput(audioInput) {
         session.addInput(audioInput)
