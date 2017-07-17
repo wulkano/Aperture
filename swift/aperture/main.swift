@@ -20,7 +20,7 @@ func record() throws {
 
   var cropRect: CGRect?
   if cropArea != "none" {
-    let points = cropArea.components(separatedBy: ":").map { CGFloat(Double($0)!) }
+    let points = cropArea.components(separatedBy: ":").map { Double($0)! }
     cropRect = CGRect(x: points[0], y: points[1], width: points[2], height: points[3])
   }
 
