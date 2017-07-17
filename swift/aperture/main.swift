@@ -31,7 +31,7 @@ func record() throws {
     showCursor: showCursor == "true",
     highlightClicks: highlightClicks == "true",
     displayId: displayId == "main" ? CGMainDisplayID() : CGDirectDisplayID(displayId)!,
-    audioDeviceId: audioDeviceId == "none" ? DeviceList.audio().first?["id"] : audioDeviceId
+    audioDeviceId: audioDeviceId == "none" ? nil : audioDeviceId
   )
 
   recorder.onStart = {
