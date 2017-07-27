@@ -32,7 +32,7 @@ func record() throws {
     showCursor: showCursor == "true",
     highlightClicks: highlightClicks == "true",
     displayId: displayId == "main" ? CGMainDisplayID() : CGDirectDisplayID(displayId)!,
-    audioDevice: audioDeviceId == "none" ? nil : .defaultDevice(withMediaType: AVMediaTypeAudio)
+    audioDevice: audioDeviceId == "none" ? nil : .default(for: .audio)
   )
 
   recorder.onStart = {

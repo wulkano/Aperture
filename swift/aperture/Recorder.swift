@@ -1,7 +1,6 @@
 import AVFoundation
 
 enum ApertureError: Error {
-  case invalidDisplayId
   case invalidAudioDevice
   case couldNotAddScreen
   case couldNotAddMic
@@ -16,13 +15,11 @@ final class Recorder: NSObject {
   var onFinish: (() -> Void)?
   var onError: ((Error) -> Void)?
 
-  init(destination: URL, fps: Int, cropRect: CGRect?, showCursor: Bool, highlightClicks: Bool, displayId: CGDirectDisplayID = CGMainDisplayID(), audioDevice: AVCaptureDevice? = .defaultDevice(withMediaType: AVMediaTypeAudio)) throws {
+  init(destination: URL, fps: Int, cropRect: CGRect?, showCursor: Bool, highlightClicks: Bool, displayId: CGDirectDisplayID = CGMainDisplayID(), audioDevice: AVCaptureDevice? = .default(for: .audio)) throws {
     self.destination = destination
     session = AVCaptureSession()
 
-    guard let input = AVCaptureScreenInput(displayID: displayId) else {
-      throw ApertureError.invalidDisplayId
-    }
+    let input = AVCaptureScreenInput(displayID: displayId)
 
     input.minFrameDuration = CMTimeMake(1, Int32(fps))
 
@@ -40,7 +37,7 @@ final class Recorder: NSObject {
     output.movieFragmentInterval = kCMTimeInvalid
 
     if let audioDevice = audioDevice {
-      if !audioDevice.hasMediaType(AVMediaTypeAudio) {
+      if !audioDevice.hasMediaType(.audio) {
         throw ApertureError.invalidAudioDevice
       }
 
@@ -70,7 +67,7 @@ final class Recorder: NSObject {
 
   func start() {
     session.startRunning()
-    output.startRecording(toOutputFileURL: destination, recordingDelegate: self)
+    output.startRecording(to: destination, recordingDelegate: self)
   }
 
   func stop() {
@@ -80,14 +77,14 @@ final class Recorder: NSObject {
 }
 
 extension Recorder: AVCaptureFileOutputRecordingDelegate {
-  func capture(_ captureOutput: AVCaptureFileOutput!, didStartRecordingToOutputFileAt fileURL: URL!, fromConnections connections: [Any]!) {
+  func fileOutput(_ captureOutput: AVCaptureFileOutput, didStartRecordingTo fileURL: URL, from connections: [AVCaptureConnection]) {
     onStart?()
   }
 
-  func capture(_ captureOutput: AVCaptureFileOutput!, didFinishRecordingToOutputFileAt outputFileURL: URL!, fromConnections connections: [Any]!, error: Error!) {
+  func fileOutput(_ captureOutput: AVCaptureFileOutput, didFinishRecordingTo outputFileURL: URL, from connections: [AVCaptureConnection], error: Error?) {
     let FINISHED_RECORDING_ERROR_CODE = -11806
 
-    if let err = error, err._code != FINISHED_RECORDING_ERROR_CODE {
+    if let error = error, error._code != FINISHED_RECORDING_ERROR_CODE {
       onError?(error)
     } else {
       onFinish?()
