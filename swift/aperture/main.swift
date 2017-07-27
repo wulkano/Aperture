@@ -1,4 +1,5 @@
 import Foundation
+import AVFoundation
 
 var recorder: Recorder!
 
@@ -7,27 +8,31 @@ func quit(_: Int32) {
 }
 
 func record() throws {
-  let destinationPath = CommandLine.arguments[1]
-  let fps = CommandLine.arguments[2]
-  let cropArea = CommandLine.arguments[3]
-  let showCursor = CommandLine.arguments[4] == "true"
-  let highlightClicks = CommandLine.arguments[5] == "true"
-  let displayId = CommandLine.arguments[6] == "main" ? CGMainDisplayID() : UInt32(CommandLine.arguments[6])
-  let audioDeviceId = CommandLine.arguments[7]
+  // TODO: Use JSON and `Codable` here when Swift 4 is out
 
-  var coordinates = [String]()
+  let args = CommandLine.arguments
+  let destination = args[1]
+  let fps = args[2]
+  let cropArea = args[3]
+  let showCursor = args[4]
+  let highlightClicks = args[5]
+  let displayId = args[6]
+  let audioDeviceId = args[7]
+
+  var cropRect: CGRect?
   if cropArea != "none" {
-    coordinates = CommandLine.arguments[3].components(separatedBy: ":")
+    let points = cropArea.components(separatedBy: ":").map { Double($0)! }
+    cropRect = CGRect(x: points[0], y: points[1], width: points[2], height: points[3])
   }
 
   recorder = try Recorder(
-    destinationPath: destinationPath,
-    fps: fps,
-    coordinates: coordinates,
-    showCursor: showCursor,
-    highlightClicks: highlightClicks,
-    displayId: displayId!,
-    audioDeviceId: audioDeviceId
+    destination: URL(fileURLWithPath: destination),
+    fps: Int(fps)!,
+    cropRect: cropRect,
+    showCursor: showCursor == "true",
+    highlightClicks: highlightClicks == "true",
+    displayId: displayId == "main" ? CGMainDisplayID() : CGDirectDisplayID(displayId)!,
+    audioDevice: audioDeviceId == "none" ? nil : .defaultDevice(withMediaType: AVMediaTypeAudio)
   )
 
   recorder.onStart = {
@@ -70,6 +75,7 @@ if numberOfArgs == 8 {
 
 if numberOfArgs == 2 && CommandLine.arguments[1] == "list-audio-devices" {
   // Use stderr because of unrelated stuff being outputted on stdout
+  // TODO: Use JSON and `Codable` here when Swift 4 is out
   printErr(try toJson(DeviceList.audio()))
   exit(0)
 }
