@@ -1,7 +1,14 @@
 <p>
   <h1 align="center">Aperture</h1>
   <h4 align="center">Record the screen on macOS</h4>
-  <p align="center"><a href="https://github.com/sindresorhus/xo"><img src="https://img.shields.io/badge/code_style-XO-5ed9c7.svg" alt="XO code style"></a></p>
+  <p align="center">
+    <a href="https://travis-ci.org/wulkano/aperture">
+      <img src="https://travis-ci.org/wulkano/aperture.svg?branch=master" alt="Build Status: macOS">
+    </a>
+    <a href="https://github.com/sindresorhus/xo">
+      <img src="https://img.shields.io/badge/code_style-XO-5ed9c7.svg" alt="XO code style">
+    </a>
+  </p>
 </p>
 
 
@@ -17,6 +24,7 @@ $ npm install aperture
 ## Usage
 
 ```js
+const delay = require('delay');
 const aperture = require('aperture')();
 
 const options = {
@@ -29,18 +37,31 @@ const options = {
   }
 };
 
-aperture.startRecording(options).then(filePath => {
-  setTimeout(() => {
-      aperture.stopRecording().then(console.log);
-      //=> '/var/folders/r9/65knbqts47x3yg055cd739qh0000gn/T/tmp-15694AAzbYX1vzi2X.mp4'
-  }, 3000);
-});
+(async () => {
+  await aperture.startRecording(options);
+  await delay(3000);
+  console.log(await aperture.stopRecording());
+  //=> '/private/var/folders/3x/jf5977fn79jbglr7rk0tq4d00000gn/T/cdf4f7df426c97880f8c10a1600879f7.mp4'
+})();
 ```
 
 See [`example.js`](example.js) if you want to quickly try it out. *(The example requires Node.js 7+)*
 
 
 ## API
+
+### aperture.getAudioSources()
+
+Get a list of audio sources.
+
+Example:
+
+```js
+[{
+  id: 'AppleHDAEngineInput:1B,0,1,0:1',
+  name: 'Built-in Microphone'
+}]
+```
 
 ### instance = aperture()
 
@@ -53,19 +74,6 @@ Fullfills when the recording starts or rejects if the recording didn't start aft
 ### instance.stopRecording()
 
 Returns a `Promise` for the path to the screen recording file.
-
-### instance.getAudioSources()
-
-Get a list of audio sources.
-
-Example:
-
-```js
-[{
-  id: 'AppleHDAEngineInput:1B,0,1,0:1',
-  name: 'Built-in Microphone'
-}]
-```
 
 #### options
 
@@ -111,7 +119,7 @@ Display to record.
 Type: `Object` `string`<br>
 Default: `'none'`
 
-Audio source to include in the screen recording. Should be one of the `id`'s from `instance.getAudioSources()`.
+Audio source to include in the screen recording. Should be one of the `id`'s from `aperture.getAudioSources()`.
 
 
 ## Why

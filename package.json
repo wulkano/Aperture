@@ -13,24 +13,27 @@
     }
   ],
   "engines": {
-    "node": ">=6"
+    "node": ">=8"
   },
   "scripts": {
-    "test": "xo",
+    "test": "xo && ava",
     "build": "cd swift && xcodebuild archive -derivedDataPath $(mktemp -d) -scheme aperture",
     "prepublish": "npm run build"
   },
   "files": [
     "index.js",
-    "swift/main"
+    "aperture"
   ],
   "dependencies": {
     "execa": "^0.6.0",
     "macos-version": "^4.0.1",
-    "tmp": "0.0.31"
+    "tempy": "^0.1.0"
   },
   "devDependencies": {
+    "ava": "^0.19.1",
     "delay": "^2.0.0",
+    "file-type": "^5.1.1",
+    "read-chunk": "^2.0.0",
     "xo": "^0.18.2"
   },
   "xo": {
