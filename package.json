@@ -1,7 +1,7 @@
 {
   "name": "aperture",
   "version": "2.1.1",
-  "description": "Record the screen on macOS",
+  "description": "Record the screen on macOS & Windows",
   "license": "MIT",
   "repository": "wulkano/aperture",
   "author": "Matheus Fernandes <npm@matheus.top> (https://matheus.top)",

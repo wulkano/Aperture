@@ -8,14 +8,38 @@ const macosVersion = require('macos-version');
 const debuglog = util.debuglog('aperture');
 const BIN = path.join(__dirname, 'aperture');
 
+const IS_LINUX = process.platform === 'linux';
+const IS_MACOS = process.platform === 'darwin';
+const IS_WINDOWS = process.platform === 'win32';
+
 class Aperture {
-  constructor() {
-    macosVersion.assertGreaterThanOrEqualTo('10.10');
+  constructor({ffmpegBinary} = {}) {
+    if (IS_MACOS) {
+      macosVersion.assertGreaterThanOrEqualTo('10.10');
+      return;
+    }
+
+    if (IS_WINDOWS) {
+      if (!ffmpegBinary) {
+        throw new Error('Missing `ffmpegBinary`');
+      }
+
+      if (!path.isAbsolute(ffmpegBinary)) {
+        throw new Error('`ffmpegBinary` must be absolute path');
+      }
+
+      this.ffmpegBinary = ffmpegBinary;
+      return;
+    }
+
+    if (IS_LINUX) {
+      throw new Error('Linux is not implemented yet');
+    }
   }
 
   startRecording({
     fps = 30,
-    cropArea = 'none',
+    cropArea,
     showCursor = true,
     highlightClicks = false,
     displayId = 'main',
@@ -41,21 +65,42 @@ class Aperture {
           reject(new Error('Invalid `cropArea` option object'));
           return;
         }
-
-        cropArea = `${cropArea.x}:${cropArea.y}:${cropArea.width}:${cropArea.height}`;
       }
 
-      const recorderOpts = [
-        this.tmpPath,
-        fps,
-        cropArea,
-        showCursor,
-        highlightClicks,
-        displayId,
-        audioSourceId
-      ];
+      if (IS_MACOS) {
+        const recorderOpts = [
+          this.tmpPath,
+          fps,
+          cropArea ? `${cropArea.x}:${cropArea.y}:${cropArea.width}:${cropArea.height}` : 'none',
+          showCursor,
+          highlightClicks,
+          displayId,
+          audioSourceId
+        ];
 
-      this.recorder = execa(BIN, recorderOpts);
+        this.recorder = execa(BIN, recorderOpts);
+      } else if (IS_WINDOWS) {
+        const ffmpegArgs = [
+          '-f', 'gdigrab',
+          '-i', 'desktop'
+        ];
+
+        if (typeof cropArea === 'object') {
+          ffmpegArgs.push(
+            '-video_size', `${cropArea.width}x${cropArea.height}`,
+            '-offset_x', cropArea.x,
+            '-offset_y', cropArea.y
+          );
+        } else {
+          ffmpegArgs.push(
+            '-offset_x', 0,
+            '-offset_y', 0
+          );
+        }
+
+        ffmpegArgs.push('-framerate', fps, '-draw_mouse', Number(showCursor === true), this.tmpPath);
+        this.recorder = execa(this.ffmpegBinary, ffmpegArgs);
+      }
 
       const timeout = setTimeout(() => {
         // `.stopRecording()` was called already
@@ -76,16 +121,28 @@ class Aperture {
         reject(err);
       });
 
-      this.recorder.stdout.setEncoding('utf8');
-      this.recorder.stdout.on('data', data => {
-        debuglog(data);
+      if (IS_MACOS) {
+        this.recorder.stdout.setEncoding('utf8');
+        this.recorder.stdout.on('data', data => {
+          debuglog(data);
 
-        if (data.trim() === 'R') {
-          // `R` is printed by Swift when the recording **actually** starts
-          clearTimeout(timeout);
-          resolve(this.tmpPath);
-        }
-      });
+          if (data.trim() === 'R') {
+            // `R` is printed by Swift when the recording **actually** starts
+            clearTimeout(timeout);
+            resolve(this.tmpPath);
+          }
+        });
+      } else if (IS_WINDOWS) {
+        this.recorder.stderr.setEncoding('utf8');
+        this.recorder.stderr.on('data', data => {
+          debuglog(data);
+
+          if (data.includes('encoder')) {
+            clearTimeout(timeout);
+            resolve(this.tmpPath);
+          }
+        });
+      }
     });
   }
 
@@ -94,7 +151,11 @@ class Aperture {
       throw new Error('Call `.startRecording()` first');
     }
 
-    this.recorder.kill();
+    if (IS_MACOS) {
+      this.recorder.kill();
+    } else if (IS_WINDOWS) {
+      this.recorder.stdin.write('quit\n');
+    }
     await this.recorder;
     delete this.recorder;
 
@@ -105,11 +166,15 @@ class Aperture {
 module.exports = () => new Aperture();
 
 module.exports.getAudioSources = async () => {
-  const stderr = await execa.stderr(BIN, ['list-audio-devices']);
+  if (IS_MACOS) {
+    const stderr = await execa.stderr(BIN, ['list-audio-devices']);
 
-  try {
-    return JSON.parse(stderr);
-  } catch (err) {
-    return stderr;
+    try {
+      return JSON.parse(stderr);
+    } catch (err) {
+      return stderr;
+    }
   }
+
+  throw new Error('Not implemented');
 };

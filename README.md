@@ -1,6 +1,6 @@
 <p>
   <h1 align="center">Aperture</h1>
-  <h4 align="center">Record the screen on macOS</h4>
+  <h4 align="center">Record the screen on macOS & Windows</h4>
   <p align="center">
     <a href="https://travis-ci.org/wulkano/aperture">
       <img src="https://travis-ci.org/wulkano/aperture.svg?branch=master" alt="Build Status: macOS">
@@ -18,14 +18,16 @@
 $ npm install aperture
 ```
 
-*Requires macOS 10.10 or later.*
+*Requires minimum macOS 10.10 or Windows 7.*
 
 
 ## Usage
 
 ```js
 const delay = require('delay');
-const aperture = require('aperture')();
+const aperture = require('aperture')({
+  ffmpegBinary: process.platform === 'win32' ? 'C:\\path\\to\\ffmpeg.exe' : null,
+});
 
 const options = {
   fps: 30,
@@ -63,7 +65,16 @@ Example:
 }]
 ```
 
-### instance = aperture()
+### instance = aperture([options])
+
+#### options
+
+##### ffmpegBinary
+
+Type: `string`<br>
+**Required on Windows**
+
+Absolute path to the `ffmpeg.exe` binary.
 
 ### instance.startRecording([options])
 
