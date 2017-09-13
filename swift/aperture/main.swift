@@ -60,10 +60,14 @@ func record() throws {
 }
 
 func usage() {
-  print("usage: aperture <list-audio-devices | <destinationPath> <fps> <crop-rect-coordinates> <show-cursor> <highlight-clicks> <display-id> <audio-device-id>>")
-  print("examples: aperture ./file.mp4 30 0:0:100:100 true false 1846519 'AppleHDAEngineInput:1B,0,1,0:1'")
-  print("          aperture ./file.mp4 30 none true false main none")
-  print("          aperture list-audio-devices")
+  print(
+    """
+    usage: aperture <list-audio-devices | <destinationPath> <fps> <crop-rect-coordinates> <show-cursor> <highlight-clicks> <display-id> <audio-device-id>>
+    examples: aperture ./file.mp4 30 0:0:100:100 true false 1846519 'AppleHDAEngineInput:1B,0,1,0:1'
+              aperture ./file.mp4 30 none true false main none
+              aperture list-audio-devices
+    """
+  )
 }
 
 let numberOfArgs = CommandLine.arguments.count
