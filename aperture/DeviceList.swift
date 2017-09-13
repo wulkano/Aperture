@@ -16,21 +16,17 @@ private func enableDalDevices() {
 
 struct DeviceList {
   static func audio() -> [[String: String]] {
-    let captureDevices = AVCaptureDevice.devices(withMediaType: AVMediaTypeAudio) as! [AVCaptureDevice]
-
-    return captureDevices
-      .map {
-        [
-          "name": $0.localizedName,
-          "id": $0.uniqueID
-        ]
-      }
+    return AVCaptureDevice.devices(for: .audio).map {
+      [
+        "name": $0.localizedName,
+        "id": $0.uniqueID
+      ]
+    }
   }
 
   static func ios() -> [[String: String]] {
     enableDalDevices()
-    let captureDevices = AVCaptureDevice.devices(withMediaType: AVMediaTypeMuxed) as! [AVCaptureDevice]
-    return captureDevices
+    return AVCaptureDevice.devices(for: .muxed)
       .filter { $0.localizedName == "iPhone" || $0.localizedName == "iPad" }
       .map {
         [
