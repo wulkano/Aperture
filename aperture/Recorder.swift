@@ -11,9 +11,20 @@ final class Recorder: NSObject {
   private let destination: URL
   private let session: AVCaptureSession
   private let output: AVCaptureMovieFileOutput
+
   var onStart: (() -> Void)?
   var onFinish: (() -> Void)?
   var onError: ((Error) -> Void)?
+  var onPause: (() -> Void)?
+  var onResume: (() -> Void)?
+
+  var isRecording: Bool {
+    return output.isRecording
+  }
+
+  var isPaused: Bool {
+    return output.isRecordingPaused
+  }
 
   init(destination: URL, fps: Int, cropRect: CGRect?, showCursor: Bool, highlightClicks: Bool, displayId: CGDirectDisplayID = CGMainDisplayID(), audioDevice: AVCaptureDevice? = .default(for: .audio)) throws {
     self.destination = destination
@@ -74,6 +85,14 @@ final class Recorder: NSObject {
     output.stopRecording()
     session.stopRunning()
   }
+
+  func pause() {
+    output.pauseRecording()
+  }
+
+  func resume() {
+    output.resumeRecording()
+  }
 }
 
 extension Recorder: AVCaptureFileOutputRecordingDelegate {
@@ -89,5 +108,13 @@ extension Recorder: AVCaptureFileOutputRecordingDelegate {
     } else {
       onFinish?()
     }
+  }
+
+  func fileOutput(_ output: AVCaptureFileOutput, didPauseRecordingTo fileURL: URL, from connections: [AVCaptureConnection]) {
+    onPause?()
+  }
+
+  func fileOutput(_ output: AVCaptureFileOutput, didResumeRecordingTo fileURL: URL, from connections: [AVCaptureConnection]) {
+    onResume?()
   }
 }
