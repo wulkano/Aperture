@@ -79,7 +79,6 @@ if numberOfArgs == 8 {
 
 if numberOfArgs == 2 && CommandLine.arguments[1] == "list-audio-devices" {
   // Use stderr because of unrelated stuff being outputted on stdout
-  // TODO: Use JSON and `Codable` here when Swift 4 is out
   printErr(try toJson(DeviceList.audio()))
   exit(0)
 }
