@@ -2,37 +2,51 @@ import Foundation
 import AVFoundation
 
 var recorder: Recorder!
+let arguments = CommandLine.arguments.dropFirst()
 
 func quit(_: Int32) {
   recorder.stop()
 }
 
-func record() throws {
-  // TODO: Use JSON and `Codable` here when Swift 4 is out
+struct CropArea: Decodable {
+  let x: CGFloat
+  let y: CGFloat
+  let width: CGFloat
+  let height: CGFloat
+}
 
-  let args = CommandLine.arguments
-  let destination = args[1]
-  let fps = args[2]
-  let cropArea = args[3]
-  let showCursor = args[4]
-  let highlightClicks = args[5]
-  let displayId = args[6]
-  let audioDeviceId = args[7]
+struct Options: Decodable {
+  let destination: String // TODO: Figure out a way to make this decodable into an `URL`
+  let fps: Int
+  let cropArea: CropArea? // TODO: Figure out a way to make this decodable into a `CGRect`
+  let showCursor: Bool
+  let highlightClicks: Bool
+  let displayId: String
+  let audioDeviceId: String?
+}
+
+func record() throws {
+  let json = arguments.first!.data(using: .utf8)!
+  let options = try JSONDecoder().decode(Options.self, from: json)
 
   var cropRect: CGRect?
-  if cropArea != "none" {
-    let points = cropArea.components(separatedBy: ":").map { Double($0)! }
-    cropRect = CGRect(x: points[0], y: points[1], width: points[2], height: points[3])
+  if let cropArea = options.cropArea {
+    cropRect = CGRect(
+      x: cropArea.x,
+      y: cropArea.y,
+      width: cropArea.width,
+      height: cropArea.height
+    )
   }
 
   recorder = try Recorder(
-    destination: URL(fileURLWithPath: destination),
-    fps: Int(fps)!,
+    destination: URL(fileURLWithPath: options.destination),
+    fps: options.fps,
     cropRect: cropRect,
-    showCursor: showCursor == "true",
-    highlightClicks: highlightClicks == "true",
-    displayId: displayId == "main" ? CGMainDisplayID() : CGDirectDisplayID(displayId)!,
-    audioDevice: audioDeviceId == "none" ? nil : .default(for: .audio)
+    showCursor: options.showCursor,
+    highlightClicks: options.highlightClicks,
+    displayId: options.displayId == "main" ? CGMainDisplayID() : CGDirectDisplayID(options.displayId)!,
+    audioDevice: options.audioDeviceId != nil ? AVCaptureDevice(uniqueID: options.audioDeviceId!) : .default(for: .audio)
   )
 
   recorder.onStart = {
@@ -70,16 +84,14 @@ func usage() {
   )
 }
 
-let numberOfArgs = CommandLine.arguments.count
-
-if numberOfArgs == 8 {
-  try record()
+if arguments.first == "list-audio-devices" {
+  // Use stderr because of unrelated stuff being outputted on stdout
+  printErr(try toJson(DeviceList.audio()))
   exit(0)
 }
 
-if numberOfArgs == 2 && CommandLine.arguments[1] == "list-audio-devices" {
-  // Use stderr because of unrelated stuff being outputted on stdout
-  printErr(try toJson(DeviceList.audio()))
+if arguments.first != nil {
+  try record()
   exit(0)
 }
 

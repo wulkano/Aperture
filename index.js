@@ -15,11 +15,11 @@ class Aperture {
 
   startRecording({
     fps = 30,
-    cropArea = 'none',
+    cropArea = undefined,
     showCursor = true,
     highlightClicks = false,
     displayId = 'main',
-    audioSourceId = 'none'
+    audioSourceId = undefined
   } = {}) {
     return new Promise((resolve, reject) => {
       if (this.recorder !== undefined) {
@@ -27,11 +27,11 @@ class Aperture {
         return;
       }
 
+      this.tmpPath = tempy.file({extension: 'mp4'});
+
       if (highlightClicks === true) {
         showCursor = true;
       }
-
-      this.tmpPath = tempy.file({extension: 'mp4'});
 
       if (typeof cropArea === 'object') {
         if (typeof cropArea.x !== 'number' ||
@@ -41,21 +41,19 @@ class Aperture {
           reject(new Error('Invalid `cropArea` option object'));
           return;
         }
-
-        cropArea = `${cropArea.x}:${cropArea.y}:${cropArea.width}:${cropArea.height}`;
       }
 
-      const recorderOpts = [
-        this.tmpPath,
+      const recorderOpts = {
+        destination: this.tmpPath,
         fps,
         cropArea,
         showCursor,
         highlightClicks,
         displayId,
-        audioSourceId
-      ];
+        audioDeviceId: audioSourceId
+      };
 
-      this.recorder = execa(BIN, recorderOpts);
+      this.recorder = execa(BIN, [JSON.stringify(recorderOpts)]);
 
       const timeout = setTimeout(() => {
         // `.stopRecording()` was called already
