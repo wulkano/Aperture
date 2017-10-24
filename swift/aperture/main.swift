@@ -4,6 +4,7 @@ var recorder: Recorder!
 
 func quit(_: Int32) {
   recorder.stop()
+  // See https://github.com/wulkano/aperture/pull/35 for more info
   exit(0)
 }
 
