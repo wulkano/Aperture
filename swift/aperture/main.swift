@@ -8,11 +8,17 @@ func quit(_: Int32) {
 
 func record() throws {
   let destinationPath = CommandLine.arguments[1]
-  let fps = CommandLine.arguments[2]
+  guard let fps = Int32(CommandLine.arguments[2]) else {
+    printErr("Fps not a valid int")
+    exit(1)
+  }
   let cropArea = CommandLine.arguments[3]
   let showCursor = CommandLine.arguments[4] == "true"
   let highlightClicks = CommandLine.arguments[5] == "true"
-  let displayId = CommandLine.arguments[6] == "main" ? CGMainDisplayID() : UInt32(CommandLine.arguments[6])
+  guard let displayId = CommandLine.arguments[6] == "main" ? CGMainDisplayID() : UInt32(CommandLine.arguments[6]) else {
+    printErr("Missing displayId")
+    exit(1)
+  }
   let audioDeviceId = CommandLine.arguments[7]
 
   var coordinates = [String]()
@@ -20,15 +26,20 @@ func record() throws {
     coordinates = CommandLine.arguments[3].components(separatedBy: ":")
   }
 
-  recorder = try Recorder(
-    destinationPath: destinationPath,
-    fps: fps,
-    coordinates: coordinates,
-    showCursor: showCursor,
-    highlightClicks: highlightClicks,
-    displayId: displayId!,
-    audioDeviceId: audioDeviceId
-  )
+  do {
+    recorder = try Recorder(
+      destinationPath: destinationPath,
+      fps: fps,
+      coordinates: coordinates,
+      showCursor: showCursor,
+      highlightClicks: highlightClicks,
+      displayId: displayId,
+      audioDeviceId: audioDeviceId
+    )
+  } catch let error {
+    printErr(error)
+    exit(1)
+  }
 
   recorder.onStart = {
     print("R")

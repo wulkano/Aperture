@@ -16,13 +16,13 @@ final class Recorder: NSObject, AVCaptureFileOutputRecordingDelegate {
   var onFinish: (() -> Void)?
   var onError: ((Any) -> Void)?
 
-  init(destinationPath: String, fps: String, coordinates: [String], showCursor: Bool, highlightClicks: Bool, displayId: UInt32, audioDeviceId: String) throws {
+  init(destinationPath: String, fps: Int32, coordinates: [String], showCursor: Bool, highlightClicks: Bool, displayId: UInt32, audioDeviceId: String) throws {
     destination = URL(fileURLWithPath: destinationPath)
 
     session = AVCaptureSession()
 
     input = AVCaptureScreenInput(displayID: displayId)
-    input.minFrameDuration = CMTimeMake(1, Int32(fps)!)
+    input.minFrameDuration = CMTimeMake(1, fps)
     input.capturesCursor = showCursor
     input.capturesMouseClicks = highlightClicks
 
