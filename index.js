@@ -4,6 +4,7 @@ const path = require('path');
 const execa = require('execa');
 const tempy = require('tempy');
 const macosVersion = require('macos-version');
+const fileUrl = require('file-url');
 
 const debuglog = util.debuglog('aperture');
 const BIN = path.join(__dirname, 'aperture');
@@ -15,11 +16,11 @@ class Aperture {
 
   startRecording({
     fps = 30,
-    cropArea = 'none',
+    cropArea = undefined,
     showCursor = true,
     highlightClicks = false,
     displayId = 'main',
-    audioSourceId = 'none'
+    audioSourceId = undefined
   } = {}) {
     return new Promise((resolve, reject) => {
       if (this.recorder !== undefined) {
@@ -27,11 +28,11 @@ class Aperture {
         return;
       }
 
+      this.tmpPath = tempy.file({extension: 'mp4'});
+
       if (highlightClicks === true) {
         showCursor = true;
       }
-
-      this.tmpPath = tempy.file({extension: 'mp4'});
 
       if (typeof cropArea === 'object') {
         if (typeof cropArea.x !== 'number' ||
@@ -41,21 +42,25 @@ class Aperture {
           reject(new Error('Invalid `cropArea` option object'));
           return;
         }
-
-        cropArea = `${cropArea.x}:${cropArea.y}:${cropArea.width}:${cropArea.height}`;
       }
 
-      const recorderOpts = [
-        this.tmpPath,
+      const recorderOpts = {
+        destination: fileUrl(this.tmpPath),
         fps,
-        cropArea,
         showCursor,
         highlightClicks,
         displayId,
-        audioSourceId
-      ];
+        audioDeviceId: audioSourceId
+      };
 
-      this.recorder = execa(BIN, recorderOpts);
+      if (cropArea) {
+        recorderOpts.cropRect = [
+          [cropArea.x, cropArea.y],
+          [cropArea.width, cropArea.height]
+        ];
+      }
+
+      this.recorder = execa(BIN, [JSON.stringify(recorderOpts)]);
 
       const timeout = setTimeout(() => {
         // `.stopRecording()` was called already
