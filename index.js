@@ -4,6 +4,7 @@ const path = require('path');
 const execa = require('execa');
 const tempy = require('tempy');
 const macosVersion = require('macos-version');
+const fileUrl = require('file-url');
 
 const debuglog = util.debuglog('aperture');
 const BIN = path.join(__dirname, 'aperture');
@@ -44,14 +45,20 @@ class Aperture {
       }
 
       const recorderOpts = {
-        destination: this.tmpPath,
+        destination: fileUrl(this.tmpPath),
         fps,
-        cropArea,
         showCursor,
         highlightClicks,
         displayId,
         audioDeviceId: audioSourceId
       };
+
+      if (cropArea) {
+        recorderOpts.cropRect = [
+          [cropArea.x, cropArea.y],
+          [cropArea.width, cropArea.height]
+        ];
+      }
 
       this.recorder = execa(BIN, [JSON.stringify(recorderOpts)]);
 

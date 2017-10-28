@@ -26,6 +26,7 @@
   ],
   "dependencies": {
     "execa": "^0.6.0",
+    "file-url": "^2.0.2",
     "macos-version": "^4.0.1",
     "tempy": "^0.1.0"
   },
