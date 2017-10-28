@@ -17,6 +17,12 @@ test('returns audio sources', async t => {
   }
 });
 
+test('returns available video codecs', t => {
+  const codecs = aperture.videoCodecs;
+  console.log('Video codecs:', codecs);
+  t.true(codecs.has('h264'));
+});
+
 test('records screen', async t => {
   const recorder = aperture();
   t.true(fs.existsSync(await recorder.startRecording()));

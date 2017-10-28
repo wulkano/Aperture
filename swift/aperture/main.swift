@@ -18,6 +18,7 @@ struct Options: Decodable {
   let highlightClicks: Bool
   let displayId: String
   let audioDeviceId: String?
+  let videoCodec: String?
 }
 
 func record() throws {
@@ -31,7 +32,8 @@ func record() throws {
     showCursor: options.showCursor,
     highlightClicks: options.highlightClicks,
     displayId: options.displayId == "main" ? CGMainDisplayID() : CGDirectDisplayID(options.displayId)!,
-    audioDevice: options.audioDeviceId != nil ? AVCaptureDevice(uniqueID: options.audioDeviceId!) : nil
+    audioDevice: options.audioDeviceId != nil ? AVCaptureDevice(uniqueID: options.audioDeviceId!) : nil,
+    videoCodec: options.videoCodec
   )
 
   recorder.onStart = {

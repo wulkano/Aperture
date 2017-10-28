@@ -1,4 +1,5 @@
 'use strict';
+const os = require('os');
 const util = require('util');
 const path = require('path');
 const execa = require('execa');
@@ -8,6 +9,19 @@ const fileUrl = require('file-url');
 
 const debuglog = util.debuglog('aperture');
 const BIN = path.join(__dirname, 'aperture');
+
+const supportsHevcHardwareEncoding = (() => {
+  if (!macosVersion.isGreaterThanOrEqualTo('10.13')) {
+    return false;
+  }
+
+  // Get the Intel Core generation, the `4` in `Intel(R) Core(TM) i7-4850HQ CPU @ 2.30GHz`
+  // More info: https://www.intel.com/content/www/us/en/processors/processor-numbers.html
+  const result = /Intel.*Core.*i(?:7|5)-(\d)/.exec(os.cpus()[0].model);
+
+  // Intel Core generation 6 or higher supports HEVC hardware encoding
+  return result && Number(result[1]) >= 6;
+})();
 
 class Aperture {
   constructor() {
@@ -20,7 +34,8 @@ class Aperture {
     showCursor = true,
     highlightClicks = false,
     displayId = 'main',
-    audioSourceId = undefined
+    audioSourceId = undefined,
+    videoCodec = undefined
   } = {}) {
     return new Promise((resolve, reject) => {
       if (this.recorder !== undefined) {
@@ -60,6 +75,25 @@ class Aperture {
         ];
       }
 
+      if (videoCodec) {
+        const codecMap = new Map([
+          ['h264', 'avc1'],
+          ['hevc', 'hvc1'],
+          ['proRes422', 'apcn'],
+          ['proRes4444', 'ap4h']
+        ]);
+
+        if (!supportsHevcHardwareEncoding) {
+          codecMap.delete('hevc');
+        }
+
+        if (!codecMap.has(videoCodec)) {
+          throw new Error(`Unsupported video codec specified: ${videoCodec}`);
+        }
+
+        recorderOpts.videoCodec = codecMap.get(videoCodec);
+      }
+
       this.recorder = execa(BIN, [JSON.stringify(recorderOpts)]);
 
       const timeout = setTimeout(() => {
@@ -73,7 +107,7 @@ class Aperture {
         this.recorder.kill();
         delete this.recorder;
         reject(err);
-      }, 5000);
+      }, 10000);
 
       this.recorder.catch(err => {
         clearTimeout(timeout);
@@ -118,3 +152,20 @@ module.exports.getAudioSources = async () => {
     return stderr;
   }
 };
+
+Object.defineProperty(module.exports, 'videoCodecs', {
+  get() {
+    const codecs = new Map([
+      ['h264', 'H264'],
+      ['hevc', 'HEVC'],
+      ['proRes422', 'Apple ProRes 422'],
+      ['proRes4444', 'Apple ProRes 4444']
+    ]);
+
+    if (!supportsHevcHardwareEncoding) {
+      codecs.delete('hevc');
+    }
+
+    return codecs;
+  }
+});
