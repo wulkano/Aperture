@@ -87,7 +87,7 @@ Number of frames per seconds.
 ##### cropArea
 
 Type: `Object`<br>
-Default: `null`
+Default: `undefined`
 
 Record only an area of the screen. Accepts an object with `x`, `y`, `width`, `height` properties.
 
@@ -117,7 +117,7 @@ Display to record.
 ##### audioSourceId
 
 Type: `string`<br>
-Default: `null`
+Default: `undefined`
 
 Audio source to include in the screen recording. Should be one of the `id`'s from `aperture.getAudioSources()`.
 
