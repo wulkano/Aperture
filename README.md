@@ -50,7 +50,7 @@ See [`example.js`](example.js) if you want to quickly try it out. *(The example 
 
 ## API
 
-### aperture.getAudioSources()
+### aperture.getAudioSources() -> `Promise<Array>`
 
 Get a list of audio sources.
 
@@ -61,6 +61,21 @@ Example:
   id: 'AppleHDAEngineInput:1B,0,1,0:1',
   name: 'Built-in Microphone'
 }]
+```
+
+### aperture.videoCodecs
+
+Get a list of available video codecs. The key is the `videoCodec` option name and the value is the codec name. It only returns `hevc` if you're on macOS 10.13 or newer and your computer supports HEVC hardware encoding.
+
+Example:
+
+```js
+Map {
+  'h264' => 'H264',
+  'hevc' => 'HEVC',
+  'proRes422' => 'Apple ProRes 422',
+  'proRes4444' => 'Apple ProRes 4444'
+}
 ```
 
 ### instance = aperture()
@@ -120,6 +135,16 @@ Type: `string`<br>
 Default: `undefined`
 
 Audio source to include in the screen recording. Should be one of the `id`'s from `aperture.getAudioSources()`.
+
+##### videoCodec
+
+Type: `string`<br>
+Default: `h264`<br>
+Values: `hevc` `h264` `proRes422` `proRes4444`
+
+The `hevc` codec requires macOS 10.13 or newer. A computer with Intel 6th generation processor or newer is strongly recommended, as otherwise it will use software encoding, which only produces 3 FPS fullscreen recording.
+
+The [`proRes422` and `proRes4444`](https://documentation.apple.com/en/finalcutpro/professionalformatsandworkflows/index.html#chapter=10%26section=2%26tasks=true) codecs are uncompressed data. They will create huge files.
 
 
 ## Why
