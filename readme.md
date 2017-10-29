@@ -50,7 +50,7 @@ See [`example.js`](example.js) if you want to quickly try it out. *(The example 
 
 ## API
 
-### aperture.audioDevices() -> `Promise<Array>`
+### Aperture.audioDevices() -> `Promise<Array>`
 
 Get a list of audio devices.
 
@@ -63,7 +63,7 @@ Example:
 }]
 ```
 
-### aperture.videoCodecs -> `Map`
+### Aperture.videoCodecs -> `Map`
 
 Get a list of available video codecs. The key is the `videoCodec` option name and the value is the codec name. It only returns `hevc` if you're on macOS 10.13 or newer and your computer supports HEVC hardware encoding.
 
@@ -78,15 +78,15 @@ Map {
 }
 ```
 
-### instance = aperture()
+### recorder = `new Aperture()`
 
-### instance.startRecording([options])
+### recorder.startRecording([options])
 
 Returns a `Promise` for the path to the screen recording file.
 
 Fullfills when the recording starts or rejects if the recording didn't start after 5 seconds.
 
-### instance.stopRecording()
+### recorder.stopRecording()
 
 Returns a `Promise` for the path to the screen recording file.
 
@@ -149,17 +149,17 @@ The [`proRes422` and `proRes4444`](https://documentation.apple.com/en/finalcutpr
 
 ## Why
 
-Aperture was built to fulfill the needs of [Kap](https://github.com/wulkano/kap), providing a JavaScript interface to the **best** available method for recording the screen. That's why it's currently a wrapper for a [Swift script](https://github.com/wulkano/aperture/blob/master/swift/aperture/main.swift) that records the screen using the [AVFoundation framework](https://developer.apple.com/av-foundation/).
+Aperture was built to fulfill the needs of [Kap](https://github.com/wulkano/kap), providing a JavaScript interface to the **best** available method for recording the screen. That's why it's currently a wrapper for a [Swift script](swift/aperture/main.swift) that records the screen using the [AVFoundation framework](https://developer.apple.com/av-foundation/).
 
 #### But you can use `ffmpeg -f avfoundation...`
 
 Yes, we can, but the performance is terrible:
 
-#### Recording the entire screen with `ffmpeg -f avfoundation -i 1 -y test.mp4`:
+##### Recording the entire screen with `ffmpeg -f avfoundation -i 1 -y test.mp4`:
 
 ![ffmpeg](https://cloud.githubusercontent.com/assets/4721750/19214740/f823d4b6-8d60-11e6-8af3-4726146ef29a.jpg)
 
-#### Recording the entire screen with `aperture`:
+##### Recording the entire screen with Aperture:
 
 ![aperture](https://cloud.githubusercontent.com/assets/4721750/19214743/11f4aaaa-8d61-11e6-9822-4e83bcdfab24.jpg)
 
