@@ -121,7 +121,7 @@ class Aperture {
 
         if (data.trim().startsWith('R ')) {
           // `R` is printed by Swift when the recording **actually** starts
-          const startedAt = Number(/R ([0-9]+)/.exec(data.trim())[1]);
+          const startedAt = Number(/R (\d+)/.exec(data.trim())[1]);
 
           clearTimeout(timeout);
           resolve({
