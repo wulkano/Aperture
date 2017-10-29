@@ -45,14 +45,14 @@ const options = {
 })();
 ```
 
-See [`example.js`](example.js) if you want to quickly try it out. *(The example requires Node.js 7+)*
+See [`example.js`](example.js) if you want to quickly try it out. *(The example requires Node.js 8+)*
 
 
 ## API
 
-### aperture.getAudioSources() -> `Promise<Array>`
+### aperture.audioDevices() -> `Promise<Array>`
 
-Get a list of audio sources.
+Get a list of audio devices.
 
 Example:
 
@@ -63,7 +63,7 @@ Example:
 }]
 ```
 
-### aperture.videoCodecs
+### aperture.videoCodecs -> `Map`
 
 Get a list of available video codecs. The key is the `videoCodec` option name and the value is the codec name. It only returns `hevc` if you're on macOS 10.13 or newer and your computer supports HEVC hardware encoding.
 
@@ -134,7 +134,7 @@ Display to record.
 Type: `string`<br>
 Default: `undefined`
 
-Audio source to include in the screen recording. Should be one of the `id`'s from `aperture.getAudioSources()`.
+Audio source to include in the screen recording. Should be one of the `id`'s from `aperture.audioDevices()`.
 
 ##### videoCodec
 

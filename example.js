@@ -5,7 +5,7 @@ const aperture = require('.');
 
 async function main() {
   const recorder = aperture();
-  console.log('Audio sources:', await aperture.getAudioSources());
+  console.log('Audio devices:', await aperture.audioDevices());
   console.log('Preparing to record for 5 seconds');
   await recorder.startRecording();
   console.log('Recording started');

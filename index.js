@@ -143,7 +143,7 @@ class Aperture {
 
 module.exports = () => new Aperture();
 
-module.exports.getAudioSources = async () => {
+module.exports.audioDevices = async () => {
   const stderr = await execa.stderr(BIN, ['list-audio-devices']);
 
   try {

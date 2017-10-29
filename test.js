@@ -5,15 +5,15 @@ import readChunk from 'read-chunk';
 import fileType from 'file-type';
 import aperture from '.';
 
-test('returns audio sources', async t => {
-  const sources = await aperture.getAudioSources();
-  console.log('Audio sources:', sources);
+test('returns audio devices', async t => {
+  const devices = await aperture.audioDevices();
+  console.log('Audio devices:', devices);
 
-  t.true(Array.isArray(sources));
+  t.true(Array.isArray(devices));
 
-  if (sources.length > 0) {
-    t.true(sources[0].id.length > 0);
-    t.true(sources[0].name.length > 0);
+  if (devices.length > 0) {
+    t.true(devices[0].id.length > 0);
+    t.true(devices[0].name.length > 0);
   }
 });
 
