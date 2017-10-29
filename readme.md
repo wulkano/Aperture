@@ -172,3 +172,14 @@ We want to bring Aperture to Linux and Windows, but we don't have time or resour
 ## Upcoming
 
 Aperture is in its early days. We're working on adding more features, such as *export to GIF*, compression options, support for multiple displays, support for audio, and much more. Check out our [Aperture](https://github.com/wulkano/kap/issues?q=is%3Aissue+is%3Aopen+label%3Aaperture) issues on **Kap** to learn more.
+
+
+## Maintainers
+
+- [Matheus Fernandes](https://github.com/matheuss)
+- [Sindre Sorhus](https://github.com/sindresorhus)
+
+
+## License
+
+MIT

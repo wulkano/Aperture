@@ -4,14 +4,6 @@
   "description": "Record the screen on macOS",
   "license": "MIT",
   "repository": "wulkano/aperture",
-  "author": "Matheus Fernandes <npm@matheus.top> (https://matheus.top)",
-  "maintainers": [
-    {
-      "name": "Sindre Sorhus",
-      "email": "sindresorhus@gmail.com",
-      "url": "sindresorhus.com"
-    }
-  ],
   "engines": {
     "node": ">=8"
   },
@@ -25,15 +17,15 @@
     "aperture"
   ],
   "dependencies": {
-    "execa": "^0.6.0",
+    "execa": "^0.8.0",
     "file-url": "^2.0.2",
     "macos-version": "^4.0.1",
-    "tempy": "^0.1.0"
+    "tempy": "^0.2.1"
   },
   "devDependencies": {
-    "ava": "^0.19.1",
+    "ava": "^0.23.0",
     "delay": "^2.0.0",
-    "file-type": "^5.1.1",
+    "file-type": "^7.2.0",
     "read-chunk": "^2.0.0",
     "xo": "^0.18.2"
   },
