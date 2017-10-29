@@ -34,7 +34,7 @@ class Aperture {
     showCursor = true,
     highlightClicks = false,
     displayId = 'main',
-    audioSourceId = undefined,
+    audioDeviceId = undefined,
     videoCodec = undefined
   } = {}) {
     return new Promise((resolve, reject) => {
@@ -65,7 +65,7 @@ class Aperture {
         showCursor,
         highlightClicks,
         displayId,
-        audioDeviceId: audioSourceId
+        audioDeviceId
       };
 
       if (cropArea) {

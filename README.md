@@ -129,12 +129,12 @@ Default: `main`
 
 Display to record.
 
-##### audioSourceId
+##### audioDeviceId
 
 Type: `string`<br>
 Default: `undefined`
 
-Audio source to include in the screen recording. Should be one of the `id`'s from `aperture.audioDevices()`.
+Audio device to include in the screen recording. Should be one of the `id`'s from `aperture.audioDevices()`.
 
 ##### videoCodec
 
