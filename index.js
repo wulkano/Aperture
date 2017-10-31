@@ -25,7 +25,7 @@ const supportsHevcHardwareEncoding = (() => {
 
 class Aperture {
   constructor() {
-    macosVersion.assertGreaterThanOrEqualTo('10.10');
+    macosVersion.assertGreaterThanOrEqualTo('10.12');
   }
 
   startRecording({
