@@ -8,7 +8,15 @@ const macosVersion = require('macos-version');
 const fileUrl = require('file-url');
 
 const debuglog = util.debuglog('aperture');
-const BIN = path.join(__dirname, 'aperture');
+
+let BIN = path.join(__dirname, 'aperture');
+
+// Workaround for https://github.com/electron/electron/issues/9459
+const isElectron = 'electron' in process.versions;
+const isUsingAsar = process.mainModule.filename.includes('app.asar');
+if (isElectron && isUsingAsar) {
+  BIN = BIN.replace('app.asar', 'app.asar.unpacked');
+}
 
 const supportsHevcHardwareEncoding = (() => {
   if (!macosVersion.isGreaterThanOrEqualTo('10.13')) {
