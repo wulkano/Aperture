@@ -17,6 +17,7 @@
     "aperture"
   ],
   "dependencies": {
+    "electron-util": "^0.2.1",
     "execa": "^0.8.0",
     "file-url": "^2.0.2",
     "macos-version": "^4.0.1",
