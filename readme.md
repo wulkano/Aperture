@@ -50,7 +50,7 @@ See [`example.js`](example.js) if you want to quickly try it out. *(The example 
 
 ## API
 
-### Aperture.audioDevices() -> `Promise<Array>`
+### aperture.audioDevices() -> `Promise<Array>`
 
 Get a list of audio devices.
 
@@ -63,7 +63,7 @@ Example:
 }]
 ```
 
-### Aperture.videoCodecs -> `Map`
+### aperture.videoCodecs -> `Map`
 
 Get a list of available video codecs. The key is the `videoCodec` option name and the value is the codec name. It only returns `hevc` if you're on macOS 10.13 or newer and your computer supports HEVC hardware encoding.
 
@@ -78,7 +78,7 @@ Map {
 }
 ```
 
-### recorder = `new Aperture()`
+### recorder = `aperture()`
 
 ### recorder.startRecording([options])
 
