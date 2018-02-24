@@ -1,4 +1,5 @@
 import Foundation
+import AVFoundation
 
 private final class StandardErrorOutputStream: TextOutputStream {
   func write(_ string: String) {
@@ -15,4 +16,13 @@ func printErr(_ item: Any) {
 func toJson<T>(_ data: T) throws -> String {
   let json = try JSONSerialization.data(withJSONObject: data)
   return String(data: json, encoding: .utf8)!
+}
+
+extension CMTime {
+  static var zero: CMTime = kCMTimeZero
+  static var invalid: CMTime = kCMTimeInvalid
+}
+
+extension CGDirectDisplayID {
+  static let main: CGDirectDisplayID = CGMainDisplayID()
 }

@@ -27,13 +27,14 @@ final class Recorder: NSObject {
   }
 
   /// TODO: When targeting macOS 10.13, make the `videoCodec` option the type `AVVideoCodecType`
-  init(destination: URL, fps: Int, cropRect: CGRect?, showCursor: Bool, highlightClicks: Bool, displayId: CGDirectDisplayID = CGMainDisplayID(), audioDevice: AVCaptureDevice? = .default(for: .audio), videoCodec: String? = nil) throws {
+  init(destination: URL, fps: Int, cropRect: CGRect?, showCursor: Bool, highlightClicks: Bool, displayId: CGDirectDisplayID = .main, audioDevice: AVCaptureDevice? = .default(for: .audio), videoCodec: String? = nil) throws {
     self.destination = destination
     session = AVCaptureSession()
 
     let input = AVCaptureScreenInput(displayID: displayId)
 
-    input.minFrameDuration = CMTimeMake(1, Int32(fps))
+    /// TODO: Use `CMTime(seconds:)` here instead
+    input.minFrameDuration = CMTime(value: 1, timescale: Int32(fps))
 
     if let cropRect = cropRect {
       input.cropRect = cropRect
@@ -46,7 +47,7 @@ final class Recorder: NSObject {
 
     // Needed because otherwise there is no audio on videos longer than 10 seconds
     // http://stackoverflow.com/a/26769529/64949
-    output.movieFragmentInterval = kCMTimeInvalid
+    output.movieFragmentInterval = .invalid
 
     if let audioDevice = audioDevice {
       if !audioDevice.hasMediaType(.audio) {
