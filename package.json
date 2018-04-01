@@ -1,7 +1,7 @@
 {
   "name": "aperture",
   "version": "4.0.0",
-  "description": "Record the screen on macOS",
+  "description": "Record the screen on macOS and Windows",
   "license": "MIT",
   "repository": "wulkano/aperture",
   "engines": {
@@ -9,7 +9,9 @@
   },
   "scripts": {
     "test": "xo && ava",
-    "build": "cd swift && xcodebuild archive -derivedDataPath $(mktemp -d) -scheme aperture",
+    "build": "echo \"use 'npm run build-macos' or 'npm run build-win'\" && exit 1",
+    "build-macos": "cd swift && xcodebuild archive -derivedDataPath $(mktemp -d) -scheme aperture",
+    "build-win": "cd Aperture.CLI && msbuild Aperture.CLI.csproj /t:Restore;Build;ILMerge /p:Platform=x86 /p:Configuration=Release && copy Out\\Release\\x86\\net45\\aperture.exe ..",
     "prepublish": "npm run build"
   },
   "files": [
@@ -17,11 +19,14 @@
     "aperture"
   ],
   "dependencies": {
-    "electron-util": "^0.2.1",
+    
     "execa": "^0.8.0",
-    "file-url": "^2.0.2",
-    "macos-version": "^4.0.1",
     "tempy": "^0.2.1"
+  },
+  "optionalDependencies": {
+    "electron-util": "^0.2.1",
+    "file-url": "^2.0.2",
+    "macos-version": "^4.0.1"
   },
   "devDependencies": {
     "ava": "^0.23.0",
