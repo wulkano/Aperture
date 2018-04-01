@@ -1,6 +1,6 @@
 <p>
   <h1 align="center">Aperture</h1>
-  <h4 align="center">Record the screen on macOS</h4>
+  <h4 align="center">Record the screen on macOS and Windows</h4>
   <p align="center">
     <a href="https://travis-ci.org/wulkano/aperture">
       <img src="https://travis-ci.org/wulkano/aperture.svg?branch=master" alt="Build Status: macOS">
@@ -18,7 +18,19 @@
 $ npm install aperture
 ```
 
-*Requires macOS 10.12 or later.*
+*Requires macOS 10.12 or later, or at least Windows 7.*
+
+
+## Build
+### On macOS
+```
+$ npm run build-macos
+```
+
+### On Windows
+```
+C:\> npm run build-windows   # run from VS 2017 Developer Command Prompt
+```
 
 
 ## Usage
@@ -164,9 +176,9 @@ Yes, we can, but the performance is terrible:
 ![aperture](https://cloud.githubusercontent.com/assets/4721750/19214743/11f4aaaa-8d61-11e6-9822-4e83bcdfab24.jpg)
 
 
-## Linux and Windows
+## Linux
 
-We want to bring Aperture to Linux and Windows, but we don't have time or resources for such tasks (we're Mac users), so **any help is more than welcome**. We just want to enforce two things: **performance** and **quality** – it doesn't matter how (`ffmpeg`, custom built native lib, etc) they are achieved.
+We want to bring Aperture to Linux, but we don't have time or resources for such tasks (we're Mac users), so **any help is more than welcome**. We just want to enforce two things: **performance** and **quality** – it doesn't matter how (`ffmpeg`, custom built native lib, etc) they are achieved.
 
 
 ## Upcoming

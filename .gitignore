@@ -4,3 +4,4 @@ node_modules
 !*.xcworkspace/contents.xcworkspacedata
 /swift/build
 /aperture
+/aperture.exe

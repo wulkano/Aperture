@@ -1,0 +1,3 @@
+[submodule "Aperture.CLI"]
+	path = Aperture.CLI
+	url = https://github.com/CaptainApp/Aperture.CLI
