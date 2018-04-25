@@ -25,7 +25,8 @@ test('returns available video codecs', t => {
 
 test('records screen', async t => {
   const recorder = aperture();
-  t.true(fs.existsSync(await recorder.startRecording()));
+  const {filePath} = await recorder.startRecording();
+  t.true(fs.existsSync(filePath));
   await delay(1000);
   const videoPath = await recorder.stopRecording();
   t.true(fs.existsSync(videoPath));

@@ -122,10 +122,15 @@ class Aperture {
       this.recorder.stdout.on('data', data => {
         debuglog(data);
 
-        if (data.trim() === 'R') {
+        if (data.trim().startsWith('R ')) {
           // `R` is printed by Swift when the recording **actually** starts
+          const startedAt = Number(/R (\d+)/.exec(data.trim())[1]);
+
           clearTimeout(timeout);
-          resolve(this.tmpPath);
+          resolve({
+            filePath: this.tmpPath,
+            startedAt
+          });
         }
       });
     });

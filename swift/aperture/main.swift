@@ -37,7 +37,8 @@ func record() throws {
   )
 
   recorder.onStart = {
-    print("R")
+    let time = Int(Date().timeIntervalSince1970 * 1000)
+    print("R \(time)")
   }
 
   recorder.onFinish = {
