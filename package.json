@@ -17,7 +17,7 @@
     "aperture"
   ],
   "dependencies": {
-    "electron-util": "^0.8.1",
+    "electron-util": "^0.9.0",
     "execa": "^0.10.0",
     "file-url": "^2.0.2",
     "macos-version": "^4.0.1",
@@ -25,10 +25,10 @@
   },
   "devDependencies": {
     "ava": "^0.25.0",
-    "delay": "^2.0.0",
-    "file-type": "^7.2.0",
+    "delay": "^3.0.0",
+    "file-type": "^8.0.0",
     "read-chunk": "^2.0.0",
-    "xo": "^0.20.3"
+    "xo": "^0.21.1"
   },
   "xo": {
     "space": true
