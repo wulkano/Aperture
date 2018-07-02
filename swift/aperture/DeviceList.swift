@@ -1,4 +1,4 @@
-import Foundation
+import AppKit
 import AVFoundation
 import CoreMediaIO
 
@@ -15,6 +15,15 @@ private func enableDalDevices() {
 }
 
 struct DeviceList {
+  static func screen() -> [[String: Any]] {
+    return NSScreen.screens.map {
+      [
+        "name": $0.name,
+        "id": $0.id
+      ]
+    }
+  }
+
   static func audio() -> [[String: String]] {
     return AVCaptureDevice.devices(for: .audio).map {
       [

@@ -43,6 +43,19 @@ See [`example.js`](example.js) if you want to quickly try it out. *(The example 
 
 ## API
 
+### aperture.screens() -> `Promise<Array>`
+
+Get a list of screens. The first screen is the primary screen.
+
+Example:
+
+```js
+[{
+  id: 69732482,
+  name: 'Color LCD'
+}]
+```
+
 ### aperture.audioDevices() -> `Promise<Array>`
 
 Get a list of audio devices.

@@ -65,9 +65,15 @@ func usage() {
     """
     Usage:
       aperture <options>
+      aperture list-screens
       aperture list-audio-devices
     """
   )
+}
+
+if arguments.first == "list-screens" {
+  printErr(try toJson(DeviceList.screen()))
+  exit(0)
 }
 
 if arguments.first == "list-audio-devices" {

@@ -146,12 +146,22 @@ class Aperture {
 
 module.exports = () => new Aperture();
 
+module.exports.screens = async () => {
+  const stderr = await execa.stderr(BIN, ['list-screens']);
+
+  try {
+    return JSON.parse(stderr);
+  } catch (_) {
+    return stderr;
+  }
+};
+
 module.exports.audioDevices = async () => {
   const stderr = await execa.stderr(BIN, ['list-audio-devices']);
 
   try {
     return JSON.parse(stderr);
-  } catch (err) {
+  } catch (_) {
     return stderr;
   }
 };
