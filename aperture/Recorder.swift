@@ -27,11 +27,20 @@ final class Recorder: NSObject {
   }
 
   /// TODO: When targeting macOS 10.13, make the `videoCodec` option the type `AVVideoCodecType`
-  init(destination: URL, fps: Int, cropRect: CGRect?, showCursor: Bool, highlightClicks: Bool, displayId: CGDirectDisplayID = .main, audioDevice: AVCaptureDevice? = .default(for: .audio), videoCodec: String? = nil) throws {
+  init(
+    destination: URL,
+    fps: Int,
+    cropRect: CGRect?,
+    showCursor: Bool,
+    highlightClicks: Bool,
+    screenId: CGDirectDisplayID = .main,
+    audioDevice: AVCaptureDevice? = .default(for: .audio),
+    videoCodec: String? = nil
+  ) throws {
     self.destination = destination
     session = AVCaptureSession()
 
-    let input = AVCaptureScreenInput(displayID: displayId)
+    let input = AVCaptureScreenInput(displayID: screenId)
 
     /// TODO: Use `CMTime(seconds:)` here instead
     input.minFrameDuration = CMTime(value: 1, timescale: Int32(fps))

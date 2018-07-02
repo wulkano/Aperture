@@ -16,7 +16,7 @@ struct Options: Decodable {
   let cropRect: CGRect?
   let showCursor: Bool
   let highlightClicks: Bool
-  let displayId: String
+  let screenId: CGDirectDisplayID
   let audioDeviceId: String?
   let videoCodec: String?
 }
@@ -31,7 +31,7 @@ func record() throws {
     cropRect: options.cropRect,
     showCursor: options.showCursor,
     highlightClicks: options.highlightClicks,
-    displayId: options.displayId == "main" ? CGMainDisplayID() : CGDirectDisplayID(options.displayId)!,
+    screenId: options.screenId == 0 ? .main : options.screenId,
     audioDevice: options.audioDeviceId != nil ? AVCaptureDevice(uniqueID: options.audioDeviceId!) : nil,
     videoCodec: options.videoCodec
   )
