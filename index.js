@@ -36,7 +36,7 @@ class Aperture {
     cropArea = undefined,
     showCursor = true,
     highlightClicks = false,
-    displayId = 'main',
+    screenId = 0,
     audioDeviceId = undefined,
     videoCodec = undefined
   } = {}) {
@@ -67,7 +67,7 @@ class Aperture {
         fps,
         showCursor,
         highlightClicks,
-        displayId,
+        screenId,
         audioDeviceId
       };
 

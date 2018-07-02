@@ -128,12 +128,12 @@ Highlight cursor clicks in the screen recording.
 
 Enabling this will also enable the `showCursor` option.
 
-##### displayId
+##### screenId
 
-Type: `string`<br>
-Default: `main`
+Type: `number`<br>
+Default: `aperture.screens()[0]` *(Primary screen)*
 
-Display to record.
+Screen to record.
 
 ##### audioDeviceId
 
