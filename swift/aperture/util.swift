@@ -1,16 +1,195 @@
 import AppKit
 import AVFoundation
 
-private final class StandardErrorOutputStream: TextOutputStream {
-  func write(_ string: String) {
-    FileHandle.standardError.write(string.data(using: .utf8)!)
+
+// MARK: - SignalHandler
+struct SignalHandler {
+  struct Signal: Hashable {
+    static let hangup = Signal(rawValue: SIGHUP)
+    static let interrupt = Signal(rawValue: SIGINT)
+    static let quit = Signal(rawValue: SIGQUIT)
+    static let abort = Signal(rawValue: SIGABRT)
+    static let kill = Signal(rawValue: SIGKILL)
+    static let alarm = Signal(rawValue: SIGALRM)
+    static let termination = Signal(rawValue: SIGTERM)
+    static let userDefined1 = Signal(rawValue: SIGUSR1)
+    static let userDefined2 = Signal(rawValue: SIGUSR2)
+
+    /// Signals that cause the process to exit
+    static let exitSignals = [
+      hangup,
+      interrupt,
+      quit,
+      abort,
+      alarm,
+      termination
+    ]
+
+    let rawValue: Int32
+    init(rawValue: Int32) {
+      self.rawValue = rawValue
+    }
+  }
+
+  typealias CSignalHandler = @convention(c) (Int32) -> ()
+  typealias SignalHandler = (Signal) -> Void
+
+  private static var handlers = [Signal: [SignalHandler]]()
+
+  private static var cHandler: CSignalHandler = { rawSignal in
+    let signal = Signal(rawValue: rawSignal)
+
+    guard let signalHandlers = handlers[signal] else {
+      return
+    }
+
+    for handler in signalHandlers {
+      handler(signal)
+    }
+  }
+
+  /// Handle some signals
+  static func handle(signals: [Signal], handler: @escaping SignalHandler) {
+    for signal in signals {
+      // Since Swift has no way of running code on "struct creation", we need to initialize here…
+      if handlers[signal] == nil {
+        handlers[signal] = []
+      }
+      handlers[signal]?.append(handler)
+
+      var signalAction = sigaction(
+        __sigaction_u: unsafeBitCast(cHandler, to: __sigaction_u.self),
+        sa_mask: 0,
+        sa_flags: 0
+      )
+
+      _ = withUnsafePointer(to: &signalAction) { pointer in
+        sigaction(signal.rawValue, pointer, nil)
+      }
+    }
+  }
+
+  /// Raise a signal
+  static func raise(signal: Signal) {
+    _ = Darwin.raise(signal.rawValue)
+  }
+
+  /// Ignore a signal
+  static func ignore(signal: Signal) {
+    _ = Darwin.signal(signal.rawValue, SIG_IGN)
+  }
+
+  /// Restore default signal handling
+  static func restore(signal: Signal) {
+    _ = Darwin.signal(signal.rawValue, SIG_DFL)
   }
 }
 
-private var stderr = StandardErrorOutputStream()
+extension Array where Element == SignalHandler.Signal {
+  static let exitSignals = SignalHandler.Signal.exitSignals
+}
+// MARK: -
 
-func printErr(_ item: Any) {
-  print(item, to: &stderr)
+
+// MARK: - CLI utils
+extension FileHandle: TextOutputStream {
+  public func write(_ string: String) {
+    write(string.data(using: .utf8)!)
+  }
+}
+
+struct CLI {
+  static var standardInput = FileHandle.standardOutput
+  static var standardOutput = FileHandle.standardOutput
+  static var standardError = FileHandle.standardError
+
+  static let arguments = Array(CommandLine.arguments.dropFirst(1))
+
+  /// Called when the process exits, either normally or forced
+  static var onExit: (() -> Void)? {
+    didSet {
+      guard let exitHandler = onExit else {
+        return
+      }
+
+      var isCalled = false
+      let handler = {
+        guard !isCalled else {
+          return
+        }
+        isCalled = true
+        exitHandler()
+      }
+
+      /// I'm getting this error here:
+      /// `A C function pointer cannot be formed from a closure that captures context`
+      /// Any ideas how to solve it?
+//      atexit {
+//        handler()
+//      }
+
+      SignalHandler.handle(signals: .exitSignals) { _ in
+        handler()
+      }
+    }
+  }
+
+  /// Called when the process exits forced
+  static var onForcedExit: ((SignalHandler.Signal) -> Void)? {
+    didSet {
+      guard let exitHandler = onForcedExit else {
+        return
+      }
+
+      SignalHandler.handle(signals: .exitSignals, handler: exitHandler)
+    }
+  }
+}
+
+enum PrintOutputTarget {
+  case standardOutput
+  case standardError
+}
+
+/// Make `print()` accept an array of items
+/// Since Swift doesn't support spreading...
+private func print<Target>(
+  _ items: [Any],
+  separator: String = " ",
+  terminator: String = "\n",
+  to output: inout Target
+) where Target: TextOutputStream {
+  let item = items.map { "\($0)" }.joined(separator: separator)
+  Swift.print(item, terminator: terminator, to: &output)
+}
+
+func print(
+  _ items: Any...,
+  separator: String = " ",
+  terminator: String = "\n",
+  to output: PrintOutputTarget = .standardOutput
+) {
+  switch output {
+  case .standardOutput:
+    print(items, separator: separator, terminator: terminator)
+  case .standardError:
+    print(items, separator: separator, terminator: terminator, to: &CLI.standardError)
+  }
+}
+// MARK: -
+
+
+// MARK: - Misc
+extension Data {
+  func jsonDecoded<T: Decodable>() throws -> T {
+    return try JSONDecoder().decode(T.self, from: self)
+  }
+}
+
+extension String {
+  func jsonDecoded<T: Decodable>() throws -> T {
+    return try data(using: .utf8)!.jsonDecoded()
+  }
 }
 
 func toJson<T>(_ data: T) throws -> String {
@@ -18,9 +197,17 @@ func toJson<T>(_ data: T) throws -> String {
   return String(data: json, encoding: .utf8)!
 }
 
+extension CMTimeScale {
+  static var video: CMTimeScale = 600 // This is what Apple recommends
+}
+
 extension CMTime {
-  static var zero: CMTime = kCMTimeZero
-  static var invalid: CMTime = kCMTimeInvalid
+  static let zero = kCMTimeZero
+  static let invalid = kCMTimeInvalid
+
+  init(videoFramesPerSecond: Int) {
+    self.init(seconds: 1 / Double(videoFramesPerSecond), preferredTimescale: .video)
+  }
 }
 
 extension CGDirectDisplayID {
@@ -77,3 +264,4 @@ extension NSScreen {
     return name
   }
 }
+// MARK: -

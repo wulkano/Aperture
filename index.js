@@ -64,7 +64,7 @@ class Aperture {
 
       const recorderOpts = {
         destination: fileUrl(this.tmpPath),
-        fps,
+        framesPerSecond: fps,
         showCursor,
         highlightClicks,
         screenId,
