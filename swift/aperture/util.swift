@@ -106,24 +106,10 @@ struct CLI {
   static let arguments = Array(CommandLine.arguments.dropFirst(1))
 }
 
-private struct AtExitWrapper {
-  private static var handlers = [() -> Void]()
-
-  static func addHandler(_ handler: @escaping () -> Void) {
-    if handlers.isEmpty {
-      atexit {
-        for handler in AtExitWrapper.handlers {
-          handler()
-        }
-      }
-    }
-
-    handlers.append(handler)
-  }
-}
-
 extension CLI {
-  /// Called when the process exits, either normally or forced
+  private static let once = Once()
+
+  /// Called when the process exits, either normally or forced (through signals)
   /// When this is set, it's up to you to exit the process
   static var onExit: (() -> Void)? {
     didSet {
@@ -131,17 +117,13 @@ extension CLI {
         return
       }
 
-      /// TODO: Make a thing that ensures `handler` is only called once
-      var isCalled = false
       let handler = {
-        guard !isCalled else {
-          return
-        }
-        isCalled = true
-        exitHandler()
+        once.run(exitHandler)
       }
 
-      AtExitWrapper.addHandler(handler)
+      atexit_b {
+        handler()
+      }
 
       SignalHandler.handle(signals: .exitSignals) { _ in
         handler()
@@ -149,7 +131,7 @@ extension CLI {
     }
   }
 
-  /// Called when the process is being forced to exit
+  /// Called when the process is being forced (through signals) to exit
   /// When this is set, it's up to you to exit the process
   static var onForcedExit: ((SignalHandler.Signal) -> Void)? {
     didSet {
@@ -196,6 +178,49 @@ func print(
 
 
 // MARK: - Misc
+func synchronized<T>(lock: AnyObject, closure: () throws -> T) rethrows -> T {
+	objc_sync_enter(lock)
+	defer {
+		objc_sync_exit(lock)
+	}
+
+	return try closure()
+}
+
+final class Once {
+  private var hasRun = false
+
+  /**
+  Executes the given closure only once (thread-safe)
+
+  ```
+  final class Foo {
+    private let once = Once()
+
+    func bar() {
+      once.run {
+        print("Called only once")
+      }
+    }
+  }
+
+  let foo = Foo()
+  foo.bar()
+  foo.bar()
+  ```
+  */
+  func run(_ closure: () -> Void) {
+    synchronized(lock: self) {
+      guard !hasRun else {
+        return
+      }
+
+      hasRun = true
+      closure()
+    }
+  }
+}
+
 extension Data {
   func jsonDecoded<T: Decodable>() throws -> T {
     return try JSONDecoder().decode(T.self, from: self)
