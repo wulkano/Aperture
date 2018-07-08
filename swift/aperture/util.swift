@@ -104,14 +104,34 @@ struct CLI {
   static var standardError = FileHandle.standardError
 
   static let arguments = Array(CommandLine.arguments.dropFirst(1))
+}
 
+private struct AtExitWrapper {
+  private static var handlers = [() -> Void]()
+
+  static func addHandler(_ handler: @escaping () -> Void) {
+    if handlers.isEmpty {
+      atexit {
+        for handler in AtExitWrapper.handlers {
+          handler()
+        }
+      }
+    }
+
+    handlers.append(handler)
+  }
+}
+
+extension CLI {
   /// Called when the process exits, either normally or forced
+  /// When this is set, it's up to you to exit the process
   static var onExit: (() -> Void)? {
     didSet {
       guard let exitHandler = onExit else {
         return
       }
 
+      /// TODO: Make a thing that ensures `handler` is only called once
       var isCalled = false
       let handler = {
         guard !isCalled else {
@@ -121,12 +141,7 @@ struct CLI {
         exitHandler()
       }
 
-      /// I'm getting this error here:
-      /// `A C function pointer cannot be formed from a closure that captures context`
-      /// Any ideas how to solve it?
-//      atexit {
-//        handler()
-//      }
+      AtExitWrapper.addHandler(handler)
 
       SignalHandler.handle(signals: .exitSignals) { _ in
         handler()
@@ -134,7 +149,8 @@ struct CLI {
     }
   }
 
-  /// Called when the process exits forced
+  /// Called when the process is being forced to exit
+  /// When this is set, it's up to you to exit the process
   static var onForcedExit: ((SignalHandler.Signal) -> Void)? {
     didSet {
       guard let exitHandler = onForcedExit else {
