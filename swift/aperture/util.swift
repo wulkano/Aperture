@@ -31,7 +31,7 @@ struct SignalHandler {
     }
   }
 
-  typealias CSignalHandler = @convention(c) (Int32) -> ()
+  typealias CSignalHandler = @convention(c) (Int32) -> Void
   typealias SignalHandler = (Signal) -> Void
 
   private static var handlers = [Signal: [SignalHandler]]()
