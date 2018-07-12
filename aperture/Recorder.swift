@@ -29,7 +29,7 @@ final class Recorder: NSObject {
   /// TODO: When targeting macOS 10.13, make the `videoCodec` option the type `AVVideoCodecType`
   init(
     destination: URL,
-    fps: Int,
+    framesPerSecond: Int,
     cropRect: CGRect?,
     showCursor: Bool,
     highlightClicks: Bool,
@@ -42,8 +42,7 @@ final class Recorder: NSObject {
 
     let input = AVCaptureScreenInput(displayID: screenId)
 
-    /// TODO: Use `CMTime(seconds:)` here instead
-    input.minFrameDuration = CMTime(value: 1, timescale: Int32(fps))
+    input.minFrameDuration = CMTime(videoFramesPerSecond: framesPerSecond)
 
     if let cropRect = cropRect {
       input.cropRect = cropRect

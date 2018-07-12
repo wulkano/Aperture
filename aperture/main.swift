@@ -1,18 +1,9 @@
 import Foundation
 import AVFoundation
 
-var recorder: Recorder!
-let arguments = CommandLine.arguments.dropFirst()
-
-func quit(_: Int32) {
-  recorder.stop()
-  // Do not call `exit()` here as the video is not always done
-  // saving at this point and will be corrupted randomly
-}
-
 struct Options: Decodable {
   let destination: URL
-  let fps: Int
+  let framesPerSecond: Int
   let cropRect: CGRect?
   let showCursor: Bool
   let highlightClicks: Bool
@@ -22,12 +13,11 @@ struct Options: Decodable {
 }
 
 func record() throws {
-  let json = arguments.first!.data(using: .utf8)!
-  let options = try JSONDecoder().decode(Options.self, from: json)
+  let options: Options = try CLI.arguments.first!.jsonDecoded()
 
-  recorder = try Recorder(
+  let recorder = try Recorder(
     destination: options.destination,
-    fps: options.fps,
+    framesPerSecond: options.framesPerSecond,
     cropRect: options.cropRect,
     showCursor: options.showCursor,
     highlightClicks: options.highlightClicks,
@@ -45,22 +35,23 @@ func record() throws {
   }
 
   recorder.onError = {
-    printErr($0)
+    print($0, to: .standardError)
     exit(1)
   }
 
-  signal(SIGHUP, quit)
-  signal(SIGINT, quit)
-  signal(SIGTERM, quit)
-  signal(SIGQUIT, quit)
+  CLI.onExit = {
+    recorder.stop()
+    // Do not call `exit()` here as the video is not always done
+    // saving at this point and will be corrupted randomly
+  }
 
   recorder.start()
-  setbuf(__stdoutp, nil)
 
+  setbuf(__stdoutp, nil)
   RunLoop.main.run()
 }
 
-func usage() {
+func showUsage() {
   print(
     """
     Usage:
@@ -71,21 +62,17 @@ func usage() {
   )
 }
 
-if arguments.first == "list-screens" {
-  printErr(try toJson(DeviceList.screen()))
+switch CLI.arguments.first {
+case "list-screens":
+  print(try toJson(DeviceList.screen()), to: .standardError)
   exit(0)
-}
-
-if arguments.first == "list-audio-devices" {
+case "list-audio-devices":
   // Uses stderr because of unrelated stuff being outputted on stdout
-  printErr(try toJson(DeviceList.audio()))
+  print(try toJson(DeviceList.audio()), to: .standardError)
   exit(0)
-}
-
-if arguments.first != nil {
+case .none:
+  showUsage()
+  exit(1)
+default:
   try record()
-  exit(0)
 }
-
-usage()
-exit(1)
