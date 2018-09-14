@@ -1,6 +1,7 @@
 import AVFoundation
 
 enum ApertureError: Error {
+  case invalidScreen
   case invalidAudioDevice
   case couldNotAddScreen
   case couldNotAddMic
@@ -40,7 +41,7 @@ final class Recorder: NSObject {
     self.destination = destination
     session = AVCaptureSession()
 
-    let input = AVCaptureScreenInput(displayID: screenId)
+    let input = try AVCaptureScreenInput(displayID: screenId).unwrapOrThrow(ApertureError.invalidScreen)
 
     input.minFrameDuration = CMTime(videoFramesPerSecond: framesPerSecond)
 
