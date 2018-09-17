@@ -243,9 +243,6 @@ extension CMTimeScale {
 }
 
 extension CMTime {
-  static let zero = kCMTimeZero
-  static let invalid = kCMTimeInvalid
-
   init(videoFramesPerSecond: Int) {
     self.init(seconds: 1 / Double(videoFramesPerSecond), preferredTimescale: .video)
   }
@@ -298,11 +295,21 @@ extension NSScreen {
     guard
       let localizedNames = info[kDisplayProductName] as? [String: Any],
       let name = localizedNames.values.first as? String
-      else {
+    else {
         return "Unnamed screen"
     }
 
     return name
+  }
+}
+
+extension Optional {
+  func unwrapOrThrow(_ errorExpression: @autoclosure () -> Error) throws -> Wrapped {
+    guard let value = self else {
+      throw errorExpression()
+    }
+
+    return value
   }
 }
 // MARK: -
