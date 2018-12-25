@@ -1,6 +1,7 @@
+import Foundation
 import AVFoundation
 
-enum ApertureError: Error {
+public enum ApertureError: Error {
   case invalidScreen
   case invalidAudioDevice
   case couldNotAddScreen
@@ -8,27 +9,29 @@ enum ApertureError: Error {
   case couldNotAddOutput
 }
 
-final class Aperture: NSObject {
+public final class Aperture: NSObject {
   private let destination: URL
   private let session: AVCaptureSession
   private let output: AVCaptureMovieFileOutput
 
-  var onStart: (() -> Void)?
-  var onFinish: (() -> Void)?
-  var onError: ((Error) -> Void)?
-  var onPause: (() -> Void)?
-  var onResume: (() -> Void)?
+  public var onStart: (() -> Void)?
+  public var onFinish: (() -> Void)?
+  public var onError: ((Error) -> Void)?
+  public var onPause: (() -> Void)?
+  public var onResume: (() -> Void)?
 
-  var isRecording: Bool {
+  public var isRecording: Bool {
     return output.isRecording
   }
 
-  var isPaused: Bool {
+  public var isPaused: Bool {
     return output.isRecordingPaused
   }
 
+  public let devices = Devices.self
+
   /// TODO: When targeting macOS 10.13, make the `videoCodec` option the type `AVVideoCodecType`
-  init(
+  public init(
     destination: URL,
     framesPerSecond: Int,
     cropRect: CGRect?,
@@ -95,31 +98,31 @@ final class Aperture: NSObject {
     super.init()
   }
 
-  func start() {
+  public func start() {
     session.startRunning()
     output.startRecording(to: destination, recordingDelegate: self)
   }
 
-  func stop() {
+  public func stop() {
     output.stopRecording()
     session.stopRunning()
   }
 
-  func pause() {
+  public func pause() {
     output.pauseRecording()
   }
 
-  func resume() {
+  public func resume() {
     output.resumeRecording()
   }
 }
 
 extension Aperture: AVCaptureFileOutputRecordingDelegate {
-  func fileOutput(_ captureOutput: AVCaptureFileOutput, didStartRecordingTo fileURL: URL, from connections: [AVCaptureConnection]) {
+  public func fileOutput(_ captureOutput: AVCaptureFileOutput, didStartRecordingTo fileURL: URL, from connections: [AVCaptureConnection]) {
     onStart?()
   }
 
-  func fileOutput(_ captureOutput: AVCaptureFileOutput, didFinishRecordingTo outputFileURL: URL, from connections: [AVCaptureConnection], error: Error?) {
+  public func fileOutput(_ captureOutput: AVCaptureFileOutput, didFinishRecordingTo outputFileURL: URL, from connections: [AVCaptureConnection], error: Error?) {
     let FINISHED_RECORDING_ERROR_CODE = -11806
 
     if let error = error, error._code != FINISHED_RECORDING_ERROR_CODE {
@@ -129,15 +132,15 @@ extension Aperture: AVCaptureFileOutputRecordingDelegate {
     }
   }
 
-  func fileOutput(_ output: AVCaptureFileOutput, didPauseRecordingTo fileURL: URL, from connections: [AVCaptureConnection]) {
+  public func fileOutput(_ output: AVCaptureFileOutput, didPauseRecordingTo fileURL: URL, from connections: [AVCaptureConnection]) {
     onPause?()
   }
 
-  func fileOutput(_ output: AVCaptureFileOutput, didResumeRecordingTo fileURL: URL, from connections: [AVCaptureConnection]) {
+  public func fileOutput(_ output: AVCaptureFileOutput, didResumeRecordingTo fileURL: URL, from connections: [AVCaptureConnection]) {
     onResume?()
   }
 
-  func fileOutputShouldProvideSampleAccurateRecordingStart(_ output: AVCaptureFileOutput) -> Bool {
+  public func fileOutputShouldProvideSampleAccurateRecordingStart(_ output: AVCaptureFileOutput) -> Bool {
     return true
   }
 }

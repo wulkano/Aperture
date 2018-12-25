@@ -14,8 +14,8 @@ private func enableDalDevices() {
   CMIOObjectSetPropertyData(CMIOObjectID(kCMIOObjectSystemObject), &property, 0, nil, UInt32(sizeOfAllow), &allow)
 }
 
-struct Devices {
-  static func screen() -> [[String: Any]] {
+public struct Devices {
+  public static func screen() -> [[String: Any]] {
     return NSScreen.screens.map {
       [
         "name": $0.name,
@@ -24,7 +24,7 @@ struct Devices {
     }
   }
 
-  static func audio() -> [[String: String]] {
+  public static func audio() -> [[String: String]] {
     return AVCaptureDevice.devices(for: .audio).map {
       [
         "name": $0.localizedName,
@@ -33,7 +33,7 @@ struct Devices {
     }
   }
 
-  static func ios() -> [[String: String]] {
+  public static func ios() -> [[String: String]] {
     enableDalDevices()
     return AVCaptureDevice.devices(for: .muxed)
       .filter { $0.localizedName == "iPhone" || $0.localizedName == "iPad" }
