@@ -15,7 +15,7 @@ struct Options: Decodable {
 func record() throws {
   let options: Options = try CLI.arguments.first!.jsonDecoded()
 
-  let recorder = try Recorder(
+  let recorder = try Aperture(
     destination: options.destination,
     framesPerSecond: options.framesPerSecond,
     cropRect: options.cropRect,
@@ -64,11 +64,11 @@ func showUsage() {
 
 switch CLI.arguments.first {
 case "list-screens":
-  print(try toJson(DeviceList.screen()), to: .standardError)
+  print(try toJson(Devices.screen()), to: .standardError)
   exit(0)
 case "list-audio-devices":
   // Uses stderr because of unrelated stuff being outputted on stdout
-  print(try toJson(DeviceList.audio()), to: .standardError)
+  print(try toJson(Devices.audio()), to: .standardError)
   exit(0)
 case .none:
   showUsage()

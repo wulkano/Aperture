@@ -7,17 +7,17 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		E3A310881E450DC800D314DD /* DeviceList.swift in Sources */ = {isa = PBXBuildFile; fileRef = E3A310851E450DC800D314DD /* DeviceList.swift */; };
+		E3A310881E450DC800D314DD /* Devices.swift in Sources */ = {isa = PBXBuildFile; fileRef = E3A310851E450DC800D314DD /* Devices.swift */; };
 		E3A310891E450DC800D314DD /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = E3A310861E450DC800D314DD /* main.swift */; };
-		E3A3108A1E450DC800D314DD /* Recorder.swift in Sources */ = {isa = PBXBuildFile; fileRef = E3A310871E450DC800D314DD /* Recorder.swift */; };
+		E3A3108A1E450DC800D314DD /* Aperture.swift in Sources */ = {isa = PBXBuildFile; fileRef = E3A310871E450DC800D314DD /* Aperture.swift */; };
 		E3A8F9E11E46F9C000C6C5FC /* util.swift in Sources */ = {isa = PBXBuildFile; fileRef = E3A8F9E01E46F9C000C6C5FC /* util.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
 		E3A3107B1E450D3600D314DD /* aperture */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = aperture; sourceTree = BUILT_PRODUCTS_DIR; };
-		E3A310851E450DC800D314DD /* DeviceList.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; lineEnding = 0; path = DeviceList.swift; sourceTree = "<group>"; usesTabs = 0; };
+		E3A310851E450DC800D314DD /* Devices.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; lineEnding = 0; path = Devices.swift; sourceTree = "<group>"; usesTabs = 0; };
 		E3A310861E450DC800D314DD /* main.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; lineEnding = 0; path = main.swift; sourceTree = "<group>"; usesTabs = 0; };
-		E3A310871E450DC800D314DD /* Recorder.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; lineEnding = 0; path = Recorder.swift; sourceTree = "<group>"; usesTabs = 0; };
+		E3A310871E450DC800D314DD /* Aperture.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; lineEnding = 0; path = Aperture.swift; sourceTree = "<group>"; usesTabs = 0; };
 		E3A8F9E01E46F9C000C6C5FC /* util.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; lineEnding = 0; path = util.swift; sourceTree = "<group>"; usesTabs = 0; };
 /* End PBXFileReference section */
 
@@ -55,8 +55,8 @@
 			isa = PBXGroup;
 			children = (
 				E3A310861E450DC800D314DD /* main.swift */,
-				E3A310871E450DC800D314DD /* Recorder.swift */,
-				E3A310851E450DC800D314DD /* DeviceList.swift */,
+				E3A310871E450DC800D314DD /* Aperture.swift */,
+				E3A310851E450DC800D314DD /* Devices.swift */,
 				E3A8F9E01E46F9C000C6C5FC /* util.swift */,
 			);
 			path = aperture;
@@ -103,6 +103,9 @@
 			compatibilityVersion = "Xcode 10.0";
 			developmentRegion = English;
 			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+			);
 			mainGroup = E3A310721E450D3600D314DD;
 			productRefGroup = E3A3107C1E450D3600D314DD /* Products */;
 			projectDirPath = "";
@@ -134,9 +137,9 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				E3A3108A1E450DC800D314DD /* Recorder.swift in Sources */,
+				E3A3108A1E450DC800D314DD /* Aperture.swift in Sources */,
 				E3A310891E450DC800D314DD /* main.swift in Sources */,
-				E3A310881E450DC800D314DD /* DeviceList.swift in Sources */,
+				E3A310881E450DC800D314DD /* Devices.swift in Sources */,
 				E3A8F9E11E46F9C000C6C5FC /* util.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

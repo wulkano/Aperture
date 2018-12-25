@@ -14,7 +14,7 @@ private func enableDalDevices() {
   CMIOObjectSetPropertyData(CMIOObjectID(kCMIOObjectSystemObject), &property, 0, nil, UInt32(sizeOfAllow), &allow)
 }
 
-struct DeviceList {
+struct Devices {
   static func screen() -> [[String: Any]] {
     return NSScreen.screens.map {
       [

@@ -8,7 +8,7 @@ enum ApertureError: Error {
   case couldNotAddOutput
 }
 
-final class Recorder: NSObject {
+final class Aperture: NSObject {
   private let destination: URL
   private let session: AVCaptureSession
   private let output: AVCaptureMovieFileOutput
@@ -114,7 +114,7 @@ final class Recorder: NSObject {
   }
 }
 
-extension Recorder: AVCaptureFileOutputRecordingDelegate {
+extension Aperture: AVCaptureFileOutputRecordingDelegate {
   func fileOutput(_ captureOutput: AVCaptureFileOutput, didStartRecordingTo fileURL: URL, from connections: [AVCaptureConnection]) {
     onStart?()
   }
