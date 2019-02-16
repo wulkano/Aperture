@@ -13,6 +13,7 @@ public final class Aperture: NSObject {
   private let destination: URL
   private let session: AVCaptureSession
   private let output: AVCaptureMovieFileOutput
+  private var activity: NSObjectProtocol?
 
   public var onStart: (() -> Void)?
   public var onFinish: (() -> Void)?
@@ -118,11 +119,28 @@ public final class Aperture: NSObject {
 }
 
 extension Aperture: AVCaptureFileOutputRecordingDelegate {
+  private var shouldPreventSleep: Bool {
+    get {
+      return activity != nil
+    }
+    set {
+      if newValue {
+        activity = ProcessInfo.processInfo.beginActivity(options: .idleSystemSleepDisabled, reason: "Recording screen")
+      } else if let activity = activity {
+        ProcessInfo.processInfo.endActivity(activity)
+        self.activity = nil
+      }
+    }
+  }
+
   public func fileOutput(_ captureOutput: AVCaptureFileOutput, didStartRecordingTo fileURL: URL, from connections: [AVCaptureConnection]) {
+    shouldPreventSleep = true
     onStart?()
   }
 
   public func fileOutput(_ captureOutput: AVCaptureFileOutput, didFinishRecordingTo outputFileURL: URL, from connections: [AVCaptureConnection], error: Error?) {
+    shouldPreventSleep = false
+
     let FINISHED_RECORDING_ERROR_CODE = -11806
 
     if let error = error, error._code != FINISHED_RECORDING_ERROR_CODE {
@@ -133,10 +151,12 @@ extension Aperture: AVCaptureFileOutputRecordingDelegate {
   }
 
   public func fileOutput(_ output: AVCaptureFileOutput, didPauseRecordingTo fileURL: URL, from connections: [AVCaptureConnection]) {
+    shouldPreventSleep = false
     onPause?()
   }
 
   public func fileOutput(_ output: AVCaptureFileOutput, didResumeRecordingTo fileURL: URL, from connections: [AVCaptureConnection]) {
+    shouldPreventSleep = true
     onResume?()
   }
 
