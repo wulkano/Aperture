@@ -141,7 +141,7 @@ extension Aperture: AVCaptureFileOutputRecordingDelegate {
   public func fileOutput(_ captureOutput: AVCaptureFileOutput, didFinishRecordingTo outputFileURL: URL, from connections: [AVCaptureConnection], error: Error?) {
     shouldPreventSleep = false
 
-    let FINISHED_RECORDING_ERROR_CODE = -11806
+    let FINISHED_RECORDING_ERROR_CODE = -11_806
 
     if let error = error, error._code != FINISHED_RECORDING_ERROR_CODE {
       onError?(error)
