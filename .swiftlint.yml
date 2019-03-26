@@ -15,6 +15,7 @@ whitelist_rules:
   - conditional_returns_on_newline
   - contains_over_first_not_nil
   - control_statement
+  - deployment_target
   - discarded_notification_center_observer
   - discouraged_direct_init
   - discouraged_object_literal
@@ -148,3 +149,8 @@ identifier_name:
     - 'y'
     - 'a'
     - 'b'
+    - 'x1'
+    - 'x2'
+    - 'y1'
+    - 'y2'
+macOS_deployment_target: '10.12'
