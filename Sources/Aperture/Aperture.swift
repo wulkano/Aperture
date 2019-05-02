@@ -40,7 +40,8 @@ public final class Aperture: NSObject {
     highlightClicks: Bool,
     screenId: CGDirectDisplayID = .main,
     audioDevice: AVCaptureDevice? = .default(for: .audio),
-    videoCodec: String? = nil
+    videoCodec: String? = nil,
+    isFlippedCropRect: Bool? = false
   ) throws {
     self.destination = destination
     session = AVCaptureSession()
@@ -51,6 +52,10 @@ public final class Aperture: NSObject {
 
     if let cropRect = cropRect {
       input.cropRect = cropRect
+      if isFlippedCropRect {
+        var screenHeight = CGDisplayScreenSize(screenId).height
+        input.cropRect.y = screenHeight - (input.cropRect.y + input.cropRect.height)
+      }
     }
 
     input.capturesCursor = showCursor
