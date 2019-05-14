@@ -40,6 +40,7 @@ public final class Aperture: NSObject {
     highlightClicks: Bool,
     screenId: CGDirectDisplayID = .main,
     audioDevice: AVCaptureDevice? = .default(for: .audio),
+    movieFragmentInterval: Int64? = nil,
     videoCodec: String? = nil
   ) throws {
     self.destination = destination
@@ -60,7 +61,7 @@ public final class Aperture: NSObject {
 
     // Needed because otherwise there is no audio on videos longer than 10 seconds
     // http://stackoverflow.com/a/26769529/64949
-    output.movieFragmentInterval = .invalid
+    output.movieFragmentInterval = movieFragmentInterval != nil ? CMTimeMake(value: movieFragmentInterval!, timescale: 1) : .invalid
 
     if let audioDevice = audioDevice {
       if !audioDevice.hasMediaType(.audio) {
