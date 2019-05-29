@@ -52,6 +52,7 @@ public final class Aperture: NSObject {
 
     if let cropRect = cropRect {
       input.cropRect = cropRect
+
       if isFlippedCropRect {
         var screenHeight = CGDisplayScreenSize(screenId).height
         input.cropRect.y = screenHeight - (input.cropRect.y + input.cropRect.height)
