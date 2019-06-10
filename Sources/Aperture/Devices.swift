@@ -18,6 +18,7 @@ public struct Devices {
   public static func screen() -> [[String: Any]] {
     return NSScreen.screens.map {
       [
+		// TODO: Use `NSScreen#localizedName` when targeting macOS 10.15
         "name": $0.name,
         "id": $0.id
       ]
