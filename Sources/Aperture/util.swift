@@ -2,7 +2,8 @@ import AppKit
 import AVFoundation
 
 extension CMTimeScale {
-  static var video: CMTimeScale = 600 // This is what Apple recommends
+  /// This is what Apple recommends.
+  static var video: CMTimeScale = 600
 }
 
 extension CMTime {
@@ -47,7 +48,7 @@ extension NSScreen {
   }
 
   var id: CGDirectDisplayID {
-    return deviceDescription[NSDeviceDescriptionKey("NSScreenNumber")] as! CGDirectDisplayID
+	deviceDescription[NSDeviceDescriptionKey("NSScreenNumber")] as! CGDirectDisplayID
   }
 
   var name: String {

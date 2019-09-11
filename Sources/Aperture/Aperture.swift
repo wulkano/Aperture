@@ -20,18 +20,11 @@ public final class Aperture: NSObject {
   public var onError: ((Error) -> Void)?
   public var onPause: (() -> Void)?
   public var onResume: (() -> Void)?
-
-  public var isRecording: Bool {
-    return output.isRecording
-  }
-
-  public var isPaused: Bool {
-    return output.isRecordingPaused
-  }
-
+  public var isRecording: Bool { output.isRecording }
+  public var isPaused: Bool { output.isRecordingPaused }
   public let devices = Devices.self
 
-  /// TODO: When targeting macOS 10.13, make the `videoCodec` option the type `AVVideoCodecType`
+  // TODO: When targeting macOS 10.13, make the `videoCodec` option the type `AVVideoCodecType`.
   public init(
     destination: URL,
     framesPerSecond: Int,
@@ -120,9 +113,7 @@ public final class Aperture: NSObject {
 
 extension Aperture: AVCaptureFileOutputRecordingDelegate {
   private var shouldPreventSleep: Bool {
-    get {
-      return activity != nil
-    }
+    get { activity != nil }
     set {
       if newValue {
         activity = ProcessInfo.processInfo.beginActivity(options: .idleSystemSleepDisabled, reason: "Recording screen")
@@ -160,7 +151,5 @@ extension Aperture: AVCaptureFileOutputRecordingDelegate {
     onResume?()
   }
 
-  public func fileOutputShouldProvideSampleAccurateRecordingStart(_ output: AVCaptureFileOutput) -> Bool {
-    return true
-  }
+  public func fileOutputShouldProvideSampleAccurateRecordingStart(_ output: AVCaptureFileOutput) -> Bool { true }
 }

@@ -2,7 +2,7 @@ import AppKit
 import AVFoundation
 import CoreMediaIO
 
-// Enable access to iOS devices
+// Enable access to iOS devices.
 private func enableDalDevices() {
   var property = CMIOObjectPropertyAddress(
     mSelector: CMIOObjectPropertySelector(kCMIOHardwarePropertyAllowScreenCaptureDevices),
@@ -16,9 +16,9 @@ private func enableDalDevices() {
 
 public struct Devices {
   public static func screen() -> [[String: Any]] {
-    return NSScreen.screens.map {
+	NSScreen.screens.map {
       [
-		// TODO: Use `NSScreen#localizedName` when targeting macOS 10.15
+		// TODO: Use `NSScreen#localizedName` when targeting macOS 10.15.
         "name": $0.name,
         "id": $0.id
       ]
@@ -26,7 +26,7 @@ public struct Devices {
   }
 
   public static func audio() -> [[String: String]] {
-    return AVCaptureDevice.devices(for: .audio).map {
+	AVCaptureDevice.devices(for: .audio).map {
       [
         "name": $0.localizedName,
         "id": $0.uniqueID
