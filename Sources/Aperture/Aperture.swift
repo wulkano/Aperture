@@ -99,6 +99,59 @@ public final class Aperture: NSObject {
     super.init()
   }
 
+  public init(
+    destination: URL,
+    iosDevice: AVCaptureDevice,
+    audioDevice: AVCaptureDevice? = nil,
+    videoCodec: String? = nil
+  ) throws {
+    self.destination = destination
+    session = AVCaptureSession()
+
+    let input = try AVCaptureDeviceInput(device: iosDevice)
+
+    // input.capturesCursor = showCursor
+    // input.capturesMouseClicks = highlightClicks
+
+    output = AVCaptureMovieFileOutput()
+
+    // Needed because otherwise there is no audio on videos longer than 10 seconds
+    // http://stackoverflow.com/a/26769529/64949
+    output.movieFragmentInterval = .invalid
+
+    if let audioDevice = audioDevice {
+      if !audioDevice.hasMediaType(.audio) {
+        throw ApertureError.invalidAudioDevice
+      }
+
+      let audioInput = try AVCaptureDeviceInput(device: audioDevice)
+
+      if session.canAddInput(audioInput) {
+        session.addInput(audioInput)
+      } else {
+        throw ApertureError.couldNotAddMic
+      }
+    }
+
+    if session.canAddInput(input) {
+      session.addInput(input)
+    } else {
+      throw ApertureError.couldNotAddScreen
+    }
+
+    if session.canAddOutput(output) {
+      session.addOutput(output)
+    } else {
+      throw ApertureError.couldNotAddOutput
+    }
+
+    if let videoCodec = videoCodec {
+      output.setOutputSettings([AVVideoCodecKey: videoCodec], for: output.connection(with: .video)!)
+    }
+
+    super.init()
+  }
+
   public func start() {
     session.startRunning()
     output.startRecording(to: destination, recordingDelegate: self)

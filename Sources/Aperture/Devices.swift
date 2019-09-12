@@ -11,7 +11,9 @@ private func enableDalDevices() {
   )
   var allow: UInt32 = 1
   let sizeOfAllow = MemoryLayout<UInt32>.size
-  CMIOObjectSetPropertyData(CMIOObjectID(kCMIOObjectSystemObject), &property, 0, nil, UInt32(sizeOfAllow), &allow)
+  print("OSSTatus")
+  print(CMIOObjectSetPropertyData(CMIOObjectID(kCMIOObjectSystemObject), &property, 0, nil, UInt32(sizeOfAllow), &allow))
+  print("OSSTatus End")
 }
 
 public struct Devices {
@@ -37,7 +39,7 @@ public struct Devices {
   public static func ios() -> [[String: String]] {
     enableDalDevices()
     return AVCaptureDevice.devices(for: .muxed)
-      .filter { $0.localizedName == "iPhone" || $0.localizedName == "iPad" }
+      .filter { $0.localizedName.contains("iPhone") || $0.localizedName.contains("iPad") }
       .map {
         [
           "name": $0.localizedName,
