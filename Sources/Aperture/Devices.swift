@@ -11,9 +11,7 @@ private func enableDalDevices() {
   )
   var allow: UInt32 = 1
   let sizeOfAllow = MemoryLayout<UInt32>.size
-  print("OSSTatus")
-  print(CMIOObjectSetPropertyData(CMIOObjectID(kCMIOObjectSystemObject), &property, 0, nil, UInt32(sizeOfAllow), &allow))
-  print("OSSTatus End")
+  CMIOObjectSetPropertyData(CMIOObjectID(kCMIOObjectSystemObject), &property, 0, nil, UInt32(sizeOfAllow), &allow)
 }
 
 public struct Devices {
