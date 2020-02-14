@@ -4,13 +4,11 @@
   <p align="center">Record the screen on macOS</p>
 </p>
 
-
 ## Requirements
 
 - macOS 10.12+
-- Xcode 10.2+
-- Swift 5+
-
+- Xcode 11+
+- Swift 5.1+
 
 ## Install
 
@@ -32,17 +30,10 @@ github "wulkano/Aperture"
 pod 'Aperture'
 ```
 
-
 ## Docs
 
-Coming soon. See the source for now.
-
+See the source for now.
 
 ## Related
 
 - [aperture-node](https://github.com/wulkano/aperture-node) - Node.js wrapper
-
-
-## License
-
-MIT
