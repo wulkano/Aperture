@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="media/aperture-logo.svg" width="64" height="64">
+  <img src="Media/aperture-logo.svg" width="64" height="64">
   <h3 align="center">Aperture</h3>
   <p align="center">Record the screen on macOS</p>
 </p>
@@ -32,7 +32,7 @@ pod 'Aperture'
 
 ## Docs
 
-See the source for now.
+See the [source](https://github.com/wulkano/Aperture/blob/master/Sources/Aperture/Aperture.swift) for now.
 
 ## Related
 
