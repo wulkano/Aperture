@@ -2,6 +2,10 @@ import Foundation
 import AVFoundation
 import Aperture
 
+func delay(seconds: TimeInterval, closure: @escaping () -> Void) {
+	DispatchQueue.main.asyncAfter(deadline: .now() + seconds, execute: closure)
+}
+
 guard
 	let deviceInfo = Aperture.Devices.iOS().first,
 	let device = AVCaptureDevice(uniqueID: deviceInfo.id)
@@ -17,17 +21,23 @@ guard let aperture = try? Aperture(destination: url, iosDevice: device) else {
 	exit(1)
 }
 
-aperture.onError = {
-	print($0)
-	exit(1)
+aperture.onFinish = {
+	if let error = $0 {
+		print(error)
+		exit(1)
+	}
+
+	print("Finished recording:", url.path)
+	exit(0)
 }
 
 aperture.start()
 
 print("Recording the screen of “\(deviceInfo.name)” for 5 seconds")
 
-sleep(5)
+delay(seconds: 5) {
+	aperture.stop()
+}
 
-aperture.stop()
-
-print("Finished recording:", url.path)
+setbuf(__stdoutp, nil)
+RunLoop.current.run()

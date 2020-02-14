@@ -82,3 +82,8 @@ extension Optional {
 		return value
 	}
 }
+
+
+func sleep(for duration: TimeInterval) {
+	usleep(useconds_t(duration * Double(USEC_PER_SEC)))
+}

@@ -16,8 +16,7 @@ public final class Aperture: NSObject {
 	private var activity: NSObjectProtocol?
 
 	public var onStart: (() -> Void)?
-	public var onFinish: (() -> Void)?
-	public var onError: ((Swift.Error) -> Void)?
+	public var onFinish: ((Swift.Error?) -> Void)?
 	public var onPause: (() -> Void)?
 	public var onResume: (() -> Void)?
 	public var isRecording: Bool { output.isRecording }
@@ -158,7 +157,11 @@ public final class Aperture: NSObject {
 
 	public func stop() {
 		output.stopRecording()
-		session.stopRunning()
+
+		// This prevents a race condition in Apple's APIs with the above and below calls.
+		sleep(for: 0.1)
+
+		self.session.stopRunning()
 	}
 
 	public func pause() {
@@ -190,14 +193,7 @@ extension Aperture: AVCaptureFileOutputRecordingDelegate {
 
 	public func fileOutput(_ captureOutput: AVCaptureFileOutput, didFinishRecordingTo outputFileURL: URL, from connections: [AVCaptureConnection], error: Swift.Error?) {
 		shouldPreventSleep = false
-
-		let FINISHED_RECORDING_ERROR_CODE = -11_806
-
-		if let error = error, error._code != FINISHED_RECORDING_ERROR_CODE {
-			onError?(error)
-		} else {
-			onFinish?()
-		}
+		onFinish?(error)
 	}
 
 	public func fileOutput(_ output: AVCaptureFileOutput, didPauseRecordingTo fileURL: URL, from connections: [AVCaptureConnection]) {
