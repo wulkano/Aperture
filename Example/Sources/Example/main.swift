@@ -13,13 +13,18 @@ else {
 let url = URL(fileURLWithPath: "../ios-screen-recording.mp4")
 
 guard let aperture = try? Aperture(destination: url, iosDevice: device) else {
-	print("Failed to start recording")
+	print("Failed to initialize")
 	exit(1)
 }
 
-print("Recording the screen of “\(deviceInfo.name)” for 5 seconds")
+aperture.onError = {
+	print($0)
+	exit(1)
+}
 
 aperture.start()
+
+print("Recording the screen of “\(deviceInfo.name)” for 5 seconds")
 
 sleep(5)
 
