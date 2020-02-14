@@ -1,15 +1,15 @@
 import Foundation
 import AVFoundation
 
-public enum ApertureError: Error {
-	case invalidScreen
-	case invalidAudioDevice
-	case couldNotAddScreen
-	case couldNotAddMic
-	case couldNotAddOutput
-}
-
 public final class Aperture: NSObject {
+	public enum Error: Swift.Error {
+		case invalidScreen
+		case invalidAudioDevice
+		case couldNotAddScreen
+		case couldNotAddMic
+		case couldNotAddOutput
+	}
+
 	private let destination: URL
 	private let session: AVCaptureSession
 	private let output: AVCaptureMovieFileOutput
@@ -17,7 +17,7 @@ public final class Aperture: NSObject {
 
 	public var onStart: (() -> Void)?
 	public var onFinish: (() -> Void)?
-	public var onError: ((Error) -> Void)?
+	public var onError: ((Swift.Error) -> Void)?
 	public var onPause: (() -> Void)?
 	public var onResume: (() -> Void)?
 	public var isRecording: Bool { output.isRecording }
@@ -42,7 +42,7 @@ public final class Aperture: NSObject {
 
 		if let audioDevice = audioDevice {
 			if !audioDevice.hasMediaType(.audio) {
-				throw ApertureError.invalidAudioDevice
+				throw Error.invalidAudioDevice
 			}
 
 			let audioInput = try AVCaptureDeviceInput(device: audioDevice)
@@ -50,20 +50,20 @@ public final class Aperture: NSObject {
 			if session.canAddInput(audioInput) {
 				session.addInput(audioInput)
 			} else {
-				throw ApertureError.couldNotAddMic
+				throw Error.couldNotAddMic
 			}
 		}
 
 		if session.canAddInput(input) {
 			session.addInput(input)
 		} else {
-			throw ApertureError.couldNotAddScreen
+			throw Error.couldNotAddScreen
 		}
 
 		if session.canAddOutput(output) {
 			session.addOutput(output)
 		} else {
-			throw ApertureError.couldNotAddOutput
+			throw Error.couldNotAddOutput
 		}
 
 		// TODO: Default to HEVC when on 10.13 or newer and encoding is hardware supported. Without hardware encoding I got 3 FPS full screen recording.
@@ -103,7 +103,7 @@ public final class Aperture: NSObject {
 		audioDevice: AVCaptureDevice? = .default(for: .audio),
 		videoCodec: String? = nil
 	) throws {
-		let input = try AVCaptureScreenInput(displayID: screenId).unwrapOrThrow(ApertureError.invalidScreen)
+		let input = try AVCaptureScreenInput(displayID: screenId).unwrapOrThrow(Error.invalidScreen)
 
 		input.minFrameDuration = CMTime(videoFramesPerSecond: framesPerSecond)
 
@@ -195,7 +195,7 @@ extension Aperture: AVCaptureFileOutputRecordingDelegate {
 		onStart?()
 	}
 
-	public func fileOutput(_ captureOutput: AVCaptureFileOutput, didFinishRecordingTo outputFileURL: URL, from connections: [AVCaptureConnection], error: Error?) {
+	public func fileOutput(_ captureOutput: AVCaptureFileOutput, didFinishRecordingTo outputFileURL: URL, from connections: [AVCaptureConnection], error: Swift.Error?) {
 		shouldPreventSleep = false
 
 		let FINISHED_RECORDING_ERROR_CODE = -11_806
