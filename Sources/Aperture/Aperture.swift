@@ -91,10 +91,10 @@ public final class Aperture: NSObject {
 	*/
 	public convenience init(
 		destination: URL,
-		framesPerSecond: Int,
-		cropRect: CGRect?,
-		showCursor: Bool,
-		highlightClicks: Bool,
+		framesPerSecond: Int = 30,
+		cropRect: CGRect? = nil,
+		showCursor: Bool = true,
+		highlightClicks: Bool = false,
 		screenId: CGDirectDisplayID = .main,
 		audioDevice: AVCaptureDevice? = .default(for: .audio),
 		videoCodec: String? = nil
