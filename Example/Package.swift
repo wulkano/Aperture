@@ -2,7 +2,7 @@
 import PackageDescription
 
 let package = Package(
-    name: "ScreenRecordingSample",
+    name: "Example",
     platforms: [
         .macOS(.v10_12)
     ],
@@ -11,15 +11,9 @@ let package = Package(
     ],
     targets: [
         .target(
-            name: "ScreenRecordingSample",
+            name: "Example",
             dependencies: [
               "Aperture"
-            ]
-        ),
-        .testTarget(
-            name: "ScreenRecordingSampleTests",
-            dependencies: [
-              "ScreenRecordingSample"
             ]
         )
     ]

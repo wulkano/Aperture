@@ -3,7 +3,7 @@ import AVFoundation
 
 extension CMTimeScale {
   /// This is what Apple recommends.
-  static var video: CMTimeScale = 600
+  static let video: CMTimeScale = 600
 }
 
 extension CMTime {
@@ -51,6 +51,7 @@ extension NSScreen {
 	deviceDescription[NSDeviceDescriptionKey("NSScreenNumber")] as! CGDirectDisplayID
   }
 
+  // TODO: Use the built-in `.localizedName` property instead when targeting macOS 10.15. I can then drop this and `infoForCGDisplay`.
   var name: String {
     guard let info = infoForCGDisplay(id, options: kIODisplayOnlyPreferredName) else {
       return "Unknown screen"

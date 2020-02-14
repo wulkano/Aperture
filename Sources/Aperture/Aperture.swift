@@ -78,20 +78,20 @@ public final class Aperture: NSObject {
   }
 
   // TODO: When targeting macOS 10.13, make the `videoCodec` option the type `AVVideoCodecType`.
-  /// Starts a capture session with the given screen id.
+  /// Starts a capture session with the given screen ID.
   ///
   /// To get a list of available screens, use `Devices.screen()`.
   ///
-  /// Then pass the property `id` from those dictionaries to this initializer to start the capture session for the screen.
+  /// Then pass the `id` property from those dictionaries to this initializer to start recording.
   ///
   /// - parameter destination: The destination URL where the captured video will be saved. Needs to be writable by current user.
   /// - parameter framesPerSecond: The frames per second to be used for this capture.
-  /// - parameter cropRect: Optionally the screen capture can be cropped. Pass a CGRect to this initializer which represents the crop area.
+  /// - parameter cropRect: Optionally the screen capture can be cropped. Pass a `CGRect` to this initializer representing the crop area.
   /// - parameter showCursor: Whether to show the cursor in the captured video.
   /// - parameter highlightClicks: Whether to highlight clicks in the captured video.
-  /// - parameter screenId: The id of the screen to be captured.
-  /// - parameter audioDevice: An optional audio device to capture during this session.
-  /// - parameter videoCodec: The video codec to use when capturing this session.
+  /// - parameter screenId: The ID of the screen to be captured.
+  /// - parameter audioDevice: An optional audio device to capture.
+  /// - parameter videoCodec: The video codec to use when capturing.
   public convenience init(
     destination: URL,
     framesPerSecond: Int,
@@ -125,17 +125,17 @@ public final class Aperture: NSObject {
   /// Starts a capture session with the given iOS device.
   ///
   /// To get a list of connected iOS devices, use `Devices.iOS()`.
-  /// Use the property `id` from those dictionaries to create an `AVCaptureDevice`
+  /// Use the `id` property from those dictionaries to create an `AVCaptureDevice`
   /// like in the following example:
   ///
   /// `AVCaptureDevice(uniqueID: id)`
   ///
-  /// Then pass this `AVCaptureDevice` to this initializer to start the capture session for an iOS device.
+  /// Then pass this `AVCaptureDevice` to this initializer to start recording.
   ///
   /// - parameter destination: The destination URL where the captured video will be saved. Needs to be writable by current user.
-  /// - parameter iOSDevice: The iOS device to capture in this session.
-  /// - parameter audioDevice: An optional audio device to capture during this session.
-  /// - parameter videoCodec: The video codec to use when capturing this session.
+  /// - parameter iOSDevice: The iOS device to capture.
+  /// - parameter audioDevice: An optional audio device to capture.
+  /// - parameter videoCodec: The video codec to use when capturing.
   public convenience init(
     destination: URL,
     iosDevice: AVCaptureDevice,
