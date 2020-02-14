@@ -91,7 +91,7 @@ public final class Aperture: NSObject {
 	*/
 	public convenience init(
 		destination: URL,
-		framesPerSecond: Int = 30,
+		framesPerSecond: Int = 60,
 		cropRect: CGRect? = nil,
 		showCursor: Bool = true,
 		highlightClicks: Bool = false,
@@ -127,6 +127,8 @@ public final class Aperture: NSObject {
 	```
 	AVCaptureDevice(uniqueID: id)
 	```
+
+	The frame rate is 60 frames per second.
 
 	- Parameter destination: The destination URL where the captured video will be saved. Needs to be writable by current user.
 	- Parameter iosDevice: The iOS device to capture.
