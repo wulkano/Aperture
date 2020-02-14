@@ -22,7 +22,6 @@ public final class Aperture: NSObject {
 	public var onResume: (() -> Void)?
 	public var isRecording: Bool { output.isRecording }
 	public var isPaused: Bool { output.isRecordingPaused }
-	public let devices = Devices.self
 
 	private init(
 		destination: URL,
@@ -80,7 +79,7 @@ public final class Aperture: NSObject {
 	/**
 	Start a capture session with the given screen ID.
 
-	Use `Aperture.devices.screen()` to get a list of available screens.
+	Use `Aperture.Devices.screen()` to get a list of available screens.
 
 	Then pass the `id` property from those dictionaries to this initializer to start recording.
 
@@ -126,7 +125,7 @@ public final class Aperture: NSObject {
 	/**
 	Start a capture session with the given iOS device.
 
-	Use `Aperture.devices.iOS()` to get a list of connected iOS devices.
+	Use `Aperture.Devices.iOS()` to get a list of connected iOS devices.
 
 	Use the `id` property from those dictionaries to create an `AVCaptureDevice` like in the following example:
 

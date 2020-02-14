@@ -14,37 +14,39 @@ private func enableDalDevices() {
 	CMIOObjectSetPropertyData(CMIOObjectID(kCMIOObjectSystemObject), &property, 0, nil, UInt32(sizeOfAllow), &allow)
 }
 
-public struct Devices {
-	public static func screen() -> [[String: Any]] {
-		NSScreen.screens.map {
-			[
-				// TODO: Use `NSScreen#localizedName` when targeting macOS 10.15.
-				"name": $0.name,
-				"id": $0.id
-			]
+extension Aperture {
+	public struct Devices {
+		public static func screen() -> [[String: Any]] {
+			NSScreen.screens.map {
+				[
+					// TODO: Use `NSScreen#localizedName` when targeting macOS 10.15.
+					"name": $0.name,
+					"id": $0.id
+				]
+			}
 		}
-	}
 
-	public static func audio() -> [[String: String]] {
-		AVCaptureDevice.devices(for: .audio).map {
-			[
-				"name": $0.localizedName,
-				"id": $0.uniqueID
-			]
-		}
-	}
-
-	public static func ios() -> [[String: String]] {
-		enableDalDevices()
-
-		return AVCaptureDevice
-			.devices(for: .muxed)
-			.filter { $0.localizedName.contains("iPhone") || $0.localizedName.contains("iPad") }
-			.map {
+		public static func audio() -> [[String: String]] {
+			AVCaptureDevice.devices(for: .audio).map {
 				[
 					"name": $0.localizedName,
 					"id": $0.uniqueID
 				]
 			}
+		}
+
+		public static func ios() -> [[String: String]] {
+			enableDalDevices()
+
+			return AVCaptureDevice
+				.devices(for: .muxed)
+				.filter { $0.localizedName.contains("iPhone") || $0.localizedName.contains("iPad") }
+				.map {
+					[
+						"name": $0.localizedName,
+						"id": $0.uniqueID
+					]
+				}
+		}
 	}
 }
