@@ -37,7 +37,7 @@ public struct Devices {
   public static func ios() -> [[String: String]] {
     enableDalDevices()
     return AVCaptureDevice.devices(for: .muxed)
-      .filter { $0.localizedName == "iPhone" || $0.localizedName == "iPad" }
+      .filter { $0.localizedName.contains("iPhone") || $0.localizedName.contains("iPad") }
       .map {
         [
           "name": $0.localizedName,

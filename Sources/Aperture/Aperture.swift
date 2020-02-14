@@ -24,32 +24,17 @@ public final class Aperture: NSObject {
   public var isPaused: Bool { output.isRecordingPaused }
   public let devices = Devices.self
 
-  // TODO: When targeting macOS 10.13, make the `videoCodec` option the type `AVVideoCodecType`.
-  public init(
+  private init(
     destination: URL,
-    framesPerSecond: Int,
-    cropRect: CGRect?,
-    showCursor: Bool,
-    highlightClicks: Bool,
-    screenId: CGDirectDisplayID = .main,
-    audioDevice: AVCaptureDevice? = .default(for: .audio),
-    videoCodec: String? = nil
+    input: AVCaptureInput,
+    output: AVCaptureMovieFileOutput,
+    audioDevice: AVCaptureDevice?,
+    videoCodec: String?
   ) throws {
     self.destination = destination
     session = AVCaptureSession()
 
-    let input = try AVCaptureScreenInput(displayID: screenId).unwrapOrThrow(ApertureError.invalidScreen)
-
-    input.minFrameDuration = CMTime(videoFramesPerSecond: framesPerSecond)
-
-    if let cropRect = cropRect {
-      input.cropRect = cropRect
-    }
-
-    input.capturesCursor = showCursor
-    input.capturesMouseClicks = highlightClicks
-
-    output = AVCaptureMovieFileOutput()
+    self.output = output
 
     // Needed because otherwise there is no audio on videos longer than 10 seconds
     // http://stackoverflow.com/a/26769529/64949
@@ -90,6 +75,82 @@ public final class Aperture: NSObject {
     }
 
     super.init()
+  }
+
+  // TODO: When targeting macOS 10.13, make the `videoCodec` option the type `AVVideoCodecType`.
+  /// Starts a capture session with the given screen id.
+  ///
+  /// To get a list of available screens, use `Devices.screen()`.
+  ///
+  /// Then pass the property `id` from those dictionaries to this initializer to start the capture session for the screen.
+  ///
+  /// - parameter destination: The destination URL where the captured video will be saved. Needs to be writable by current user.
+  /// - parameter framesPerSecond: The frames per second to be used for this capture.
+  /// - parameter cropRect: Optionally the screen capture can be cropped. Pass a CGRect to this initializer which represents the crop area.
+  /// - parameter showCursor: Whether to show the cursor in the captured video.
+  /// - parameter highlightClicks: Whether to highlight clicks in the captured video.
+  /// - parameter screenId: The id of the screen to be captured.
+  /// - parameter audioDevice: An optional audio device to capture during this session.
+  /// - parameter videoCodec: The video codec to use when capturing this session.
+  public convenience init(
+    destination: URL,
+    framesPerSecond: Int,
+    cropRect: CGRect?,
+    showCursor: Bool,
+    highlightClicks: Bool,
+    screenId: CGDirectDisplayID = .main,
+    audioDevice: AVCaptureDevice? = .default(for: .audio),
+    videoCodec: String? = nil
+  ) throws {
+    let input = try AVCaptureScreenInput(displayID: screenId).unwrapOrThrow(ApertureError.invalidScreen)
+
+    input.minFrameDuration = CMTime(videoFramesPerSecond: framesPerSecond)
+
+    if let cropRect = cropRect {
+      input.cropRect = cropRect
+    }
+
+    input.capturesCursor = showCursor
+    input.capturesMouseClicks = highlightClicks
+
+    try self.init(
+      destination: destination,
+      input: input,
+      output: AVCaptureMovieFileOutput(),
+      audioDevice: audioDevice,
+      videoCodec: videoCodec
+    )
+  }
+
+  /// Starts a capture session with the given iOS device.
+  ///
+  /// To get a list of connected iOS devices, use `Devices.iOS()`.
+  /// Use the property `id` from those dictionaries to create an `AVCaptureDevice`
+  /// like in the following example:
+  ///
+  /// `AVCaptureDevice(uniqueID: id)`
+  ///
+  /// Then pass this `AVCaptureDevice` to this initializer to start the capture session for an iOS device.
+  ///
+  /// - parameter destination: The destination URL where the captured video will be saved. Needs to be writable by current user.
+  /// - parameter iOSDevice: The iOS device to capture in this session.
+  /// - parameter audioDevice: An optional audio device to capture during this session.
+  /// - parameter videoCodec: The video codec to use when capturing this session.
+  public convenience init(
+    destination: URL,
+    iosDevice: AVCaptureDevice,
+    audioDevice: AVCaptureDevice? = nil,
+    videoCodec: String? = nil
+  ) throws {
+    let input = try AVCaptureDeviceInput(device: iosDevice)
+
+    try self.init(
+      destination: destination,
+      input: input,
+      output: AVCaptureMovieFileOutput(),
+      audioDevice: audioDevice,
+      videoCodec: videoCodec
+    )
   }
 
   public func start() {
