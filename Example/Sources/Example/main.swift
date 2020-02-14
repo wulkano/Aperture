@@ -3,10 +3,8 @@ import AVFoundation
 import Aperture
 
 guard
-	let deviceInfo = Devices.ios().first,
-	let deviceId = deviceInfo["id"],
-	let deviceName = deviceInfo["name"],
-	let device = AVCaptureDevice(uniqueID: deviceId)
+	let deviceInfo = Aperture.Devices.iOS().first,
+	let device = AVCaptureDevice(uniqueID: deviceInfo.id)
 else {
 	print("Could not find any iOS devices")
 	exit(1)
@@ -19,7 +17,7 @@ guard let aperture = try? Aperture(destination: url, iosDevice: device) else {
 	exit(1)
 }
 
-print("Recording the screen of “\(deviceName)” for 5 seconds")
+print("Recording the screen of “\(deviceInfo.name)” for 5 seconds")
 
 aperture.start()
 

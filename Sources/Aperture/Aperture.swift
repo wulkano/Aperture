@@ -81,8 +81,6 @@ public final class Aperture: NSObject {
 
 	Use `Aperture.Devices.screen()` to get a list of available screens.
 
-	Then pass the `id` property from those dictionaries to this initializer to start recording.
-
 	- Parameter destination: The destination URL where the captured video will be saved. Needs to be writable by current user.
 	- Parameter framesPerSecond: The frames per second to be used for this capture.
 	- Parameter cropRect: Optionally the screen capture can be cropped. Pass a `CGRect` to this initializer representing the crop area.
@@ -125,15 +123,11 @@ public final class Aperture: NSObject {
 	/**
 	Start a capture session with the given iOS device.
 
-	Use `Aperture.Devices.iOS()` to get a list of connected iOS devices.
-
-	Use the `id` property from those dictionaries to create an `AVCaptureDevice` like in the following example:
+	Use `Aperture.Devices.iOS()` to get a list of connected iOS devices and use the `.id` property to create an `AVCaptureDevice`:
 
 	```
 	AVCaptureDevice(uniqueID: id)
 	```
-
-	Then pass that `AVCaptureDevice` to this initializer to start recording.
 
 	- Parameter destination: The destination URL where the captured video will be saved. Needs to be writable by current user.
 	- Parameter iosDevice: The iOS device to capture.

@@ -1,10 +1,12 @@
 import AppKit
 import AVFoundation
 
+
 extension CMTimeScale {
 	/// This is what Apple recommends.
 	static let video: CMTimeScale = 600
 }
+
 
 extension CMTime {
 	init(videoFramesPerSecond: Int) {
@@ -12,9 +14,11 @@ extension CMTime {
 	}
 }
 
+
 extension CGDirectDisplayID {
 	public static let main = CGMainDisplayID()
 }
+
 
 extension NSScreen {
 	private func infoForCGDisplay(_ displayID: CGDirectDisplayID, options: Int) -> [AnyHashable: Any]? {
@@ -67,6 +71,7 @@ extension NSScreen {
 		return name
 	}
 }
+
 
 extension Optional {
 	func unwrapOrThrow(_ errorExpression: @autoclosure () -> Error) throws -> Wrapped {
