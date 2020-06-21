@@ -41,7 +41,10 @@ extension NSScreen {
 				continue
 			}
 
-			if vendorID == CGDisplayVendorNumber(displayID) && productID == CGDisplayModelNumber(displayID) {
+			if
+				vendorID == CGDisplayVendorNumber(displayID),
+				productID == CGDisplayModelNumber(displayID)
+			{
 				return info
 			}
 

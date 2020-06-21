@@ -30,8 +30,7 @@ public final class Aperture: NSObject {
 		videoCodec: String?
 	) throws {
 		self.destination = destination
-		session = AVCaptureSession()
-
+		self.session = AVCaptureSession()
 		self.output = output
 
 		// Needed because otherwise there is no audio on videos longer than 10 seconds.
