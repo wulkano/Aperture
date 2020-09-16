@@ -15,7 +15,7 @@
 #### SwiftPM
 
 ```swift
-.package(url: "https://github.com/wulkano/Aperture", from: "0.3.0")
+.package(url: "https://github.com/wulkano/Aperture", from: "0.4.0")
 ```
 
 #### Carthage
