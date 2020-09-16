@@ -6,7 +6,7 @@
 
 ## Requirements
 
-- macOS 10.12+
+- macOS 10.13+
 - Xcode 12+
 - Swift 5.3+
 

@@ -26,8 +26,8 @@ public final class Aperture: NSObject {
 		destination: URL,
 		input: AVCaptureInput,
 		output: AVCaptureMovieFileOutput,
-		audioDevice: AVCaptureDevice?,
-		videoCodec: String?
+		audioDevice: AVCaptureDevice? = nil,
+		videoCodec: AVVideoCodecType? = nil
 	) throws {
 		self.destination = destination
 		self.session = AVCaptureSession()
@@ -63,7 +63,7 @@ public final class Aperture: NSObject {
 			throw Error.couldNotAddOutput
 		}
 
-		// TODO: Default to HEVC when on 10.13 or newer and encoding is hardware supported. Without hardware encoding I got 3 FPS full screen recording.
+		// TODO: Default to HEVC when encoding is hardware supported. Without hardware encoding I got 3 FPS full screen recording.
 		// TODO: Find a way to detect hardware encoding support.
 		// Hardware encoding is supported on 6th gen Intel processor or newer.
 		if let videoCodec = videoCodec {
@@ -73,7 +73,6 @@ public final class Aperture: NSObject {
 		super.init()
 	}
 
-	// TODO: When targeting macOS 10.13, make the `videoCodec` option the type `AVVideoCodecType`.
 	/**
 	Start a capture session with the given screen ID.
 
@@ -96,7 +95,7 @@ public final class Aperture: NSObject {
 		highlightClicks: Bool = false,
 		screenId: CGDirectDisplayID = .main,
 		audioDevice: AVCaptureDevice? = .default(for: .audio),
-		videoCodec: String? = nil
+		videoCodec: AVVideoCodecType? = nil
 	) throws {
 		let input = try AVCaptureScreenInput(displayID: screenId).unwrapOrThrow(Error.invalidScreen)
 
@@ -138,7 +137,7 @@ public final class Aperture: NSObject {
 		destination: URL,
 		iosDevice: AVCaptureDevice,
 		audioDevice: AVCaptureDevice? = nil,
-		videoCodec: String? = nil
+		videoCodec: AVVideoCodecType? = nil
 	) throws {
 		let input = try AVCaptureDeviceInput(device: iosDevice)
 

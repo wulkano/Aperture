@@ -9,5 +9,5 @@ Pod::Spec.new do |s|
 	s.source = { :git => 'https://github.com/wulkano/Aperture.git', :tag => "v#{s.version}" }
 	s.source_files = 'Sources/**/*.swift'
 	s.swift_version = '5.3'
-	s.platform = :macos, '10.12'
+	s.platform = :macos, '10.13'
 end
