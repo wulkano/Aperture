@@ -32,7 +32,7 @@ pod 'Aperture'
 
 ## Docs
 
-See the [source](https://github.com/wulkano/Aperture/blob/master/Sources/Aperture/Aperture.swift) for now.
+See the [source](Sources/Aperture/Aperture.swift) for now.
 
 ## Related
 
