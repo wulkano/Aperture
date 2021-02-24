@@ -86,6 +86,7 @@ public final class Aperture: NSObject {
 	- Parameter screenId: The ID of the screen to be captured.
 	- Parameter audioDevice: An optional audio device to capture.
 	- Parameter videoCodec: The video codec to use when capturing.
+	- Parameter scaleFactor: The factor by which video buffers are to be scaled
 	*/
 	public convenience init(
 		destination: URL,
@@ -95,7 +96,8 @@ public final class Aperture: NSObject {
 		highlightClicks: Bool = false,
 		screenId: CGDirectDisplayID = .main,
 		audioDevice: AVCaptureDevice? = .default(for: .audio),
-		videoCodec: AVVideoCodecType? = nil
+		videoCodec: AVVideoCodecType? = nil,
+		scaleFactor: CGFloat? = nil
 	) throws {
 		let input = try AVCaptureScreenInput(displayID: screenId).unwrapOrThrow(Error.invalidScreen)
 
@@ -103,6 +105,10 @@ public final class Aperture: NSObject {
 
 		if let cropRect = cropRect {
 			input.cropRect = cropRect
+		}
+
+		if let scaleFactor = scaleFactor {
+			input.scaleFactor = scaleFactor
 		}
 
 		input.capturesCursor = showCursor
