@@ -34,6 +34,10 @@ pod 'Aperture'
 
 See the [source](Sources/Aperture/Aperture.swift) for now.
 
+## Building 
+
+The build script can be found in the sibling Node.js wrapper [`package.json`](https://github.com/wulkano/aperture-node/blob/main/package.json).
+
 ## Related
 
 - [aperture-node](https://github.com/wulkano/aperture-node) - Node.js wrapper
