@@ -8,6 +8,7 @@ public final class Aperture: NSObject {
 		case couldNotAddScreen
 		case couldNotAddMic
 		case couldNotAddOutput
+		case couldNotSetVideoCodec
 	}
 
 	private let destination: URL
@@ -63,11 +64,13 @@ public final class Aperture: NSObject {
 			throw Error.couldNotAddOutput
 		}
 
-		// TODO: Default to HEVC when encoding is hardware supported. Without hardware encoding I got 3 FPS full screen recording.
-		// TODO: Find a way to detect hardware encoding support.
-		// Hardware encoding is supported on 6th gen Intel processor or newer.
-		if let videoCodec = videoCodec {
-			output.setOutputSettings([AVVideoCodecKey: videoCodec], for: output.connection(with: .video)!)
+		if
+			let videoCodec = videoCodec,
+			let connection = output.connection(with: .video)
+		{
+			output.setOutputSettings([AVVideoCodecKey: videoCodec], for: connection)
+		} else {
+			throw Error.couldNotSetVideoCodec
 		}
 
 		super.init()

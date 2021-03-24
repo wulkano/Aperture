@@ -1,7 +1,6 @@
-whitelist_rules:
+only_rules:
   - anyobject_protocol
   - array_init
-  - attributes
   - block_based_kvo
   - class_delegate_protocol
   - closing_brace
@@ -12,6 +11,7 @@ whitelist_rules:
   - colon
   - comma
   - compiler_protocol_init
+  - computed_accessors_order
   - conditional_returns_on_newline
   - contains_over_filter_count
   - contains_over_filter_is_empty
@@ -21,6 +21,7 @@ whitelist_rules:
   - custom_rules
   - deployment_target
   - discarded_notification_center_observer
+  - discouraged_assert
   - discouraged_direct_init
   - discouraged_object_literal
   - discouraged_optional_boolean
@@ -35,7 +36,7 @@ whitelist_rules:
   - empty_parentheses_with_trailing_closure
   - empty_string
   - empty_xctest_method
-  - enum_case_associated_value_count
+  - enum_case_associated_values_count
   - explicit_init
   - fallthrough
   - fatal_error_message
@@ -43,10 +44,12 @@ whitelist_rules:
   - flatmap_over_map_reduce
   - for_where
   - generic_type_name
+  - ibinspectable_in_extension
   - identical_operands
   - identifier_name
   - implicit_getter
   - implicit_return
+  - inclusive_language
   - inert_defer
   - is_disjoint
   - joined_default_parameter
@@ -75,18 +78,17 @@ whitelist_rules:
   - notification_center_detachment
   - nsobject_prefer_isequal
   - number_separator
-  - object_literal
   - opening_brace
   - operator_usage_whitespace
   - operator_whitespace
   - orphaned_doc_comment
   - overridden_super_call
-  - pattern_matching_keywords
   - prefer_self_type_over_type_of_self
+  - prefer_zero_over_explicit_init
   - private_action
   - private_outlet
+  - private_subject
   - private_unit_test
-  - prohibited_nan_comparison
   - prohibited_super_call
   - protocol_property_accessors_order
   - reduce_boolean
@@ -100,7 +102,6 @@ whitelist_rules:
   - redundant_type_annotation
   - redundant_void_return
   - required_enum_case
-  - return_value_from_void_function
   - return_arrow_whitespace
   - shorthand_operator
   - sorted_first_last
@@ -112,13 +113,13 @@ whitelist_rules:
   - switch_case_on_newline
   - syntactic_sugar
   - todo
+  - test_case_accessibility
   - toggle_bool
   - trailing_closure
   - trailing_comma
   - trailing_newline
   - trailing_semicolon
   - trailing_whitespace
-  - tuple_pattern
   - unavailable_function
   - unneeded_break_in_switch
   - unneeded_parentheses_in_closure_argument
@@ -141,30 +142,11 @@ whitelist_rules:
   - xctfail_message
   - yoda_condition
 analyzer_rules:
+  - capture_variable
   - unused_declaration
   - unused_import
-force_cast: warning
-force_try: warning
-force_unwrapping: warning
 number_separator:
   minimum_length: 5
-object_literal:
-  image_literal: false
-discouraged_object_literal:
-  color_literal: false
-type_contents_order:
-  order:
-    - case
-    - [type_alias, associated_type, subtype]
-    - type_property
-    - type_method
-    - ib_outlet
-    - [ib_inspectable, instance_property]
-    - initializer
-    - deinitializer
-    - subscript
-    - view_life_cycle_method
-    - [ib_action, other_method]
 identifier_name:
   max_length:
     warning: 100
@@ -185,7 +167,7 @@ identifier_name:
     - 'y1'
     - 'y2'
 deployment_target:
-  macOS_deployment_target: '10.12'
+  macOS_deployment_target: '10.13'
 custom_rules:
   no_nsrect:
     regex: '\bNSRect\b'

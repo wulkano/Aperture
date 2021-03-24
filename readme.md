@@ -12,7 +12,7 @@
 
 ## Install
 
-#### SwiftPM
+#### Swift Package Manager
 
 ```swift
 .package(url: "https://github.com/wulkano/Aperture", from: "0.4.0")
