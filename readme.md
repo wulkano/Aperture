@@ -15,7 +15,7 @@
 #### Swift Package Manager
 
 ```swift
-.package(url: "https://github.com/wulkano/Aperture", from: "0.4.0")
+.package(url: "https://github.com/wulkano/Aperture", from: "1.0.0")
 ```
 
 #### Carthage

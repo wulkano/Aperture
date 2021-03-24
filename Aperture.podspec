@@ -1,6 +1,6 @@
 Pod::Spec.new do |s|
 	s.name = 'Aperture'
-	s.version = '0.4.0'
+	s.version = '1.0.0'
 	s.summary = 'Record the screen on macOS'
 	s.license = 'MIT'
 	s.homepage = 'https://github.com/wulkano/Aperture'
