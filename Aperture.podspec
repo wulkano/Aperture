@@ -8,6 +8,6 @@ Pod::Spec.new do |s|
 	s.authors = { 'Sindre Sorhus' => 'sindresorhus@gmail.com', 'Matheus Fernandes' => 'github@matheus.top' }
 	s.source = { :git => 'https://github.com/wulkano/Aperture.git', :tag => "v#{s.version}" }
 	s.source_files = 'Sources/**/*.swift'
-	s.swift_version = '5.3'
+	s.swift_version = '5.5'
 	s.platform = :macos, '10.13'
 end

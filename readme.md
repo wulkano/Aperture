@@ -1,14 +1,14 @@
 <p align="center">
-  <img src="Media/aperture-logo.svg" width="64" height="64">
-  <h3 align="center">Aperture</h3>
-  <p align="center">Record the screen on macOS</p>
+	<img src="Media/aperture-logo.svg" width="64" height="64">
+	<h3 align="center">Aperture</h3>
+	<p align="center">Record the screen on macOS</p>
 </p>
 
 ## Requirements
 
 - macOS 10.13+
-- Xcode 12.5+
-- Swift 5.4+
+- Xcode 13+
+- Swift 5.5+
 
 ## Install
 

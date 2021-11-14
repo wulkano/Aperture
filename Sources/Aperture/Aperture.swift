@@ -110,7 +110,7 @@ public final class Aperture: NSObject {
 			input.cropRect = cropRect
 		}
 
-		input.scaleFactor = CGFloat(scaleFactor)
+		input.scaleFactor = scaleFactor
 		input.capturesCursor = showCursor
 		input.capturesMouseClicks = highlightClicks
 

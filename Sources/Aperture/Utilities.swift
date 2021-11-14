@@ -3,7 +3,9 @@ import AVFoundation
 
 
 extension CMTimeScale {
-	/// This is what Apple recommends.
+	/**
+	This is what Apple recommends.
+	*/
 	static let video: CMTimeScale = 600
 }
 
