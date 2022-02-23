@@ -64,13 +64,10 @@ public final class Aperture: NSObject {
 			throw Error.couldNotAddOutput
 		}
 
-		if
-			let videoCodec = videoCodec,
-			let connection = output.connection(with: .video)
-		{
+		if let videoCodec = videoCodec {
+			let connection = try output.connection(with: .video)
+				.unwrapOrThrow(Error.couldNotSetVideoCodec)
 			output.setOutputSettings([AVVideoCodecKey: videoCodec], for: connection)
-		} else {
-			throw Error.couldNotSetVideoCodec
 		}
 
 		super.init()
