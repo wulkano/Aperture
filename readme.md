@@ -12,23 +12,13 @@
 
 ## Install
 
-#### Swift Package Manager
+Add the following to `Package.swift`:
 
 ```swift
 .package(url: "https://github.com/wulkano/Aperture", from: "1.0.0")
 ```
 
-#### Carthage
-
-```
-github "wulkano/Aperture"
-```
-
-#### CocoaPods
-
-```ruby
-pod 'Aperture'
-```
+[Or add the package in Xcode.](https://developer.apple.com/documentation/xcode/adding_package_dependencies_to_your_app)
 
 ## Docs
 
