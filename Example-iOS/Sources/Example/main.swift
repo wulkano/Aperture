@@ -6,8 +6,16 @@ func delay(seconds: TimeInterval, closure: @escaping () -> Void) {
 	DispatchQueue.main.asyncAfter(deadline: .now() + seconds, execute: closure)
 }
 
-let url = URL(fileURLWithPath: "../screen-recording.mp4")
-let aperture = try! Aperture(destination: url)
+guard
+	let deviceInfo = Aperture.Devices.iOS().first,
+	let device = AVCaptureDevice(uniqueID: deviceInfo.id)
+else {
+	print("Could not find any iOS devices")
+	exit(1)
+}
+
+let url = URL(fileURLWithPath: "../screen-recording-ios.mp4")
+let aperture = try! Aperture(destination: url, iosDevice: device)
 
 aperture.onFinish = {
 	switch $0 {
@@ -27,7 +35,7 @@ aperture.onFinish = {
 
 aperture.start()
 
-print("Recording the screen for 5 seconds")
+print("Recording the screen of “\(deviceInfo.name)” for 5 seconds")
 
 delay(seconds: 5) {
 	aperture.stop()

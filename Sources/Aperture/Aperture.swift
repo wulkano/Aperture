@@ -17,7 +17,14 @@ public final class Aperture: NSObject {
 	private var activity: NSObjectProtocol?
 
 	public var onStart: (() -> Void)?
-	public var onFinish: ((Swift.Error?) -> Void)?
+
+	/**
+	Called when the recording finishes.
+
+	The success case may contain an error indicating a warning. It's recommended to present this to the user while informing them that the recording successfully finished.
+	*/
+	public var onFinish: ((Result<Swift.Error?, Swift.Error>) -> Void)?
+
 	public var onPause: (() -> Void)?
 	public var onResume: (() -> Void)?
 	public var isRecording: Bool { output.isRecording }
@@ -160,11 +167,6 @@ public final class Aperture: NSObject {
 
 	public func stop() {
 		output.stopRecording()
-
-		// This prevents a race condition in Apple's APIs with the above and below calls.
-		sleep(for: 0.1)
-
-		self.session.stopRunning()
 	}
 
 	public func pause() {
@@ -196,7 +198,20 @@ extension Aperture: AVCaptureFileOutputRecordingDelegate {
 
 	public func fileOutput(_ captureOutput: AVCaptureFileOutput, didFinishRecordingTo outputFileURL: URL, from connections: [AVCaptureConnection], error: Swift.Error?) {
 		shouldPreventSleep = false
-		onFinish?(error)
+		session.stopRunning()
+
+		if let error = error {
+			if ((error as NSError).userInfo[AVErrorRecordingSuccessfullyFinishedKey] as? Bool) == true {
+				onFinish?(.success(error))
+				return
+			}
+
+			onFinish?(.failure(error))
+
+			return
+		}
+
+		onFinish?(.success(nil))
 	}
 
 	public func fileOutput(_ output: AVCaptureFileOutput, didPauseRecordingTo fileURL: URL, from connections: [AVCaptureConnection]) {

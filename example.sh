@@ -1,5 +1,5 @@
 #!/bin/sh
 
 rm -f screen-recording.mp4
-cd Example-iOS
+cd Example
 swift run

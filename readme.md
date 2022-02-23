@@ -34,6 +34,10 @@ pod 'Aperture'
 
 See the [source](Sources/Aperture/Aperture.swift) for now.
 
+## Dev
+
+Run `./example.sh` or `./example-ios.sh`.
+
 ## Related
 
 - [aperture-node](https://github.com/wulkano/aperture-node) - Node.js wrapper
