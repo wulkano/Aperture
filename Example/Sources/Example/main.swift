@@ -27,7 +27,8 @@ aperture.onFinish = {
 
 aperture.start()
 
-print("Recording the screen for 5 seconds")
+print("Available screens:", Aperture.Devices.screen().map(\.name).joined(separator: ", "))
+print("Recording screen for 5 seconds")
 
 delay(seconds: 5) {
 	aperture.stop()

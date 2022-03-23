@@ -62,6 +62,10 @@ extension NSScreen {
 
 	// TODO: Use the built-in `.localizedName` property instead when targeting macOS 10.15. I can then drop this and `infoForCGDisplay`.
 	var name: String {
+		if #available(macOS 10.15, *) {
+			return localizedName
+		}
+
 		guard let info = infoForCGDisplay(id, options: kIODisplayOnlyPreferredName) else {
 			return "Unknown screen"
 		}
