@@ -7,8 +7,7 @@ func delay(seconds: TimeInterval, closure: @escaping () -> Void) {
 }
 
 guard
-	let deviceInfo = Aperture.Devices.iOS().first,
-	let device = AVCaptureDevice(uniqueID: deviceInfo.id)
+	let device = AVCaptureDevice.devices(for: .video).first
 else {
 	print("Could not find any iOS devices")
 	exit(1)
@@ -35,7 +34,7 @@ aperture.onFinish = {
 
 aperture.start()
 
-print("Recording the screen of “\(deviceInfo.name)” for 5 seconds")
+print("Recording the screen of “\(device.localizedName)” for 5 seconds")
 
 delay(seconds: 5) {
 	aperture.stop()
