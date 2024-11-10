@@ -23,10 +23,10 @@ do {
 		target: .screen,
 		options: Aperture.RecordingOptions(
 			destination: url,
-			targetId: screen.id,
+			targetID: screen.id,
 			losslessAudio: true,
 			recordSystemAudio: true,
-			microphoneDeviceId: "BuiltInMicrophoneDevice"
+			microphoneDeviceID: "BuiltInMicrophoneDevice"
 		)
 	)
 	print("Recording screen for 5 seconds")
@@ -37,7 +37,7 @@ do {
 	try await recorder.stopRecording()
 	print("Finished recording:", url.path)
 	exit(0)
-} catch let error as Aperture.ApertureError {
+} catch let error as Aperture.Error {
 	print("Aperture Error: \(error.localizedDescription)")
 } catch {
 	print("Unknown Error: \(error.localizedDescription)")

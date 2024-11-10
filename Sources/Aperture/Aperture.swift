@@ -2,11 +2,11 @@ import Foundation
 import AVFoundation
 import ScreenCaptureKit
 
-public final class Aperture {
+public enum Aperture {
 	public struct RecordingOptions {
 		public init(
 			destination: URL,
-			targetId: String? = nil,
+			targetID: String? = nil,
 			framesPerSecond: Int = 60,
 			cropRect: CGRect? = nil,
 			showCursor: Bool = true,
@@ -14,10 +14,10 @@ public final class Aperture {
 			videoCodec: AVVideoCodecType = .h264,
 			losslessAudio: Bool = false,
 			recordSystemAudio: Bool = false,
-			microphoneDeviceId: String? = nil
+			microphoneDeviceID: String? = nil
 		) {
 			self.destination = destination
-			self.targetId = targetId
+			self.targetID = targetID
 			self.framesPerSecond = framesPerSecond
 			self.cropRect = cropRect
 			self.showCursor = showCursor
@@ -25,11 +25,11 @@ public final class Aperture {
 			self.videoCodec = videoCodec
 			self.losslessAudio = losslessAudio
 			self.recordSystemAudio = recordSystemAudio
-			self.microphoneDeviceId = microphoneDeviceId
+			self.microphoneDeviceID = microphoneDeviceID
 		}
 
 		let destination: URL
-		let targetId: String?
+		let targetID: String?
 		let framesPerSecond: Int
 		let cropRect: CGRect?
 		let showCursor: Bool
@@ -37,7 +37,7 @@ public final class Aperture {
 		let videoCodec: AVVideoCodecType
 		let losslessAudio: Bool
 		let recordSystemAudio: Bool
-		let microphoneDeviceId: String?
+		let microphoneDeviceID: String?
 	}
 	
 	public enum Target {
@@ -47,7 +47,7 @@ public final class Aperture {
 		case audioOnly
 	}
 	
-	public enum ApertureError: Swift.Error {
+	public enum Error: Swift.Error {
 		case recorderAlreadyStarted
 		case targetNotFound(String)
 		case couldNotStartStream(Swift.Error?)
@@ -55,11 +55,13 @@ public final class Aperture {
 		case noTargetProvided
 		case invalidFileExtension(String, Bool)
 		case noDisplaysConnected
-		case unknownError(Swift.Error)
 		case noPermissions
+		case unknown(Swift.Error)
 	}
+}
+
+extension Aperture {
 	public final class Recorder: NSObject {
-		
 		/// The stream object for capturing anything on displays
 		private var stream: SCStream?
 		private var isStreamRecording: Bool = false
@@ -92,24 +94,24 @@ public final class Aperture {
 		private var isPaused: Bool = false
 		
 		/// Internal helpers for when we are resuming, used to fix the buffer timing
-		private var isResuming: Bool = false
-		private var timeOffset: CMTime = .zero
+		private var isResuming = false
+		private var timeOffset = CMTime.zero
 		private var lastFrame: CMTime? = nil
 		
 		/// Continuation to resolve when we have started writting to the output file
-		private var continuation: CheckedContinuation<Void, Error>? = nil
+		private var continuation: CheckedContinuation<Void, any Swift.Error>?
 		/// Holds any errors that are throwing during the recording, we throw them when we stop
-		private var error: ApertureError? = nil
+		private var error: Error?
 		
 		/// The options for the current recording
-		private var options: RecordingOptions? = nil
+		private var options: RecordingOptions?
 		/// The target type for the current recording
-		private var target: Target? = nil
+		private var target: Target?
 		
 		/// Allow consumer to set hooks for various events
 		public var onStart: (() -> Void)?
 		public var onFinish: (() -> Void)?
-		public var onError: ((ApertureError) -> Void)?
+		public var onError: ((Error) -> Void)?
 		public var onPause: (() -> Void)?
 		public var onResume: (() -> Void)?
 		
@@ -118,19 +120,19 @@ public final class Aperture {
 			options: RecordingOptions
 		) async throws {
 			if self.target != nil {
-				throw ApertureError.recorderAlreadyStarted
+				throw Error.recorderAlreadyStarted
 			}
 			
 			self.target = target
 			self.options = options
 			
 			if target != .audioOnly {
-				guard options.targetId != nil else {
-					throw ApertureError.noTargetProvided
+				guard options.targetID != nil else {
+					throw Error.noTargetProvided
 				}
 			}
 			
-			let streamConfig: SCStreamConfiguration = SCStreamConfiguration()
+			let streamConfig = SCStreamConfiguration()
 			
 			streamConfig.queueDepth = 6
 			
@@ -154,12 +156,12 @@ public final class Aperture {
 				content = try await SCShareableContent.excludingDesktopWindows(false, onScreenWindowsOnly: false)
 			} catch let error as SCStreamError {
 				if error.code == .userDeclined {
-					throw ApertureError.noPermissions
+					throw Error.noPermissions
 				}
 				
-				throw ApertureError.couldNotStartStream(error)
+				throw Error.couldNotStartStream(error)
 			} catch {
-				throw ApertureError.couldNotStartStream(error)
+				throw Error.couldNotStartStream(error)
 			}
 			
 			streamConfig.minimumFrameInterval = CMTime(value: 1, timescale: CMTimeScale(target == .audioOnly ? 1 : options.framesPerSecond))
@@ -172,17 +174,21 @@ public final class Aperture {
 				streamConfig.capturesAudio = true
 			}
 			
-			if #available(macOS 15, *), let microphoneDeviceId = options.microphoneDeviceId  {
+			if #available(macOS 15, *), let microphoneDeviceID = options.microphoneDeviceID  {
 				streamConfig.captureMicrophone = true
-				streamConfig.microphoneCaptureDeviceID = microphoneDeviceId
+				streamConfig.microphoneCaptureDeviceID = microphoneDeviceID
 			}
 			
 			switch target {
 			case .screen:
+				guard let targetID = options.targetID else {
+					throw Error.noTargetProvided
+				}
+				
 				guard let display = content.displays.first(where: { display in
-					String(display.displayID) == options.targetId
+					String(display.displayID) == targetID
 				}) else {
-					throw ApertureError.targetNotFound(options.targetId!)
+					throw Error.targetNotFound(targetID)
 				}
 				
 				let screenFilter = SCContentFilter(display: display, excludingWindows: [])
@@ -204,13 +210,17 @@ public final class Aperture {
 				filter = screenFilter
 				break
 			case .window:
-				/// We need to cal this before `SCContentFilter` below otherwise an error is thrown: https://forums.developer.apple.com/forums/thread/743615
+				/// We need to call this before `SCContentFilter` below otherwise an error is thrown: https://forums.developer.apple.com/forums/thread/743615
 				initializeCGS()
+				
+				guard let targetID = options.targetID else {
+					throw Error.noTargetProvided
+				}
 
 				guard let window = content.windows.first(where: { window in
-					String(window.windowID) == options.targetId
+					String(window.windowID) == targetID
 				}) else {
-					throw ApertureError.targetNotFound(options.targetId!)
+					throw Error.targetNotFound(targetID)
 				}
 				
 				let windowFilter = SCContentFilter(desktopIndependentWindow: window)
@@ -230,7 +240,7 @@ public final class Aperture {
 				break
 			case .audioOnly:
 				guard let display = content.displays.first else {
-					throw ApertureError.noDisplaysConnected
+					throw Error.noDisplaysConnected
 				}
 				
 				let screenFilter = SCContentFilter(display: display, excludingWindows: [])
@@ -238,11 +248,11 @@ public final class Aperture {
 				break
 			}
 			
-			if let filter = filter {
+			if let filter {
 				stream = SCStream(filter: filter, configuration: streamConfig, delegate: self)
 			}
 			
-			if let stream = stream {
+			if let stream {
 				do {
 					try stream.addStreamOutput(self, type: .screen, sampleHandlerQueue: .global())
 					
@@ -250,11 +260,11 @@ public final class Aperture {
 						try stream.addStreamOutput(self, type: .audio, sampleHandlerQueue: .global())
 					}
 					
-					if #available(macOS 15, *), options.microphoneDeviceId != nil  {
+					if #available(macOS 15, *), options.microphoneDeviceID != nil  {
 						try stream.addStreamOutput(self, type: .microphone, sampleHandlerQueue: .global())
 					}
 				} catch {
-					throw ApertureError.couldNotStartStream(error)
+					throw Error.couldNotStartStream(error)
 				}
 			}
 			
@@ -262,20 +272,20 @@ public final class Aperture {
 				try await initOutput(target: target, options: options, streamConfig: streamConfig)
 			} catch {
 				try? await cleanUp()
-				throw error is ApertureError ? error : ApertureError.couldNotStartStream(error)
+				throw error is Error ? error : Error.couldNotStartStream(error)
 			}
 		}
 		
 		public func stopRecording() async throws {
-			if let error = error {
+			if let error {
 				throw error
-			} else {
-				onFinish?()
-				try? await cleanUp()
 			}
+			
+			onFinish?()
+			try? await cleanUp()
 		}
 		
-		private func recordError(error: ApertureError) {
+		private func recordError(error: Error) {
 			self.error = error
 			onError?(error)
 			Task { try? await self.cleanUp() }
@@ -290,19 +300,19 @@ public final class Aperture {
 			systemAudioInput?.markAsFinished()
 			microphoneInput?.markAsFinished()
 			
-			if let microphoneCaptureSession = microphoneCaptureSession, microphoneCaptureSession.isRunning {
-				microphoneCaptureSession.stopRunning()
+			if microphoneCaptureSession?.isRunning == true {
+				microphoneCaptureSession?.stopRunning()
 			}
 			
-			if let externalDeviceCaptureSession = externalDeviceCaptureSession, externalDeviceCaptureSession.isRunning {
-				externalDeviceCaptureSession.stopRunning()
+			if externalDeviceCaptureSession?.isRunning == true {
+				externalDeviceCaptureSession?.stopRunning()
 			}
 			
-			if (assetWriter?.status == .writing) {
+			if assetWriter?.status == .writing {
 				await assetWriter?.finishWriting()
 			}
 			
-			if let activity = activity {
+			if let activity {
 				ProcessInfo.processInfo.endActivity(activity)
 				self.activity = nil
 			}
@@ -321,7 +331,7 @@ public final class Aperture {
 	}
 }
 
-extension Aperture.Recorder: SCStreamDelegate, SCStreamOutput, AVCaptureAudioDataOutputSampleBufferDelegate, AVCaptureVideoDataOutputSampleBufferDelegate {
+extension Aperture.Recorder {
 	private func getAssetWriter(target: Aperture.Target, options: Aperture.RecordingOptions) throws -> AVAssetWriter {
 		let fileType: AVFileType
 		let fileExtension = options.destination.pathExtension
@@ -332,7 +342,7 @@ extension Aperture.Recorder: SCStreamDelegate, SCStreamOutput, AVCaptureAudioDat
 				fileType = .m4a
 				break
 			default:
-				throw Aperture.ApertureError.invalidFileExtension(fileExtension, true)
+				throw Aperture.Error.invalidFileExtension(fileExtension, true)
 			}
 		} else {
 			switch fileExtension {
@@ -346,7 +356,7 @@ extension Aperture.Recorder: SCStreamDelegate, SCStreamOutput, AVCaptureAudioDat
 				fileType = .m4v
 				break
 			default:
-				throw Aperture.ApertureError.invalidFileExtension(fileExtension, false)
+				throw Aperture.Error.invalidFileExtension(fileExtension, false)
 			}
 		}
 		
@@ -356,7 +366,10 @@ extension Aperture.Recorder: SCStreamDelegate, SCStreamOutput, AVCaptureAudioDat
 	private func initOutput(target: Aperture.Target, options: Aperture.RecordingOptions, streamConfig: SCStreamConfiguration) async throws {
 		let assetWriter = try getAssetWriter(target: target, options: options)
 		
-		var audioSettings: [String: Any] = [AVSampleRateKey : 48000, AVNumberOfChannelsKey : 2]
+		var audioSettings: [String: Any] = [
+			AVSampleRateKey: 48000,
+			AVNumberOfChannelsKey: 2
+		]
 		
 		if options.losslessAudio {
 			audioSettings[AVFormatIDKey] = kAudioFormatAppleLossless
@@ -379,7 +392,7 @@ extension Aperture.Recorder: SCStreamDelegate, SCStreamOutput, AVCaptureAudioDat
 			}
 		}
 		
-		if let microphoneDeviceId = options.microphoneDeviceId {
+		if let microphoneDeviceID = options.microphoneDeviceID {
 			let channels: Int
 			
 			if #available(macOS 15, *), target != .externalDevice {
@@ -394,13 +407,13 @@ extension Aperture.Recorder: SCStreamDelegate, SCStreamOutput, AVCaptureAudioDat
 				}
 				
 				guard let microphoneDevice = AVCaptureDevice.DiscoverySession(deviceTypes: deviceTypes, mediaType: .audio, position: .unspecified).devices.first(where: { device in
-					device.uniqueID == microphoneDeviceId
+					device.uniqueID == microphoneDeviceID
 				}) else {
-					throw Aperture.ApertureError.microphoneNotFound(microphoneDeviceId)
+					throw Aperture.Error.microphoneNotFound(microphoneDeviceID)
 				}
 				
 				guard let microphoneChannels = microphoneDevice.formats.first?.formatDescription.audioChannelLayout?.numberOfChannels else {
-					throw Aperture.ApertureError.microphoneNotFound(microphoneDeviceId)
+					throw Aperture.Error.microphoneNotFound(microphoneDeviceID)
 				}
 				
 				channels = microphoneChannels
@@ -445,11 +458,15 @@ extension Aperture.Recorder: SCStreamDelegate, SCStreamOutput, AVCaptureAudioDat
 			}
 			
 			enableDalDevices()
+			
+			guard let targetID = options.targetID else {
+				throw Aperture.Error.noTargetProvided
+			}
 
 			guard let device = AVCaptureDevice.DiscoverySession(deviceTypes: deviceTypes, mediaType: nil, position: .unspecified).devices.first(where: { device in
-				device.uniqueID == options.targetId
+				device.uniqueID == targetID
 			}) else {
-				throw Aperture.ApertureError.targetNotFound(options.targetId!)
+				throw Aperture.Error.targetNotFound(targetID)
 			}
 			
 			let externalDeviceCaptureSession = AVCaptureSession()
@@ -481,7 +498,7 @@ extension Aperture.Recorder: SCStreamDelegate, SCStreamOutput, AVCaptureAudioDat
 		
 		try await stream?.startCapture()
 		isStreamRecording = true
-		try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
+		try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, any Swift.Error>) in
 			self.continuation = continuation
 		}
 		activity = ProcessInfo.processInfo.beginActivity(options: .idleSystemSleepDisabled, reason: "Recording screen")
@@ -498,7 +515,7 @@ extension Aperture.Recorder: SCStreamDelegate, SCStreamOutput, AVCaptureAudioDat
 			assetWriter.startSession(atSourceTime: sampleBuffer.presentationTimeStamp)
 			continuation.resume(returning: ())
 		} else {
-			continuation.resume(throwing: Aperture.ApertureError.couldNotStartStream(assetWriter.error))
+			continuation.resume(throwing: Aperture.Error.couldNotStartStream(assetWriter.error))
 		}
 		
 		self.continuation = nil
@@ -549,7 +566,7 @@ extension Aperture.Recorder: SCStreamDelegate, SCStreamOutput, AVCaptureAudioDat
 		
 		videoInput.expectsMediaDataInRealTime = true
 		
-		if (assetWriter.canAdd(videoInput)) {
+		if assetWriter.canAdd(videoInput) {
 			assetWriter.add(videoInput)
 		}
 		
@@ -558,12 +575,65 @@ extension Aperture.Recorder: SCStreamDelegate, SCStreamOutput, AVCaptureAudioDat
 			assetWriter.startSession(atSourceTime: sampleBuffer.presentationTimeStamp)
 			continuation.resume(returning: ())
 		} else {
-			continuation.resume(throwing: Aperture.ApertureError.couldNotStartStream(assetWriter.error))
+			continuation.resume(throwing: Aperture.Error.couldNotStartStream(assetWriter.error))
 		}
 		
 		self.continuation = nil
 	}
 	
+	private func handleBuffer(buffer: CMSampleBuffer, isVideo: Bool) -> CMSampleBuffer {
+		/// Use the video buffer to syncronize after pausing if we have it, otherwise the audio
+		if !isVideo && target != .audioOnly {
+			return buffer
+		}
+		
+		var resultBuffer = buffer
+		
+		if isResuming {
+			isResuming = false
+			
+			var pts = CMSampleBufferGetPresentationTimeStamp(buffer)
+			guard let lastFrame = lastFrame else {
+				return buffer
+			}
+			if lastFrame.flags.contains(.valid) {
+				if timeOffset.value > 0 {
+					pts = CMTimeSubtract(pts, timeOffset)
+				}
+				
+				let offset = CMTimeSubtract(pts, lastFrame)
+				if (timeOffset.value == 0) {
+					timeOffset = offset
+				} else {
+					timeOffset = CMTimeAdd(timeOffset, offset)
+				}
+			}
+			self.lastFrame?.flags = []
+		}
+		
+		if timeOffset.value > 0 {
+			resultBuffer = resultBuffer.adjustTime(by: timeOffset) ?? resultBuffer
+		}
+		
+		var lastFrame = CMSampleBufferGetPresentationTimeStamp(resultBuffer)
+		let dur = CMSampleBufferGetDuration(resultBuffer)
+		if (dur.value > 0) {
+			lastFrame = CMTimeAdd(lastFrame, dur)
+		}
+		
+		self.lastFrame = lastFrame
+		
+		return resultBuffer
+	}
+}
+
+extension Aperture.Recorder: SCStreamDelegate {
+	public func stream(_ stream: SCStream, didStopWithError error: any Error) {
+		recordError(error: .unknown(error))
+	}
+}
+
+extension Aperture.Recorder: SCStreamOutput {
 	public func stream(_ stream: SCStream, didOutputSampleBuffer sampleBuffer: CMSampleBuffer, of type: SCStreamOutputType) {
 		if isPaused { return }
 		guard sampleBuffer.isValid else { return }
@@ -612,11 +682,9 @@ extension Aperture.Recorder: SCStreamDelegate, SCStreamOutput, AVCaptureAudioDat
 		}
 		
 	}
-	
-	public func stream(_ stream: SCStream, didStopWithError error: any Error) {
-		recordError(error: .unknownError(error))
-	}
-	
+}
+
+extension Aperture.Recorder: AVCaptureAudioDataOutputSampleBufferDelegate, AVCaptureVideoDataOutputSampleBufferDelegate {
 	public func captureOutput(_ output: AVCaptureOutput, didOutput sampleBuffer: CMSampleBuffer, from connection: AVCaptureConnection) {
 		if isPaused {
 			return
@@ -643,54 +711,9 @@ extension Aperture.Recorder: SCStreamDelegate, SCStreamOutput, AVCaptureAudioDat
 				startVideoStream(sampleBuffer: sampleBuffer)
 			}
 			
-			if let videoInput = videoInput, videoInput.isReadyForMoreMediaData {
+			if let videoInput, videoInput.isReadyForMoreMediaData {
 				videoInput.append(sampleBuffer)
 			}
 		}
-	}
-	
-	private func handleBuffer(buffer: CMSampleBuffer, isVideo: Bool) -> CMSampleBuffer {
-		/// Use the video buffer to syncronize after pausing if we have it, otherwise the audio
-		if !isVideo && target != .audioOnly {
-			return buffer
-		}
-		
-		var resultBuffer = buffer
-		
-		if isResuming {
-			isResuming = false
-			
-			var pts = CMSampleBufferGetPresentationTimeStamp(buffer)
-			guard let lastFrame = lastFrame else {
-				return buffer
-			}
-			if lastFrame.flags.contains(.valid) {
-				if timeOffset.value > 0 {
-					pts = CMTimeSubtract(pts, timeOffset)
-				}
-				
-				let offset = CMTimeSubtract(pts, lastFrame)
-				if (timeOffset.value == 0) {
-					timeOffset = offset
-				} else {
-					timeOffset = CMTimeAdd(timeOffset, offset)
-				}
-			}
-			self.lastFrame?.flags = []
-		}
-		
-		if timeOffset.value > 0 {
-			resultBuffer = resultBuffer.adjustTime(by: timeOffset) ?? resultBuffer
-		}
-		
-		var lastFrame = CMSampleBufferGetPresentationTimeStamp(resultBuffer)
-		let dur = CMSampleBufferGetDuration(resultBuffer)
-		if (dur.value > 0) {
-			lastFrame = CMTimeAdd(lastFrame, dur)
-		}
-		
-		self.lastFrame = lastFrame
-		
-		return resultBuffer
 	}
 }

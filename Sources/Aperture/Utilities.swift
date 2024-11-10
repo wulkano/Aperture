@@ -6,21 +6,23 @@ internal func initializeCGS() {
 }
 
 extension Aperture {
-	public static func hasPermissions() async -> Bool {
-		do {
-			_ = try await SCShareableContent.current
-			return true
-		} catch {
-			return false
+	public static var hasPermissions: Bool {
+		get async {
+			do {
+				_ = try await SCShareableContent.current
+				return true
+			} catch {
+				return false
+			}
 		}
 	}
 }
 
 extension CMSampleBuffer {
 	public func adjustTime(by offset: CMTime) -> CMSampleBuffer? {
-		guard CMSampleBufferGetFormatDescription(self) != nil else { return nil }
+		guard self.formatDescription != nil else { return nil }
 		
-		var timingInfo = [CMSampleTimingInfo](repeating: CMSampleTimingInfo(), count: Int(CMSampleBufferGetNumSamples(self)))
+		var timingInfo = [CMSampleTimingInfo](repeating: CMSampleTimingInfo(), count: Int(self.numSamples))
 		CMSampleBufferGetSampleTimingInfoArray(self, entryCount: timingInfo.count, arrayToFill: &timingInfo, entriesNeededOut: nil)
 		
 		for i in 0..<timingInfo.count {
@@ -35,7 +37,7 @@ extension CMSampleBuffer {
 	}
 }
 
-extension Aperture.ApertureError {
+extension Aperture.Error {
 	public var localizedDescription: String {
 		switch self {
 		case .couldNotStartStream(_):
@@ -56,10 +58,11 @@ extension Aperture.ApertureError {
 			return "Recorder has already started. Each recorder instance can only be started once."
 		case .targetNotFound(let targetId):
 			return "Target with id \(targetId) not found."
-		case .unknownError(_):
-			return "An unknown error has occurred."
 		case .noPermissions:
 			return "Missing screen capture permissions."
+		case .unknown(_):
+			return "An unknown error has occurred."
 		}
+		
 	}
 }
