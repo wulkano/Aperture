@@ -8,3 +8,4 @@ xcuserdata
 
 # SwiftLint Remote Config Cache
 .swiftlint/RemoteConfigCache
+.swiftpm

@@ -16,21 +16,20 @@ internal func enableDalDevices() {
 
 extension NSScreen {
 	var displayID: CGDirectDisplayID? {
-		return deviceDescription[NSDeviceDescriptionKey(rawValue: "NSScreenNumber")] as? CGDirectDisplayID
+		deviceDescription[NSDeviceDescriptionKey(rawValue: "NSScreenNumber")] as? CGDirectDisplayID
 	}
 }
 
 extension SCDisplay {
 	var nsScreen: NSScreen? {
-		return NSScreen.screens.first(where: { $0.displayID == self.displayID })
+		NSScreen.screens.first { $0.displayID == self.displayID }
 	}
-	
+
 	var scaleFactor: Int {
 		if let mode = CGDisplayCopyDisplayMode(self.displayID) {
 			return mode.pixelWidth / mode.width
-		} else {
-			return 1
 		}
+			return 1
 	}
 }
 
@@ -39,22 +38,22 @@ extension Aperture {
 		public struct Screen: Hashable, Codable, Identifiable {
 			public let id: String
 			public let name: String
-			
+
 			public let width: Int
 			public let height: Int
 			public let frame: CGRect
 		}
-		
+
 		public struct Window: Hashable, Codable, Identifiable {
 			public let id: String
 			public let title: String?
 			public let applicationName: String?
 			public let applicationBundleIdentifier: String?
-			
+
 			public let isActive: Bool
 			public let isOnScreen: Bool
 			public let layer: Int
-			
+
 			public let frame: CGRect
 		}
 
@@ -80,18 +79,18 @@ extension Aperture {
 				)
 			}
 		}
-		
+
 		public static func window(excludeDesktopWindows: Bool = true, onScreenWindowsOnly: Bool = true) async throws -> [Window] {
 			let content = try await SCShareableContent.excludingDesktopWindows(excludeDesktopWindows, onScreenWindowsOnly: onScreenWindowsOnly)
 			return content.windows.map { device in
 				let isActive: Bool
-				
+
 				if #available(macOS 13.1, *) {
 					isActive = device.isActive
 				} else {
 					isActive = false
 				}
-				
+
 				return Window(
 					id: String(device.windowID),
 					title: device.title,
@@ -107,15 +106,15 @@ extension Aperture {
 
 		public static func audio() -> [Audio] {
 			let deviceTypes: [AVCaptureDevice.DeviceType]
-			
+
 			if #available(macOS 14, *) {
 				deviceTypes = [.microphone, .external]
 			} else {
 				deviceTypes = [.builtInMicrophone, .externalUnknown]
 			}
-			
+
 			let devices = AVCaptureDevice.DiscoverySession(deviceTypes: deviceTypes, mediaType: .audio, position: .unspecified).devices
-			
+
 			return devices.map { device in
 				Audio(id: device.uniqueID, name: device.localizedName)
 			}
@@ -123,15 +122,15 @@ extension Aperture {
 
 		public static func iOS() -> [IOS] {
 			enableDalDevices()
-			
+
 			let deviceTypes: [AVCaptureDevice.DeviceType]
-			
+
 			if #available(macOS 14, *) {
 				deviceTypes = [.external]
 			} else {
 				deviceTypes = [.externalUnknown]
 			}
-			
+
 			let devices = AVCaptureDevice.DiscoverySession(deviceTypes: deviceTypes, mediaType: nil, position: .unspecified).devices
 
 			return devices.map { device in
