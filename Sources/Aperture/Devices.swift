@@ -24,6 +24,14 @@ extension SCDisplay {
 	var nsScreen: NSScreen? {
 		return NSScreen.screens.first(where: { $0.displayID == self.displayID })
 	}
+	
+	var scaleFactor: Int {
+		if let mode = CGDisplayCopyDisplayMode(self.displayID) {
+			return mode.pixelWidth / mode.width
+		} else {
+			return 1
+		}
+	}
 }
 
 extension Aperture {

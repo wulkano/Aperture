@@ -11,7 +11,6 @@ public final class Aperture {
 			cropRect: CGRect? = nil,
 			showCursor: Bool = true,
 			highlightClicks: Bool = false,
-			scaleFactor: Int = 1,
 			videoCodec: AVVideoCodecType = .h264,
 			losslessAudio: Bool = false,
 			recordSystemAudio: Bool = false,
@@ -23,7 +22,6 @@ public final class Aperture {
 			self.cropRect = cropRect
 			self.showCursor = showCursor
 			self.highlightClicks = highlightClicks
-			self.scaleFactor = scaleFactor
 			self.videoCodec = videoCodec
 			self.losslessAudio = losslessAudio
 			self.recordSystemAudio = recordSystemAudio
@@ -36,7 +34,6 @@ public final class Aperture {
 		let cropRect: CGRect?
 		let showCursor: Bool
 		let highlightClicks: Bool
-		let scaleFactor: Int
 		let videoCodec: AVVideoCodecType
 		let losslessAudio: Bool
 		let recordSystemAudio: Bool
@@ -134,6 +131,22 @@ public final class Aperture {
 			}
 			
 			let streamConfig: SCStreamConfiguration = SCStreamConfiguration()
+			
+			streamConfig.queueDepth = 6
+			
+			switch options.videoCodec {
+			case .h264:
+				streamConfig.pixelFormat = kCVPixelFormatType_32BGRA
+				streamConfig.colorSpaceName = CGColorSpace.sRGB
+				break;
+			case .hevc:
+				streamConfig.pixelFormat = kCVPixelFormatType_ARGB2101010LEPacked
+				streamConfig.colorSpaceName = CGColorSpace.displayP3
+				break;
+			default:
+				break;
+			}
+			
 			let filter: SCContentFilter?
 			
 			let content: SCShareableContent
@@ -176,14 +189,16 @@ public final class Aperture {
 				
 				if let cropRect = options.cropRect {
 					streamConfig.sourceRect = cropRect
-				}
-				
-				if #available(macOS 14.0, *) {
-					streamConfig.width = Int(screenFilter.contentRect.width) * options.scaleFactor
-					streamConfig.height = Int(screenFilter.contentRect.height) * options.scaleFactor
+					streamConfig.width = Int(cropRect.width) * display.scaleFactor
+					streamConfig.height = Int(cropRect.height) * display.scaleFactor
 				} else {
-					streamConfig.width = Int(display.frame.width) * options.scaleFactor
-					streamConfig.height = Int(display.frame.height) * options.scaleFactor
+					if #available(macOS 14.0, *) {
+						streamConfig.width = Int(screenFilter.contentRect.width) * display.scaleFactor
+						streamConfig.height = Int(screenFilter.contentRect.height) * display.scaleFactor
+					} else {
+						streamConfig.width = Int(display.frame.width) * display.scaleFactor
+						streamConfig.height = Int(display.frame.height) * display.scaleFactor
+					}
 				}
 				
 				filter = screenFilter
@@ -201,11 +216,11 @@ public final class Aperture {
 				let windowFilter = SCContentFilter(desktopIndependentWindow: window)
 				
 				if #available(macOS 14.0, *) {
-					streamConfig.width = Int(windowFilter.contentRect.width) * options.scaleFactor
-					streamConfig.height = Int(windowFilter.contentRect.height) * options.scaleFactor
+					streamConfig.width = Int(windowFilter.contentRect.width)
+					streamConfig.height = Int(windowFilter.contentRect.height)
 				} else {
-					streamConfig.width = Int(window.frame.width) * options.scaleFactor
-					streamConfig.height = Int(window.frame.height) * options.scaleFactor
+					streamConfig.width = Int(window.frame.width)
+					streamConfig.height = Int(window.frame.height)
 				}
 				
 				filter = windowFilter
@@ -503,11 +518,32 @@ extension Aperture.Recorder: SCStreamDelegate, SCStreamOutput, AVCaptureAudioDat
 			return
 		}
 
-		let videoInput = AVAssetWriterInput(mediaType: .video, outputSettings: [
-			AVVideoCodecKey: options.videoCodec,
-			AVVideoWidthKey: dimensions.width,
-			AVVideoHeightKey: dimensions.height,
-		])
+		let assistant = AVOutputSettingsAssistant(
+			preset: options.videoCodec == .h264 ? .preset3840x2160 : .hevc7680x4320
+		)
+		
+		assistant?.sourceVideoFormat = try? CMVideoFormatDescription(
+			videoCodecType: options.videoCodec == .h264 ? .h264 : .hevc,
+			width: Int(dimensions.width),
+			height: Int(dimensions.height)
+		)
+		
+		var outputSettings: [String : Any] = assistant?.videoSettings ?? [AVVideoCodecKey: options.videoCodec]
+		
+		outputSettings[AVVideoWidthKey] = dimensions.width
+		outputSettings[AVVideoHeightKey] = dimensions.height
+		
+		outputSettings[AVVideoColorPropertiesKey] = options.videoCodec == .h264 ? [
+			AVVideoTransferFunctionKey: AVVideoTransferFunction_ITU_R_709_2,
+			AVVideoColorPrimariesKey: AVVideoColorPrimaries_ITU_R_709_2,
+			AVVideoYCbCrMatrixKey: AVVideoYCbCrMatrix_ITU_R_709_2,
+		] : [
+			AVVideoTransferFunctionKey: AVVideoTransferFunction_ITU_R_709_2,
+			AVVideoColorPrimariesKey: AVVideoColorPrimaries_P3_D65,
+			AVVideoYCbCrMatrixKey: AVVideoYCbCrMatrix_ITU_R_709_2,
+		]
+		
+		let videoInput = AVAssetWriterInput(mediaType: .video, outputSettings: outputSettings)
 		
 		self.videoInput = videoInput
 		
@@ -529,9 +565,7 @@ extension Aperture.Recorder: SCStreamDelegate, SCStreamOutput, AVCaptureAudioDat
 	}
 	
 	public func stream(_ stream: SCStream, didOutputSampleBuffer sampleBuffer: CMSampleBuffer, of type: SCStreamOutputType) {
-		if isPaused {
-			return
-		}
+		if isPaused { return }
 		guard sampleBuffer.isValid else { return }
 		
 		let sampleBuffer = handleBuffer(buffer: sampleBuffer, isVideo: type == .screen)

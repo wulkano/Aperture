@@ -1,7 +1,19 @@
 import AVFoundation
+import ScreenCaptureKit
 
 internal func initializeCGS() {
 	CGMainDisplayID()
+}
+
+extension Aperture {
+	public static func hasPermissions() async -> Bool {
+		do {
+			_ = try await SCShareableContent.current
+			return true
+		} catch {
+			return false
+		}
+	}
 }
 
 extension CMSampleBuffer {

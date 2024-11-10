@@ -22,7 +22,7 @@ do {
 			targetId: device.id,
 			losslessAudio: true,
 			recordSystemAudio: true,
-			microphoneDeviceId: "BuiltInMicrophoneDevice" //"AppleUSBAudioEngine:Kingston:HyperX Quadcast:4110:2"
+			microphoneDeviceId: "BuiltInMicrophoneDevice"
 		)
 	)
 	print("Recording screen for 5 seconds")
