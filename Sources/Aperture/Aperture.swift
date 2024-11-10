@@ -268,6 +268,8 @@ extension Aperture {
 				try? await cleanUp()
 				throw error is Error ? error : Error.couldNotStartStream(error)
 			}
+
+			onStart?()
 		}
 
 		public func stopRecording() async throws {
