@@ -1,66 +1,134 @@
-import AppKit
 import AVFoundation
 import CoreMediaIO
+import ScreenCaptureKit
 
 // Enable access to iOS devices.
-private func enableDalDevices() {
+internal func enableDalDevices() {
 	var property = CMIOObjectPropertyAddress(
 		mSelector: CMIOObjectPropertySelector(kCMIOHardwarePropertyAllowScreenCaptureDevices),
 		mScope: CMIOObjectPropertyScope(kCMIOObjectPropertyScopeGlobal),
-		mElement: CMIOObjectPropertyElement(kCMIOObjectPropertyElementMaster)
+		mElement: CMIOObjectPropertyElement(kCMIOObjectPropertyElementMain)
 	)
 	var allow: UInt32 = 1
 	let sizeOfAllow = MemoryLayout<UInt32>.size
 	CMIOObjectSetPropertyData(CMIOObjectID(kCMIOObjectSystemObject), &property, 0, nil, UInt32(sizeOfAllow), &allow)
 }
 
+extension NSScreen {
+	var displayID: CGDirectDisplayID? {
+		return deviceDescription[NSDeviceDescriptionKey(rawValue: "NSScreenNumber")] as? CGDirectDisplayID
+	}
+}
+
+extension SCDisplay {
+	var nsScreen: NSScreen? {
+		return NSScreen.screens.first(where: { $0.displayID == self.displayID })
+	}
+}
+
 extension Aperture {
 	public struct Devices {
-		public struct Screen: Hashable, Codable {
-			public let id: CGDirectDisplayID
+		public struct Screen: Hashable, Codable, Identifiable {
+			public let id: String
 			public let name: String
+			
+			public let width: Int
+			public let height: Int
+			public let frame: CGRect
+		}
+		
+		public struct Window: Hashable, Codable, Identifiable {
+			public let id: String
+			public let title: String?
+			public let applicationName: String?
+			public let applicationBundleIdentifier: String?
+			
+			public let isActive: Bool
+			public let isOnScreen: Bool
+			public let layer: Int
+			
+			public let frame: CGRect
 		}
 
-		public struct Audio: Hashable, Codable {
+		public struct Audio: Hashable, Codable, Identifiable {
 			public let id: String
 			public let name: String
 		}
 
-		public struct IOS: Hashable, Codable {
+		public struct IOS: Hashable, Codable, Identifiable {
 			public let id: String
 			public let name: String
 		}
 
-		public static func screen() -> [Screen] {
-			NSScreen.screens.map { Screen(id: $0.id, name: $0.name) }
+		public static func screen() async throws -> [Screen] {
+			let content = try await SCShareableContent.current
+			return content.displays.map { device in
+				Screen(
+					id: String(device.displayID),
+					name: device.nsScreen?.localizedName ?? "Unknown Display",
+					width: device.width,
+					height: device.height,
+					frame: device.frame
+				)
+			}
+		}
+		
+		public static func window(excludeDesktopWindows: Bool = true, onScreenWindowsOnly: Bool = true) async throws -> [Window] {
+			let content = try await SCShareableContent.excludingDesktopWindows(excludeDesktopWindows, onScreenWindowsOnly: onScreenWindowsOnly)
+			return content.windows.map { device in
+				let isActive: Bool
+				
+				if #available(macOS 13.1, *) {
+					isActive = device.isActive
+				} else {
+					isActive = false
+				}
+				
+				return Window(
+					id: String(device.windowID),
+					title: device.title,
+					applicationName: device.owningApplication?.applicationName,
+					applicationBundleIdentifier: device.owningApplication?.bundleIdentifier,
+					isActive: isActive,
+					isOnScreen: device.isOnScreen,
+					layer: device.windowLayer,
+					frame: device.frame
+				)
+			}
 		}
 
 		public static func audio() -> [Audio] {
-			AVCaptureDevice.devices(for: .audio).map {
-				Audio(id: $0.uniqueID, name: $0.localizedName)
+			let deviceTypes: [AVCaptureDevice.DeviceType]
+			
+			if #available(macOS 14, *) {
+				deviceTypes = [.microphone, .external]
+			} else {
+				deviceTypes = [.builtInMicrophone, .externalUnknown]
+			}
+			
+			let devices = AVCaptureDevice.DiscoverySession(deviceTypes: deviceTypes, mediaType: .audio, position: .unspecified).devices
+			
+			return devices.map { device in
+				Audio(id: device.uniqueID, name: device.localizedName)
 			}
 		}
 
 		public static func iOS() -> [IOS] {
 			enableDalDevices()
+			
+			let deviceTypes: [AVCaptureDevice.DeviceType]
+			
+			if #available(macOS 14, *) {
+				deviceTypes = [.external]
+			} else {
+				deviceTypes = [.externalUnknown]
+			}
+			
+			let devices = AVCaptureDevice.DiscoverySession(deviceTypes: deviceTypes, mediaType: nil, position: .unspecified).devices
 
-			return AVCaptureDevice
-				.devices(for: .muxed)
-				.filter {
-					$0.localizedName.contains("iPhone") || $0.localizedName.contains("iPad")
-				}
-				.map {
-					IOS(id: $0.uniqueID, name: $0.localizedName)
-				}
+			return devices.map { device in
+				IOS(id: device.uniqueID, name: device.localizedName)
+			}
 		}
 	}
 }
-
-@available(macOS 10.15, *)
-extension Aperture.Devices.Screen: Identifiable {}
-
-@available(macOS 10.15, *)
-extension Aperture.Devices.Audio: Identifiable {}
-
-@available(macOS 10.15, *)
-extension Aperture.Devices.IOS: Identifiable {}

@@ -2,44 +2,41 @@ import Foundation
 import AVFoundation
 import Aperture
 
-func delay(seconds: TimeInterval, closure: @escaping () -> Void) {
-	DispatchQueue.main.asyncAfter(deadline: .now() + seconds, execute: closure)
-}
+let url = URL(fileURLWithPath: "../screen-recording-ios.mp4")
+do {
+	let recorder = Aperture.Recorder()
 
-guard
-	let deviceInfo = Aperture.Devices.iOS().first,
-	let device = AVCaptureDevice(uniqueID: deviceInfo.id)
-else {
-	print("Could not find any iOS devices")
+	let devices = Aperture.Devices.iOS()
+
+	guard let device = devices.first else {
+		print("Could not find any iOS devices")
+		exit(1)
+	}
+
+	print("Available iOS devices:", devices.map(\.name).joined(separator: ", "))
+
+	try await recorder.startRecording(
+		target: .externalDevice,
+		options: Aperture.RecordingOptions(
+			destination: url,
+			targetId: device.id,
+			losslessAudio: true,
+			recordSystemAudio: true,
+			microphoneDeviceId: "BuiltInMicrophoneDevice" //"AppleUSBAudioEngine:Kingston:HyperX Quadcast:4110:2"
+		)
+	)
+	print("Recording screen for 5 seconds")
+
+	try await Task.sleep(for: .seconds(5))
+	print("Stopping recording")
+
+	try await recorder.stopRecording()
+	print("Finished recording:", url.path)
+	exit(0)
+} catch let error as Aperture.ApertureError {
+	print("Aperture Error: \(error.localizedDescription)")
+} catch {
+	print("Unknown Error: \(error.localizedDescription)")
 	exit(1)
 }
 
-let url = URL(fileURLWithPath: "../screen-recording-ios.mp4")
-let aperture = try! Aperture(destination: url, iosDevice: device)
-
-aperture.onFinish = {
-	switch $0 {
-	case .success(let warning):
-		print("Finished recording:", url.path)
-
-		if let warning = warning {
-			print("Warning:", warning.localizedDescription)
-		}
-
-		exit(0)
-	case .failure(let error):
-		print(error)
-		exit(1)
-	}
-}
-
-aperture.start()
-
-print("Recording the screen of “\(deviceInfo.name)” for 5 seconds")
-
-delay(seconds: 5) {
-	aperture.stop()
-}
-
-setbuf(__stdoutp, nil)
-RunLoop.current.run()
