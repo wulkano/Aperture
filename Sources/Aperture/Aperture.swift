@@ -91,7 +91,7 @@ extension Aperture {
 		/// Whether the recorder has started writting to the output file
 		private var isRunning = false
 		/// Whether the recorder is paused
-		private var isPaused = false
+		public private(set) var isPaused = false
 
 		/// Internal helpers for when we are resuming, used to fix the buffer timing
 		private var isResuming = false
