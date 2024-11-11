@@ -277,8 +277,8 @@ extension Aperture {
 				throw error
 			}
 
-			onFinish?()
 			try? await cleanUp()
+			onFinish?()
 		}
 
 		private func recordError(error: Error) {
