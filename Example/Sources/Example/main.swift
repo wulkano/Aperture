@@ -13,7 +13,7 @@ do {
 	let screens = try await Aperture.Devices.screen()
 
 	guard let screen = screens.first else {
-		print("Could not find any iOS devices")
+		print("Could not find any screens")
 		exit(1)
 	}
 
