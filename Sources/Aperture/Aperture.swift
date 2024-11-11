@@ -3,6 +3,13 @@ import AVFoundation
 import ScreenCaptureKit
 
 public enum Aperture {
+	public enum VideoCodec {
+		case h264
+		case hevc
+		case proRes422
+		case proRes4444
+	}
+
 	public struct RecordingOptions {
 		public init(
 			destination: URL,
@@ -11,7 +18,7 @@ public enum Aperture {
 			cropRect: CGRect? = nil,
 			showCursor: Bool = true,
 			highlightClicks: Bool = false,
-			videoCodec: AVVideoCodecType = .h264,
+			videoCodec: VideoCodec = .h264,
 			losslessAudio: Bool = false,
 			recordSystemAudio: Bool = false,
 			microphoneDeviceID: String? = nil
@@ -34,7 +41,7 @@ public enum Aperture {
 		let cropRect: CGRect?
 		let showCursor: Bool
 		let highlightClicks: Bool
-		let videoCodec: AVVideoCodecType
+		let videoCodec: VideoCodec
 		let losslessAudio: Bool
 		let recordSystemAudio: Bool
 		let microphoneDeviceID: String?
@@ -50,12 +57,15 @@ public enum Aperture {
 	public enum Error: Swift.Error {
 		case recorderAlreadyStarted
 		case targetNotFound(String)
+		case couldNotAddInput(String)
 		case couldNotStartStream(Swift.Error?)
 		case microphoneNotFound(String)
 		case noTargetProvided
-		case invalidFileExtension(String, Bool)
+		case unsupportedFileExtension(String, Bool)
+		case invalidFileExtension(String, String)
 		case noDisplaysConnected
 		case noPermissions
+		case unsupportedVideoCodec
 		case unknown(Swift.Error)
 	}
 }
@@ -265,8 +275,18 @@ extension Aperture {
 			do {
 				try await initOutput(target: target, options: options, streamConfig: streamConfig)
 			} catch {
+				let finalError: Aperture.Error
+				if let error = error as? Aperture.Error {
+					finalError = error
+				} else {
+					finalError = Error.couldNotStartStream(error)
+				}
+
 				try? await cleanUp()
-				throw error is Error ? error : Error.couldNotStartStream(error)
+				reset()
+				onError?(finalError)
+
+				throw finalError
 			}
 
 			onStart?()
@@ -274,10 +294,13 @@ extension Aperture {
 
 		public func stopRecording() async throws {
 			if let error {
+				reset()
+				/// We do not clean up here, as we have already cleaned up when the error was recorded
 				throw error
 			}
 
 			try? await cleanUp()
+			reset()
 			onFinish?()
 		}
 
@@ -287,14 +310,39 @@ extension Aperture {
 			Task { try? await self.cleanUp() }
 		}
 
+		private func reset() {
+			self.target = nil
+			self.options = nil
+
+			self.error = nil
+			self.continuation = nil
+			self.activity = nil
+
+			self.stream = nil
+			self.isStreamRecording = false
+
+			self.assetWriter = nil
+			self.videoInput = nil
+			self.systemAudioInput = nil
+			self.microphoneInput = nil
+
+			self.microphoneDataOutput = nil
+			self.externalDeviceDataOutput = nil
+
+			self.microphoneCaptureSession = nil
+			self.externalDeviceCaptureSession = nil
+
+			self.isRunning = false
+			self.isPaused = false
+			self.isResuming = false
+			self.timeOffset = CMTime.zero
+			self.lastFrame = nil
+		}
+
 		private func cleanUp() async throws {
 			if isStreamRecording {
 				try? await stream?.stopCapture()
 			}
-
-			videoInput?.markAsFinished()
-			systemAudioInput?.markAsFinished()
-			microphoneInput?.markAsFinished()
 
 			if microphoneCaptureSession?.isRunning == true {
 				microphoneCaptureSession?.stopRunning()
@@ -304,8 +352,20 @@ extension Aperture {
 				externalDeviceCaptureSession?.stopRunning()
 			}
 
-			if assetWriter?.status == .writing {
-				await assetWriter?.finishWriting()
+			if let assetWriter, assetWriter.status == .writing {
+				if let videoInput, assetWriter.inputs.contains([videoInput]) {
+					videoInput.markAsFinished()
+				}
+
+				if let systemAudioInput, assetWriter.inputs.contains([systemAudioInput]) {
+					systemAudioInput.markAsFinished()
+				}
+
+				if let microphoneInput, assetWriter.inputs.contains([microphoneInput]) {
+					microphoneInput.markAsFinished()
+				}
+
+				await assetWriter.finishWriting()
 			}
 
 			if let activity {
@@ -337,18 +397,34 @@ extension Aperture.Recorder {
 			case "m4a":
 				fileType = .m4a
 			default:
-				throw Aperture.Error.invalidFileExtension(fileExtension, true)
+				throw Aperture.Error.unsupportedFileExtension(fileExtension, true)
 			}
 		} else {
 			switch fileExtension {
 			case "mp4":
+				/// ProRes is only supported in .mov containers
+				switch options.videoCodec {
+				case .proRes422, .proRes4444:
+					throw Aperture.Error.invalidFileExtension(fileExtension, options.videoCodec.asString)
+				default:
+					break
+				}
+
 				fileType = .mp4
 			case "mov":
 				fileType = .mov
 			case "m4v":
+				/// ProRes is only supported in .mov containers
+				switch options.videoCodec {
+				case .proRes422, .proRes4444:
+					throw Aperture.Error.invalidFileExtension(fileExtension, options.videoCodec.asString)
+				default:
+					break
+				}
+
 				fileType = .m4v
 			default:
-				throw Aperture.Error.invalidFileExtension(fileExtension, false)
+				throw Aperture.Error.unsupportedFileExtension(fileExtension, false)
 			}
 		}
 
@@ -381,6 +457,8 @@ extension Aperture.Recorder {
 
 			if assetWriter.canAdd(systemAudioInput) {
 				assetWriter.add(systemAudioInput)
+			} else {
+				throw Aperture.Error.couldNotStartStream(Aperture.Error.couldNotAddInput("systemAudio"))
 			}
 		}
 
@@ -437,6 +515,8 @@ extension Aperture.Recorder {
 
 			if assetWriter.canAdd(microphoneInput) {
 				assetWriter.add(microphoneInput)
+			} else {
+				throw Aperture.Error.couldNotStartStream(Aperture.Error.couldNotAddInput("microphone"))
 			}
 		}
 
@@ -524,33 +604,60 @@ extension Aperture.Recorder {
 			let options,
 			let dimensions = sampleBuffer.formatDescription?.dimensions
 		else {
+			continuation?.resume(throwing: Aperture.Error.couldNotStartStream(nil))
+			self.continuation = nil
 			return
 		}
 
-		let assistant = AVOutputSettingsAssistant(
-			preset: options.videoCodec == .h264 ? .preset3840x2160 : .hevc7680x4320
-		)
 
-		assistant?.sourceVideoFormat = try? CMVideoFormatDescription(
-			videoCodecType: options.videoCodec == .h264 ? .h264 : .hevc,
-			width: Int(dimensions.width),
-			height: Int(dimensions.height)
-		)
+		let assistant: AVOutputSettingsAssistant?
 
-		var outputSettings: [String: Any] = assistant?.videoSettings ?? [AVVideoCodecKey: options.videoCodec]
+		switch options.videoCodec {
+		case .h264:
+			assistant = AVOutputSettingsAssistant(
+				preset: .preset3840x2160
+			)
+
+			assistant?.sourceVideoFormat = try? CMVideoFormatDescription(
+				videoCodecType: .h264,
+				width: Int(dimensions.width),
+				height: Int(dimensions.height)
+			)
+		case .hevc:
+			assistant = AVOutputSettingsAssistant(
+				preset: .hevc7680x4320
+			)
+
+			assistant?.sourceVideoFormat = try? CMVideoFormatDescription(
+				videoCodecType: .hevc,
+				width: Int(dimensions.width),
+				height: Int(dimensions.height)
+			)
+		default:
+			assistant = nil
+		}
+
+		var outputSettings: [String: Any] = assistant?.videoSettings ?? [AVVideoCodecKey: options.videoCodec.asAVVideoCodec]
 
 		outputSettings[AVVideoWidthKey] = dimensions.width
 		outputSettings[AVVideoHeightKey] = dimensions.height
 
-		outputSettings[AVVideoColorPropertiesKey] = options.videoCodec == .h264 ? [
-			AVVideoTransferFunctionKey: AVVideoTransferFunction_ITU_R_709_2,
-			AVVideoColorPrimariesKey: AVVideoColorPrimaries_ITU_R_709_2,
-			AVVideoYCbCrMatrixKey: AVVideoYCbCrMatrix_ITU_R_709_2
-		] : [
-			AVVideoTransferFunctionKey: AVVideoTransferFunction_ITU_R_709_2,
-			AVVideoColorPrimariesKey: AVVideoColorPrimaries_P3_D65,
-			AVVideoYCbCrMatrixKey: AVVideoYCbCrMatrix_ITU_R_709_2
-		]
+		switch options.videoCodec {
+		case .h264:
+			outputSettings[AVVideoColorPropertiesKey] = [
+				AVVideoTransferFunctionKey: AVVideoTransferFunction_ITU_R_709_2,
+				AVVideoColorPrimariesKey: AVVideoColorPrimaries_ITU_R_709_2,
+				AVVideoYCbCrMatrixKey: AVVideoYCbCrMatrix_ITU_R_709_2
+			]
+		case .hevc:
+			outputSettings[AVVideoColorPropertiesKey] = [
+				AVVideoTransferFunctionKey: AVVideoTransferFunction_ITU_R_709_2,
+				AVVideoColorPrimariesKey: AVVideoColorPrimaries_P3_D65,
+				AVVideoYCbCrMatrixKey: AVVideoYCbCrMatrix_ITU_R_709_2
+			]
+		default:
+			break
+		}
 
 		let videoInput = AVAssetWriterInput(mediaType: .video, outputSettings: outputSettings)
 
@@ -560,6 +667,10 @@ extension Aperture.Recorder {
 
 		if assetWriter.canAdd(videoInput) {
 			assetWriter.add(videoInput)
+		} else {
+			continuation.resume(throwing: Aperture.Error.couldNotStartStream(Aperture.Error.couldNotAddInput("video")))
+			self.continuation = nil
+			return
 		}
 
 		isRunning = assetWriter.startWriting()

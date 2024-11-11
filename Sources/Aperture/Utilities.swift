@@ -42,14 +42,26 @@ extension CMSampleBuffer {
 extension Aperture.Error {
 	public var localizedDescription: String {
 		switch self {
-		case .couldNotStartStream:
-			return "Could not start recording"
-		case .invalidFileExtension(let fileExtension, let isAudioOnly):
+		case .couldNotStartStream(let error):
+			let errorReason: String
+
+			if let error = error as? Aperture.Error {
+				errorReason = ": \(error.localizedDescription)"
+			} else if let error {
+				errorReason = ": \(error.localizedDescription)"
+			} else {
+				errorReason = "."
+			}
+
+			return "Could not start recording\(errorReason)"
+		case .unsupportedFileExtension(let fileExtension, let isAudioOnly):
 			if isAudioOnly {
 				return "Invalid file extension. Only .m4a is supported for audio recordings. Got \(fileExtension)."
 			}
 
 			return "Invalid file extension. Only .mp4, .mov and .m4v are supported for video recordings. Got \(fileExtension)."
+		case .invalidFileExtension(let fileExtension, let videoCodec):
+			return "Invalid file extension. .\(fileExtension) does not support \(videoCodec)."
 		case .microphoneNotFound(let microphoneId):
 			return "Microphone with id \(microphoneId) not found"
 		case .noDisplaysConnected:
@@ -62,8 +74,55 @@ extension Aperture.Error {
 			return "Target with id \(targetId) not found."
 		case .noPermissions:
 			return "Missing screen capture permissions."
-		case .unknown:
-			return "An unknown error has occurred."
+		case .unsupportedVideoCodec:
+			return "VideoCodec not supported."
+		case .couldNotAddInput(let inputType):
+			return "Could not add \(inputType) input."
+		case .unknown(let error):
+			return "An unknown error has occurred: \(error.localizedDescription)"
+		}
+	}
+}
+
+extension Aperture.VideoCodec {
+	public static func fromRawValue(_ rawValue: String) throws -> Aperture.VideoCodec {
+		switch rawValue {
+		case "h264":
+			return .h264
+		case "hevc":
+			return .hevc
+		case "proRes422":
+			return .proRes422
+		case "proRes4444":
+			return .proRes4444
+		default:
+			throw Aperture.Error.unsupportedVideoCodec
+		}
+	}
+
+	var asString: String {
+		switch self {
+		case .h264:
+			return "h264"
+		case .hevc:
+			return "hevc"
+		case .proRes422:
+			return "proRes422"
+		case .proRes4444:
+			return "proRes4444"
+		}
+	}
+
+	var asAVVideoCodec: AVVideoCodecType {
+		switch self {
+		case .h264:
+			return .h264
+		case .hevc:
+			return .hevc
+		case .proRes422:
+			return .proRes422
+		case .proRes4444:
+			return .proRes4444
 		}
 	}
 }

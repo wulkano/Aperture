@@ -22,7 +22,7 @@ do {
 			targetID: device.id,
 			losslessAudio: true,
 			recordSystemAudio: true,
-			microphoneDeviceID: "BuiltInMicrophoneDevice"
+			microphoneDeviceID: Aperture.Devices.audio().first?.id
 		)
 	)
 	print("Recording screen for 5 seconds")
