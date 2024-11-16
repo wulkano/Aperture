@@ -20,22 +20,24 @@ extension Aperture {
 
 extension CMSampleBuffer {
 	public func adjustTime(by offset: CMTime) -> CMSampleBuffer? {
-		guard self.formatDescription != nil else {
+		guard self.formatDescription != nil, offset.value > 0 else {
 			return nil
 		}
 
-		var timingInfo = [CMSampleTimingInfo](repeating: CMSampleTimingInfo(), count: Int(self.numSamples))
-		CMSampleBufferGetSampleTimingInfoArray(self, entryCount: timingInfo.count, arrayToFill: &timingInfo, entriesNeededOut: nil)
+		do {
+			var timingInfo = try self.sampleTimingInfos()
 
-		for index in 0..<timingInfo.count {
-			timingInfo[index].decodeTimeStamp = CMTimeSubtract(timingInfo[index].decodeTimeStamp, offset)
-			timingInfo[index].presentationTimeStamp = CMTimeSubtract(timingInfo[index].presentationTimeStamp, offset)
+			for index in 0..<timingInfo.count {
+				// swiftlint:disable:next shorthand_operator
+				timingInfo[index].decodeTimeStamp = timingInfo[index].decodeTimeStamp - offset
+				// swiftlint:disable:next shorthand_operator
+				timingInfo[index].presentationTimeStamp = timingInfo[index].presentationTimeStamp - offset
+			}
+
+			return try .init(copying: self, withNewTiming: timingInfo)
+		} catch {
+			return nil
 		}
-
-		var outSampleBuffer: CMSampleBuffer?
-		CMSampleBufferCreateCopyWithNewTiming(allocator: nil, sampleBuffer: self, sampleTimingEntryCount: timingInfo.count, sampleTimingArray: &timingInfo, sampleBufferOut: &outSampleBuffer)
-
-		return outSampleBuffer
 	}
 }
 

@@ -79,7 +79,7 @@ extension Aperture {
 		public var onFinish: (() -> Void)?
 		public var onPause: (() -> Void)?
 		public var onResume: (() -> Void)?
-		
+
 		public var onError: ((Error) -> Void)? {
 			didSet {
 				recordingSession?.onError = onError
@@ -102,7 +102,7 @@ extension Aperture {
 		}
 
 		public func stopRecording() async throws {
-			guard let recordingSession = recordingSession else {
+			guard let recordingSession else {
 				throw Error.recorderNotStarted
 			}
 
@@ -112,7 +112,7 @@ extension Aperture {
 		}
 
 		public func pause() throws {
-			guard let recordingSession = recordingSession else {
+			guard let recordingSession else {
 				throw Error.recorderNotStarted
 			}
 
@@ -121,14 +121,13 @@ extension Aperture {
 		}
 
 		public func resume() async throws {
-			guard let recordingSession = recordingSession else {
+			guard let recordingSession else {
 				throw Error.recorderNotStarted
 			}
 
 			await recordingSession.resume()
 			onResume?()
 		}
-		
 	}
 }
 
@@ -163,7 +162,7 @@ extension Aperture {
 		/// Whether the recorder has started writting to the output file
 		private var isRunning = false
 		/// Whether the recorder is paused
-		public private(set) var isPaused = false
+		private(set) var isPaused = false
 
 		/// Internal helpers for when we are resuming, used to fix the buffer timing
 		private var isResuming = false
@@ -183,9 +182,9 @@ extension Aperture {
 		private var target: Target?
 
 		/// The error handler for the recording session
-		public var onError: ((Error) -> Void)?
+		var onError: ((Error) -> Void)?
 
-		public func startRecording(
+		func startRecording(
 			target: Target,
 			options: RecordingOptions
 		) async throws {
@@ -349,7 +348,7 @@ extension Aperture {
 			}
 		}
 
-		public func stopRecording() async throws {
+		func stopRecording() async throws {
 			if let error {
 				/// We do not clean up here, as we have already cleaned up when the error was recorded
 				throw error
@@ -399,11 +398,11 @@ extension Aperture {
 			}
 		}
 
-		public func pause() {
+		func pause() {
 			isPaused = true
 		}
 
-		public func resume() async {
+		func resume() async {
 			await withCheckedContinuation { (continuation: CheckedContinuation<Void, Never>) in
 				self.resumeContinuation = continuation
 
@@ -721,37 +720,18 @@ extension Aperture.RecordingSession {
 
 		if isResuming {
 			isResuming = false
+			resumeContinuation?.resume()
 
-			var pts = CMSampleBufferGetPresentationTimeStamp(buffer)
 			guard let lastFrame else {
 				return buffer
 			}
-			if lastFrame.flags.contains(.valid) {
-				if timeOffset.value > 0 {
-					pts = CMTimeSubtract(pts, timeOffset)
-				}
 
-				let offset = CMTimeSubtract(pts, lastFrame)
-				if timeOffset.value == 0 {
-					timeOffset = offset
-				} else {
-					timeOffset = CMTimeAdd(timeOffset, offset)
-				}
-			}
-			self.lastFrame?.flags = []
+			let offset = buffer.presentationTimeStamp - timeOffset - lastFrame
+			timeOffset = timeOffset.value == 0 ? offset : timeOffset + offset
 		}
 
-		if timeOffset.value > 0 {
-			resultBuffer = resultBuffer.adjustTime(by: timeOffset) ?? resultBuffer
-		}
-
-		var lastFrame = CMSampleBufferGetPresentationTimeStamp(resultBuffer)
-		let dur = CMSampleBufferGetDuration(resultBuffer)
-		if dur.value > 0 {
-			lastFrame = CMTimeAdd(lastFrame, dur)
-		}
-
-		self.lastFrame = lastFrame
+		resultBuffer = resultBuffer.adjustTime(by: timeOffset) ?? resultBuffer
+		self.lastFrame = resultBuffer.presentationTimeStamp + (resultBuffer.duration.value > 0 ? resultBuffer.duration : .zero)
 
 		return resultBuffer
 	}
