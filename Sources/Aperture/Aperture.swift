@@ -86,6 +86,10 @@ extension Aperture {
 			}
 		}
 
+		public var isPaused: Bool {
+			recordingSession?.isPaused ?? false
+		}
+
 		public func startRecording(
 			target: Target,
 			options: RecordingOptions
