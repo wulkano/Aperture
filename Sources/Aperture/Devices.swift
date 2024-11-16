@@ -29,7 +29,7 @@ extension SCDisplay {
 		if let mode = CGDisplayCopyDisplayMode(self.displayID) {
 			return mode.pixelWidth / mode.width
 		}
-			return 1
+		return 1
 	}
 }
 

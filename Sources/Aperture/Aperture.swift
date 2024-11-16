@@ -56,6 +56,7 @@ public enum Aperture {
 
 	public enum Error: Swift.Error {
 		case recorderAlreadyStarted
+		case recorderNotStarted
 		case targetNotFound(String)
 		case couldNotAddInput(String)
 		case couldNotStartStream(Swift.Error?)
@@ -72,6 +73,67 @@ public enum Aperture {
 
 extension Aperture {
 	public final class Recorder: NSObject {
+		private var recordingSession: RecordingSession?
+
+		public var onStart: (() -> Void)?
+		public var onFinish: (() -> Void)?
+		public var onPause: (() -> Void)?
+		public var onResume: (() -> Void)?
+		
+		public var onError: ((Error) -> Void)? {
+			didSet {
+				recordingSession?.onError = onError
+			}
+		}
+
+		public func startRecording(
+			target: Target,
+			options: RecordingOptions
+		) async throws {
+			guard recordingSession == nil else {
+				throw Error.recorderAlreadyStarted
+			}
+
+			let recordingSession = RecordingSession()
+			recordingSession.onError = onError
+			try await recordingSession.startRecording(target: target, options: options)
+			self.recordingSession = recordingSession
+			onStart?()
+		}
+
+		public func stopRecording() async throws {
+			guard let recordingSession = recordingSession else {
+				throw Error.recorderNotStarted
+			}
+
+			try await recordingSession.stopRecording()
+			self.recordingSession = nil
+			onFinish?()
+		}
+
+		public func pause() throws {
+			guard let recordingSession = recordingSession else {
+				throw Error.recorderNotStarted
+			}
+
+			recordingSession.pause()
+			onPause?()
+		}
+
+		public func resume() async throws {
+			guard let recordingSession = recordingSession else {
+				throw Error.recorderNotStarted
+			}
+
+			await recordingSession.resume()
+			onResume?()
+		}
+		
+	}
+}
+
+extension Aperture {
+	internal final class RecordingSession: NSObject {
 		/// The stream object for capturing anything on displays
 		private var stream: SCStream?
 		private var isStreamRecording = false
@@ -110,6 +172,8 @@ extension Aperture {
 
 		/// Continuation to resolve when we have started writting to the output file
 		private var continuation: CheckedContinuation<Void, any Swift.Error>?
+		/// Continuation to resolve when the recording has resumed
+		private var resumeContinuation: CheckedContinuation<Void, Never>?
 		/// Holds any errors that are throwing during the recording, we throw them when we stop
 		private var error: Error?
 
@@ -118,12 +182,8 @@ extension Aperture {
 		/// The target type for the current recording
 		private var target: Target?
 
-		/// Allow consumer to set hooks for various events
-		public var onStart: (() -> Void)?
-		public var onFinish: (() -> Void)?
+		/// The error handler for the recording session
 		public var onError: ((Error) -> Void)?
-		public var onPause: (() -> Void)?
-		public var onResume: (() -> Void)?
 
 		public func startRecording(
 			target: Target,
@@ -283,60 +343,25 @@ extension Aperture {
 				}
 
 				try? await cleanUp()
-				reset()
 				onError?(finalError)
 
 				throw finalError
 			}
-
-			onStart?()
 		}
 
 		public func stopRecording() async throws {
 			if let error {
-				reset()
 				/// We do not clean up here, as we have already cleaned up when the error was recorded
 				throw error
 			}
 
 			try? await cleanUp()
-			reset()
-			onFinish?()
 		}
 
 		private func recordError(error: Error) {
 			self.error = error
 			onError?(error)
 			Task { try? await self.cleanUp() }
-		}
-
-		private func reset() {
-			self.target = nil
-			self.options = nil
-
-			self.error = nil
-			self.continuation = nil
-			self.activity = nil
-
-			self.stream = nil
-			self.isStreamRecording = false
-
-			self.assetWriter = nil
-			self.videoInput = nil
-			self.systemAudioInput = nil
-			self.microphoneInput = nil
-
-			self.microphoneDataOutput = nil
-			self.externalDeviceDataOutput = nil
-
-			self.microphoneCaptureSession = nil
-			self.externalDeviceCaptureSession = nil
-
-			self.isRunning = false
-			self.isPaused = false
-			self.isResuming = false
-			self.timeOffset = CMTime.zero
-			self.lastFrame = nil
 		}
 
 		private func cleanUp() async throws {
@@ -376,18 +401,20 @@ extension Aperture {
 
 		public func pause() {
 			isPaused = true
-			onPause?()
 		}
 
-		public func resume() {
-			isPaused = false
-			isResuming = true
-			onResume?()
+		public func resume() async {
+			await withCheckedContinuation { (continuation: CheckedContinuation<Void, Never>) in
+				self.resumeContinuation = continuation
+
+				isPaused = false
+				isResuming = true
+			}
 		}
 	}
 }
 
-extension Aperture.Recorder {
+extension Aperture.RecordingSession {
 	private func getAssetWriter(target: Aperture.Target, options: Aperture.RecordingOptions) throws -> AVAssetWriter {
 		let fileType: AVFileType
 		let fileExtension = options.destination.pathExtension
@@ -594,7 +621,7 @@ extension Aperture.Recorder {
 	}
 
 	private func startVideoStream(sampleBuffer: CMSampleBuffer) {
-		if target == .audioOnly {
+		guard target != .audioOnly else {
 			return
 		}
 
@@ -686,7 +713,7 @@ extension Aperture.Recorder {
 
 	private func handleBuffer(buffer: CMSampleBuffer, isVideo: Bool) -> CMSampleBuffer {
 		/// Use the video buffer to syncronize after pausing if we have it, otherwise the audio
-		if !isVideo && target != .audioOnly {
+		guard isVideo || target == .audioOnly else {
 			return buffer
 		}
 
@@ -730,18 +757,15 @@ extension Aperture.Recorder {
 	}
 }
 
-extension Aperture.Recorder: SCStreamDelegate {
+extension Aperture.RecordingSession: SCStreamDelegate {
 	public func stream(_ stream: SCStream, didStopWithError error: any Error) {
 		recordError(error: .unknown(error))
 	}
 }
 
-extension Aperture.Recorder: SCStreamOutput {
+extension Aperture.RecordingSession: SCStreamOutput {
 	public func stream(_ stream: SCStream, didOutputSampleBuffer sampleBuffer: CMSampleBuffer, of type: SCStreamOutputType) {
-		if isPaused {
-			return
-		}
-		guard sampleBuffer.isValid else {
+		guard !isPaused, sampleBuffer.isValid else {
 			return
 		}
 
@@ -759,7 +783,10 @@ extension Aperture.Recorder: SCStreamOutput {
 			    return
 			}
 
-			if assetWriter != nil && !isRunning {
+			if
+				assetWriter != nil,
+				!isRunning
+			{
 				startVideoStream(sampleBuffer: sampleBuffer)
 			}
 
@@ -767,7 +794,11 @@ extension Aperture.Recorder: SCStreamOutput {
 				videoInput.append(sampleBuffer)
 			}
 		case .audio:
-			if assetWriter != nil && !isRunning && target == .audioOnly {
+			if
+				assetWriter != nil,
+				!isRunning,
+				target == .audioOnly
+			{
 				startAudioStream(sampleBuffer: sampleBuffer)
 			}
 
@@ -775,7 +806,11 @@ extension Aperture.Recorder: SCStreamOutput {
 				systemAudioInput.append(sampleBuffer)
 			}
 		case .microphone:
-			if assetWriter != nil && !isRunning && target == .audioOnly {
+			if
+				assetWriter != nil,
+				!isRunning,
+				target == .audioOnly
+			{
 				startAudioStream(sampleBuffer: sampleBuffer)
 			}
 
@@ -788,16 +823,20 @@ extension Aperture.Recorder: SCStreamOutput {
 	}
 }
 
-extension Aperture.Recorder: AVCaptureAudioDataOutputSampleBufferDelegate, AVCaptureVideoDataOutputSampleBufferDelegate {
+extension Aperture.RecordingSession: AVCaptureAudioDataOutputSampleBufferDelegate, AVCaptureVideoDataOutputSampleBufferDelegate {
 	public func captureOutput(_ output: AVCaptureOutput, didOutput sampleBuffer: CMSampleBuffer, from connection: AVCaptureConnection) {
-		if isPaused {
+		guard !isPaused else {
 			return
 		}
 
 		let sampleBuffer = handleBuffer(buffer: sampleBuffer, isVideo: output is AVCaptureVideoDataOutput)
 
 		if output is AVCaptureAudioDataOutput {
-			if assetWriter != nil && !isRunning && target == .audioOnly {
+			if
+				assetWriter != nil,
+				!isRunning,
+				target == .audioOnly
+			{
 				startAudioStream(sampleBuffer: sampleBuffer)
 			}
 

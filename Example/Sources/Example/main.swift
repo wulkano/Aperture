@@ -26,10 +26,18 @@ do {
 			targetID: screen.id,
 			losslessAudio: true,
 			recordSystemAudio: true,
-			microphoneDeviceID: Aperture.Devices.audio().first?.id
+			microphoneDeviceID: "BuiltInMicrophoneDevice" //Aperture.Devices.audio().first?.id
 		)
 	)
 	print("Recording screen for 5 seconds")
+
+	try await Task.sleep(for: .seconds(5))
+	print("Pausing for 5 seconds")
+	try recorder.pause()
+
+	try await Task.sleep(for: .seconds(5))
+	print("Resuming for 5 seconds")
+	try await recorder.resume()
 
 	try await Task.sleep(for: .seconds(5))
 	print("Stopping recording")

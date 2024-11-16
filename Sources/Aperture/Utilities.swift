@@ -70,6 +70,8 @@ extension Aperture.Error {
 			return "No target provider."
 		case .recorderAlreadyStarted:
 			return "Recorder has already started. Each recorder instance can only be started once."
+		case .recorderNotStarted:
+			return "Recorder needs to be started first."
 		case .targetNotFound(let targetId):
 			return "Target with id \(targetId) not found."
 		case .noPermissions:
