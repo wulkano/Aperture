@@ -161,7 +161,7 @@ extension Aperture {
 		private var externalDeviceCaptureSession: AVCaptureSession?
 
 		/// Activity to prevent going to sleep
-		private var activity: NSObjectProtocol?
+		private var activity: Activity?
 
 		/// Whether the recorder has started writting to the output file
 		private var isRunning = false
@@ -396,10 +396,7 @@ extension Aperture {
 				await assetWriter.finishWriting()
 			}
 
-			if let activity {
-				ProcessInfo.processInfo.endActivity(activity)
-				self.activity = nil
-			}
+			activity = nil
 		}
 
 		func pause() {
@@ -603,7 +600,7 @@ extension Aperture.RecordingSession {
 		try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, any Swift.Error>) in
 			self.continuation = continuation
 		}
-		activity = ProcessInfo.processInfo.beginActivity(options: .idleSystemSleepDisabled, reason: "Recording screen")
+		activity = Activity(.idleSystemSleepDisabled, reason: "Recording screen")
 	}
 
 	private func startAudioStream(sampleBuffer: CMSampleBuffer) {

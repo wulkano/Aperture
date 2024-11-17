@@ -130,3 +130,18 @@ extension Aperture.VideoCodec {
 		}
 	}
 }
+
+final class Activity {
+	private let activity: NSObjectProtocol
+
+	init(
+		_ options: ProcessInfo.ActivityOptions = [],
+		reason: String
+	) {
+		self.activity = ProcessInfo.processInfo.beginActivity(options: options, reason: reason)
+	}
+
+	deinit {
+		ProcessInfo.processInfo.endActivity(activity)
+	}
+}
