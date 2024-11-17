@@ -362,6 +362,11 @@ extension Aperture {
 		}
 
 		private func recordError(error: Error) {
+			if let continuation {
+				continuation.resume(throwing: error)
+				return
+			}
+
 			self.error = error
 			onError?(error)
 			Task { try? await self.cleanUp() }
