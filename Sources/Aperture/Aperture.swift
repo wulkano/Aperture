@@ -395,8 +395,6 @@ extension Aperture {
 
 				await assetWriter.finishWriting()
 			}
-
-			activity = nil
 		}
 
 		func pause() {
