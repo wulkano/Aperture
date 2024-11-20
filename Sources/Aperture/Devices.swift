@@ -22,13 +22,14 @@ extension NSScreen {
 
 extension SCDisplay {
 	var nsScreen: NSScreen? {
-		NSScreen.screens.first { $0.displayID == self.displayID }
+		NSScreen.screens.first { $0.displayID == displayID }
 	}
 
 	var scaleFactor: Int {
-		if let mode = CGDisplayCopyDisplayMode(self.displayID) {
+		if let mode = CGDisplayCopyDisplayMode(displayID) {
 			return mode.pixelWidth / mode.width
 		}
+
 		return 1
 	}
 }
@@ -47,8 +48,8 @@ extension Aperture {
 		public struct Window: Hashable, Codable, Identifiable {
 			public let id: String
 			public let title: String?
-			public let applicationName: String?
-			public let applicationBundleIdentifier: String?
+			public let appName: String?
+			public let appBundleIdentifier: String?
 
 			public let isActive: Bool
 			public let isOnScreen: Bool
@@ -94,8 +95,8 @@ extension Aperture {
 				return Window(
 					id: String(device.windowID),
 					title: device.title,
-					applicationName: device.owningApplication?.applicationName,
-					applicationBundleIdentifier: device.owningApplication?.bundleIdentifier,
+					appName: device.owningApplication?.applicationName,
+					appBundleIdentifier: device.owningApplication?.bundleIdentifier,
 					isActive: isActive,
 					isOnScreen: device.isOnScreen,
 					layer: device.windowLayer,

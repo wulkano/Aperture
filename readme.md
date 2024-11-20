@@ -1,7 +1,7 @@
 <p align="center">
- <img src="Media/aperture-logo.svg" width="64" height="64">
- <h3 align="center">Aperture</h3>
- <p align="center">Record the screen on macOS</p>
+  <img src="Media/aperture-logo.svg" width="64" height="64">
+  <h3 align="center">Aperture</h3>
+  <p align="center">Record the screen on macOS</p>
 </p>
 
 ## Requirements
@@ -33,16 +33,16 @@ let recorder = Aperture.Recorder()
 let screens = try await Aperture.Devices.screen()
 
 guard let screen = screens.first else {
- // No screens
- exit(1)
+  // No screens
+  exit(1)
 }
 
 try await recorder.startRecording(
- target: .screen,
- options: Aperture.RecordingOptions(
-  destination: URL(fileURLWithPath: "./screen-recording.mp4"),
-  targetID: screen.id,
- )
+  target: .screen,
+  options: Aperture.RecordingOptions(
+    destination: URL(fileURLWithPath: "./screen-recording.mp4"),
+    targetID: screen.id,
+  )
 )
 
 try await Task.sleep(for: .seconds(5))
@@ -68,16 +68,14 @@ The ID of the target to record
 
 #### `losslessAudio`
 
-Type: `Bool`
-
+Type: `Bool`\
 Default: `false`
 
 Will use the lossless `ALAC` codec if enabled, `AAC` otherwise.
 
 #### `recordSystemAudio`
 
-Type: `Bool`
-
+Type: `Bool`\
 Default: `false`
 
 Record the system audio.
@@ -92,24 +90,21 @@ A microphone device ID to record.
 
 #### `framesPerSecond`
 
-Type: `Int`
-
+Type: `Int`\
 Default: `60`
 
 Number of frames per seconds.
 
 #### `showCursor`
 
-Type: `Bool`
-
+Type: `Bool`\
 Default: `true`
 
 Show the cursor in the screen recording.
 
 #### `highlightClicks`
 
-Type: `Bool`
-
+Type: `Bool`\
 Default: `false`
 
 Highlight cursor clicks in the screen recording.
@@ -118,10 +113,8 @@ Note: [This](https://developer.apple.com/documentation/screencapturekit/scstream
 
 #### `videoCodec`
 
-Type: `Aperture.VideoCodec`
-
-Default: `.h264`
-
+Type: `Aperture.VideoCodec`\
+Default: `.h264`\
 Values: `.h264`, `.hevc`, `.proRes422`, `.proRes4444`
 
 The video codec to be used.
@@ -134,19 +127,19 @@ And then start recording with `target: .screen`
 
 ```swift
 try await recorder.startRecording(
- target: .screen,
- options: Aperture.RecordingOptions(
-  destination: fileURL,
-  targetID: screen.id,
-  framesPerSecond: 60,
-  cropRect: CGRect(x: 10, y: 10, width: 100, height: 100),
-  showCursor: true,
-  highlightClicks: true,
-  videoCodec: .h264,
-  losslessAudio: true,
-  recordSystemAudio: true,
-  microphoneDeviceID: microphone.id,
- )
+  target: .screen,
+  options: Aperture.RecordingOptions(
+    destination: fileURL,
+    targetID: screen.id,
+    framesPerSecond: 60,
+    cropRect: CGRect(x: 10, y: 10, width: 100, height: 100),
+    showCursor: true,
+    highlightClicks: true,
+    videoCodec: .h264,
+    losslessAudio: true,
+    recordSystemAudio: true,
+    microphoneDeviceID: microphone.id,
+  )
 )
 ```
 
@@ -166,18 +159,18 @@ And then start recording with `target: .window`
 
 ```swift
 try await recorder.startRecording(
- target: .window,
- options: Aperture.RecordingOptions(
-  destination: fileURL,
-  targetID: window.id,
-  framesPerSecond: 60,
-  showCursor: true,
-  highlightClicks: true,
-  videoCodec: .h264,
-  losslessAudio: true,
-  recordSystemAudio: true,
-  microphoneDeviceID: microphone.id,
- )
+  target: .window,
+  options: Aperture.RecordingOptions(
+    destination: fileURL,
+    targetID: window.id,
+    framesPerSecond: 60,
+    showCursor: true,
+    highlightClicks: true,
+    videoCodec: .h264,
+    losslessAudio: true,
+    recordSystemAudio: true,
+    microphoneDeviceID: microphone.id,
+  )
 )
 ```
 
@@ -191,13 +184,13 @@ And then start recording with `target: .audioOnly`
 
 ```swift
 try await recorder.startRecording(
- target: .audioOnly,
- options: Aperture.RecordingOptions(
-  destination: fileURL,
-  losslessAudio: true,
-  recordSystemAudio: true,
-  microphoneDeviceID: microphone.id,
- )
+  target: .audioOnly,
+  options: Aperture.RecordingOptions(
+    destination: fileURL,
+    losslessAudio: true,
+    recordSystemAudio: true,
+    microphoneDeviceID: microphone.id,
+  )
 )
 ```
 
@@ -211,16 +204,16 @@ And then start recording with `target: .externalDevice`
 
 ```swift
 try await recorder.startRecording(
- target: .externalDevice,
- options: Aperture.RecordingOptions(
-  destination: fileURL,
-  targetID: device.id,
-  framesPerSecond: 60,
-  videoCodec: .h264,
-  losslessAudio: true,
-  recordSystemAudio: true,
-  microphoneDeviceID: microphone.id,
- )
+  target: .externalDevice,
+  options: Aperture.RecordingOptions(
+    destination: fileURL,
+    targetID: device.id,
+    framesPerSecond: 60,
+    videoCodec: .h264,
+    losslessAudio: true,
+    recordSystemAudio: true,
+    microphoneDeviceID: microphone.id,
+  )
 )
 ```
 
@@ -242,12 +235,12 @@ let windows = try await Aperture.Devices.window(excludeDesktopWindows: true, onS
 
 ##### `excludeDesktopWindows`
 
-Type: `Bool`
+Type: `Bool`\
 Default: `true`
 
 ##### `onScreenWindowsOnly`
 
-Type: `Bool`
+Type: `Bool`\
 Default: `true`
 
 #### Audio Devices

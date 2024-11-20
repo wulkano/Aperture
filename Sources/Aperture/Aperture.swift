@@ -90,7 +90,7 @@ extension Aperture {
 			recordingSession?.isPaused ?? false
 		}
 
-		public func startRecording(
+		public func start(
 			target: Target,
 			options: RecordingOptions
 		) async throws {
@@ -100,17 +100,17 @@ extension Aperture {
 
 			let recordingSession = RecordingSession()
 			recordingSession.onError = onError
-			try await recordingSession.startRecording(target: target, options: options)
+			try await recordingSession.start(target: target, options: options)
 			self.recordingSession = recordingSession
 			onStart?()
 		}
 
-		public func stopRecording() async throws {
+		public func stop() async throws {
 			guard let recordingSession else {
 				throw Error.recorderNotStarted
 			}
 
-			try await recordingSession.stopRecording()
+			try await recordingSession.stop()
 			self.recordingSession = nil
 			onFinish?()
 		}
@@ -136,7 +136,7 @@ extension Aperture {
 }
 
 extension Aperture {
-	internal final class RecordingSession: NSObject {
+	final class RecordingSession: NSObject {
 		/// The stream object for capturing anything on displays
 		private var stream: SCStream?
 		private var isStreamRecording = false
@@ -188,7 +188,7 @@ extension Aperture {
 		/// The error handler for the recording session
 		var onError: ((Error) -> Void)?
 
-		func startRecording(
+		func start(
 			target: Target,
 			options: RecordingOptions
 		) async throws {
@@ -280,7 +280,7 @@ extension Aperture {
 
 				filter = screenFilter
 			case .window:
-				/// We need to call this before `SCContentFilter` below otherwise an error is thrown: https://forums.developer.apple.com/forums/thread/743615
+				// We need to call this before `SCContentFilter` below otherwise an error is thrown: https://forums.developer.apple.com/forums/thread/743615
 				initializeCGS()
 
 				guard let targetID = options.targetID else {
@@ -338,11 +338,10 @@ extension Aperture {
 			do {
 				try await initOutput(target: target, options: options, streamConfig: streamConfig)
 			} catch {
-				let finalError: Aperture.Error
-				if let error = error as? Aperture.Error {
-					finalError = error
+				let finalError: Error = if let error = error as? Error {
+					error
 				} else {
-					finalError = Error.couldNotStartStream(error)
+					.couldNotStartStream(error)
 				}
 
 				try? await cleanUp()
@@ -352,9 +351,9 @@ extension Aperture {
 			}
 		}
 
-		func stopRecording() async throws {
+		func stop() async throws {
 			if let error {
-				/// We do not clean up here, as we have already cleaned up when the error was recorded
+				// We do not clean up here, as we have already cleaned up when the error was recorded
 				throw error
 			}
 
@@ -432,7 +431,7 @@ extension Aperture.RecordingSession {
 		} else {
 			switch fileExtension {
 			case "mp4":
-				/// ProRes is only supported in .mov containers
+				// ProRes is only supported in .mov containers
 				switch options.videoCodec {
 				case .proRes422, .proRes4444:
 					throw Aperture.Error.invalidFileExtension(fileExtension, options.videoCodec.asString)
@@ -444,7 +443,7 @@ extension Aperture.RecordingSession {
 			case "mov":
 				fileType = .mov
 			case "m4v":
-				/// ProRes is only supported in .mov containers
+				// ProRes is only supported in .mov containers
 				switch options.videoCodec {
 				case .proRes422, .proRes4444:
 					throw Aperture.Error.invalidFileExtension(fileExtension, options.videoCodec.asString)
@@ -715,7 +714,7 @@ extension Aperture.RecordingSession {
 	}
 
 	private func handleBuffer(buffer: CMSampleBuffer, isVideo: Bool) -> CMSampleBuffer {
-		/// Use the video buffer to syncronize after pausing if we have it, otherwise the audio
+		// Use the video buffer to syncronize after pausing if we have it, otherwise the audio
 		guard isVideo || target == .audioOnly else {
 			return buffer
 		}

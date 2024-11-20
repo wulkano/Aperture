@@ -2,11 +2,7 @@ import Foundation
 import AVFoundation
 import Aperture
 
-func delay(seconds: TimeInterval, closure: @escaping () -> Void) {
-	DispatchQueue.main.asyncAfter(deadline: .now() + seconds, execute: closure)
-}
-
-let url = URL(fileURLWithPath: "../screen-recording.mp4")
+let url = URL(filePath: "../screen-recording.mp4")
 do {
 	let recorder = Aperture.Recorder()
 
@@ -47,6 +43,7 @@ do {
 	exit(0)
 } catch let error as Aperture.Error {
 	print("Aperture Error: \(error.localizedDescription)")
+	exit(1)
 } catch {
 	print("Unknown Error: \(error.localizedDescription)")
 	exit(1)
