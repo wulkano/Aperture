@@ -15,7 +15,7 @@ do {
 
 	print("Available screens:", screens.map(\.name).joined(separator: ", "))
 
-	try await recorder.startRecording(
+	try await recorder.start(
 		target: .screen,
 		options: Aperture.RecordingOptions(
 			destination: url,
@@ -38,7 +38,7 @@ do {
 	try await Task.sleep(for: .seconds(5))
 	print("Stopping recording")
 
-	try await recorder.stopRecording()
+	try await recorder.stop()
 	print("Finished recording:", url.path)
 	exit(0)
 } catch let error as Aperture.Error {

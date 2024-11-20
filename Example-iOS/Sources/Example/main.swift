@@ -2,7 +2,7 @@ import Foundation
 import AVFoundation
 import Aperture
 
-let url = URL(fileURLWithPath: "../screen-recording-ios.mp4")
+let url = URL(filePath: "../screen-recording-ios.mp4")
 do {
 	let recorder = Aperture.Recorder()
 
@@ -15,7 +15,7 @@ do {
 
 	print("Available iOS devices:", devices.map(\.name).joined(separator: ", "))
 
-	try await recorder.startRecording(
+	try await recorder.start(
 		target: .externalDevice,
 		options: Aperture.RecordingOptions(
 			destination: url,
@@ -30,11 +30,12 @@ do {
 	try await Task.sleep(for: .seconds(5))
 	print("Stopping recording")
 
-	try await recorder.stopRecording()
+	try await recorder.stop()
 	print("Finished recording:", url.path)
 	exit(0)
 } catch let error as Aperture.Error {
 	print("Aperture Error: \(error.localizedDescription)")
+	exit(1)
 } catch {
 	print("Unknown Error: \(error.localizedDescription)")
 	exit(1)

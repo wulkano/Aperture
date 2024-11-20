@@ -36,7 +36,7 @@ extension SCDisplay {
 
 extension Aperture {
 	public struct Devices {
-		public struct Screen: Hashable, Codable, Identifiable {
+		public struct Screen: Hashable, Codable, Identifiable, Sendable {
 			public let id: String
 			public let name: String
 
@@ -45,7 +45,7 @@ extension Aperture {
 			public let frame: CGRect
 		}
 
-		public struct Window: Hashable, Codable, Identifiable {
+		public struct Window: Hashable, Codable, Identifiable, Sendable {
 			public let id: String
 			public let title: String?
 			public let appName: String?
@@ -58,12 +58,12 @@ extension Aperture {
 			public let frame: CGRect
 		}
 
-		public struct Audio: Hashable, Codable, Identifiable {
+		public struct Audio: Hashable, Codable, Identifiable, Sendable {
 			public let id: String
 			public let name: String
 		}
 
-		public struct IOS: Hashable, Codable, Identifiable {
+		public struct IOS: Hashable, Codable, Identifiable, Sendable {
 			public let id: String
 			public let name: String
 		}
