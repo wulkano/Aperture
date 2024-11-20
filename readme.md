@@ -1,7 +1,7 @@
 <p align="center">
-  <img src="Media/aperture-logo.svg" width="64" height="64">
-  <h3 align="center">Aperture</h3>
-  <p align="center">Record the screen on macOS</p>
+	<img src="Media/aperture-logo.svg" width="64" height="64">
+	<h3 align="center">Aperture</h3>
+	<p align="center">Record the screen on macOS</p>
 </p>
 
 ## Requirements
