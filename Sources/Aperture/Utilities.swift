@@ -6,6 +6,9 @@ internal func initializeCGS() {
 }
 
 extension Aperture {
+	/**
+	Whether Aperture has the necessary permissions to capture the screen.
+	*/
 	public static var hasPermissions: Bool {
 		get async {
 			do {

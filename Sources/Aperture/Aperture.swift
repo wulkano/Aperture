@@ -3,6 +3,9 @@ import AVFoundation
 import ScreenCaptureKit
 
 public enum Aperture {
+	/**
+	Represents the available video codecs for recording.
+	*/
 	public enum VideoCodec {
 		case h264
 		case hevc
@@ -10,7 +13,24 @@ public enum Aperture {
 		case proRes4444
 	}
 
+	/**
+	Represents options for starting a recording.
+	*/
 	public struct RecordingOptions {
+		/**
+		Initializes recording options.
+		 
+		- Parameter destination: The location of the file to record to.
+		- Parameter targetID: The identifier of the target to record.
+		- Parameter framesPerSecond: The number of frames per second to record.
+		- Parameter cropRect: A rectangle that specifies the source area to capture.
+		- Parameter showCursor: A Boolean value that determines whether the cursor is visible in the stream.
+		- Parameter highlightClicks: A Boolean value that determines whether mouse clicks are highlighted.
+		- Parameter videoCodec: The video codec to use for the recording.
+		- Parameter losslessAudio: A Boolean value that determines whether audio is recorded in a lossless format.
+		- Parameter recordSystemAudio: A Boolean value that determines whether system audio is recorded.
+		- Parameter microphoneDeviceID: The identifier of the microphone device to record audio from.
+		*/
 		public init(
 			destination: URL,
 			targetID: String? = nil,
@@ -47,6 +67,9 @@ public enum Aperture {
 		let microphoneDeviceID: String?
 	}
 
+	/**
+	Represents the target type for a recording.
+	*/
 	public enum Target {
 		case screen
 		case window
@@ -54,6 +77,9 @@ public enum Aperture {
 		case audioOnly
 	}
 
+	/**
+	Represents errors that can occur when using Aperture. 
+	*/
 	public enum Error: Swift.Error {
 		case recorderAlreadyStarted
 		case recorderNotStarted
@@ -72,24 +98,95 @@ public enum Aperture {
 }
 
 extension Aperture {
+	/**
+	An instance that represents a recorder.
+	 
+	Multiple recorders can be used at the same time.
+	 
+	```swift
+	import Foundation
+	import Aperture
+
+	let recorder = Aperture.Recorder()
+
+	try await recorder.startRecording(
+		target: .screen,
+		options: Aperture.RecordingOptions(
+			destination: URL(filePath: "./screen-recording.mp4"),
+			targetID: String(CGMainDisplayID())
+		)
+	)
+
+	try await Task.sleep(for: .seconds(5))
+
+	try await recorder.stopRecording()
+	```
+	*/
 	public final class Recorder: NSObject {
 		private var recordingSession: RecordingSession?
 
+		/**
+		Called when the recording has started successfully and the first frame has been captured.
+		*/
 		public var onStart: (() -> Void)?
+
+		/**
+		Called when the recording finishes successfully and the file is saved.
+		*/
 		public var onFinish: (() -> Void)?
+
+		/**
+		Called when the recording is paused.
+		*/
 		public var onPause: (() -> Void)?
+
+		/**
+		Called when the recording has resumed and the first frame has been captured.
+		*/
 		public var onResume: (() -> Void)?
 
+		/**
+		Called any time an error occurs during the recording.
+		 
+		When `stop()` is called, the same error will be thrown.
+		*/
 		public var onError: ((Error) -> Void)? {
 			didSet {
 				recordingSession?.onError = onError
 			}
 		}
 
+		/**
+		Whether the recording is currently paused.
+		*/
 		public var isPaused: Bool {
 			recordingSession?.isPaused ?? false
 		}
 
+		/**
+		Start recording the given target with the provided options.
+		
+		Returns when the recording has started successfully.
+		
+		Throws any errors that occur before the recording starts.
+		 
+		```swift
+		import Aperture
+		
+		let recorder = Aperture.Recorder()
+		
+		try await recorder.start(
+			target: .screen,
+			options: Aperture.RecordingOptions(
+				destination: URL(filePath: "./screen-recording.mp4"),
+				targetID: String(CGMainDisplayID())
+			)
+		)
+		```
+		 
+		- Parameter target: The `Target` type to record.
+		- Parameter options: The `RecordingOptions` to use for the recording.
+		*/
 		public func start(
 			target: Target,
 			options: RecordingOptions
@@ -105,6 +202,13 @@ extension Aperture {
 			onStart?()
 		}
 
+		/**
+		Stop the current recording.
+		
+		Returns when the recording has stopped and the file is finalized.
+		
+		Throws if an error has occured during the recording or while finalizing the file.
+		*/
 		public func stop() async throws {
 			guard let recordingSession else {
 				throw Error.recorderNotStarted
@@ -115,6 +219,11 @@ extension Aperture {
 			onFinish?()
 		}
 
+		/**
+		Pauses the recording.
+		 
+		Call `resume()` to resume.
+		*/
 		public func pause() throws {
 			guard let recordingSession else {
 				throw Error.recorderNotStarted
@@ -124,6 +233,9 @@ extension Aperture {
 			onPause?()
 		}
 
+		/**
+		Resumes a paused recording. Returns when the recording has resumed and the first frame has been captured.
+		*/
 		public func resume() async throws {
 			guard let recordingSession else {
 				throw Error.recorderNotStarted

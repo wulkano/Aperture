@@ -35,39 +35,108 @@ extension SCDisplay {
 }
 
 extension Aperture {
+	/**
+	Discover devices that can be used with Aperture.
+	*/
 	public struct Devices {
+		/**
+		Represents a screen that can be recorded.
+		*/
 		public struct Screen: Hashable, Codable, Identifiable, Sendable {
+			/**
+			The screen identifier.
+			*/
 			public let id: String
+			/**
+			The screen name.
+			*/
 			public let name: String
 
+			/**
+			The width of the screen in points.
+			*/
 			public let width: Int
+			/**
+			The height of the screen in points.
+			*/
 			public let height: Int
+			/**
+			The frame of the screen.
+			*/
 			public let frame: CGRect
 		}
 
+		/**
+		Represents a window that can be recorded.
+		*/
 		public struct Window: Hashable, Codable, Identifiable, Sendable {
+			/**
+			The window identifier. 
+			*/
 			public let id: String
+			/**
+			The string that displays in a window’s title bar.
+			*/
 			public let title: String?
+			/**
+			The display name of the app that owns the window.
+			*/
 			public let appName: String?
+			/**
+			The unique bundle identifier of the app that owns the window.
+			*/
 			public let appBundleIdentifier: String?
 
+			/**
+			A Boolean value that indicates if the window is currently streaming.
+			*/
 			public let isActive: Bool
+			/**
+			A Boolean value that indicates whether the window is on screen.
+			*/
 			public let isOnScreen: Bool
+			/**
+			The layer of the window relative to other windows.
+			*/
 			public let layer: Int
 
+			/**
+			A rectangle the represents the frame of the window within a display.
+			*/
 			public let frame: CGRect
 		}
 
+		/**
+		Represents devices that can be used to record audio.
+		*/
 		public struct Audio: Hashable, Codable, Identifiable, Sendable {
+			/**
+			The audio device identifier.
+			*/
 			public let id: String
+			/**
+			The audio device name. 
+			*/
 			public let name: String
 		}
 
+		/**
+		Represents iOS devices that can be used to record. 
+		*/
 		public struct IOS: Hashable, Codable, Identifiable, Sendable {
+			/**
+			The iOS device identifier. 
+			*/
 			public let id: String
+			/**
+			The iOS device name. 
+			*/
 			public let name: String
 		}
 
+		/**
+		Get a list of availble screens.
+		*/
 		public static func screen() async throws -> [Screen] {
 			let content = try await SCShareableContent.current
 			return content.displays.map { device in
@@ -81,6 +150,12 @@ extension Aperture {
 			}
 		}
 
+		/**
+		Get a list of available windows.
+		 
+		- Parameter excludeDesktopWindows: A Boolean value that indicates whether to exclude desktop windows like Finder, Dock, and Desktop from the set of shareable content.
+		- Parameter onScreenWindowsOnly: A Boolean value that indicates whether to include only onscreen windows in the set of shareable content.
+		*/
 		public static func window(excludeDesktopWindows: Bool = true, onScreenWindowsOnly: Bool = true) async throws -> [Window] {
 			let content = try await SCShareableContent.excludingDesktopWindows(excludeDesktopWindows, onScreenWindowsOnly: onScreenWindowsOnly)
 			return content.windows.map { device in
@@ -105,6 +180,9 @@ extension Aperture {
 			}
 		}
 
+		/**
+		Get a list of available audio devices.
+		*/
 		public static func audio() -> [Audio] {
 			let deviceTypes: [AVCaptureDevice.DeviceType]
 
@@ -121,6 +199,9 @@ extension Aperture {
 			}
 		}
 
+		/**
+		Get a list of available iOS devices.
+		*/
 		public static func iOS() -> [IOS] {
 			enableDalDevices()
 

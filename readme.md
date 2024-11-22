@@ -22,6 +22,8 @@ Add the following to `Package.swift`:
 
 ## Docs
 
+[API Documentation.](https://swiftpackageindex.com/wulkano/Aperture/documentation)
+
 ### Base Usage
 
 ```swift
@@ -33,21 +35,21 @@ let recorder = Aperture.Recorder()
 let screens = try await Aperture.Devices.screen()
 
 guard let screen = screens.first else {
-  // No screens
-  exit(1)
+	// No screens
+	exit(1)
 }
 
-try await recorder.startRecording(
-  target: .screen,
-  options: Aperture.RecordingOptions(
-    destination: URL(fileURLWithPath: "./screen-recording.mp4"),
-    targetID: screen.id,
-  )
+try await recorder.start(
+	target: .screen,
+	options: Aperture.RecordingOptions(
+		destination: URL(filePath: "./screen-recording.mp4"),
+		targetID: screen.id,
+	)
 )
 
 try await Task.sleep(for: .seconds(5))
 
-try await recorder.stopRecording()
+try await recorder.stop()
 ```
 
 ### Base Options
@@ -126,20 +128,20 @@ Use [`Aeprture.Devices.screen`](#screens) to discover the available screens
 And then start recording with `target: .screen`
 
 ```swift
-try await recorder.startRecording(
-  target: .screen,
-  options: Aperture.RecordingOptions(
-    destination: fileURL,
-    targetID: screen.id,
-    framesPerSecond: 60,
-    cropRect: CGRect(x: 10, y: 10, width: 100, height: 100),
-    showCursor: true,
-    highlightClicks: true,
-    videoCodec: .h264,
-    losslessAudio: true,
-    recordSystemAudio: true,
-    microphoneDeviceID: microphone.id,
-  )
+try await recorder.start(
+	target: .screen,
+	options: Aperture.RecordingOptions(
+		destination: fileURL,
+		targetID: screen.id,
+		framesPerSecond: 60,
+		cropRect: CGRect(x: 10, y: 10, width: 100, height: 100),
+		showCursor: true,
+		highlightClicks: true,
+		videoCodec: .h264,
+		losslessAudio: true,
+		recordSystemAudio: true,
+		microphoneDeviceID: microphone.id,
+	)
 )
 ```
 
@@ -158,19 +160,19 @@ Use [`Aeprture.Devices.window`](#windows) to discover the available windows
 And then start recording with `target: .window`
 
 ```swift
-try await recorder.startRecording(
-  target: .window,
-  options: Aperture.RecordingOptions(
-    destination: fileURL,
-    targetID: window.id,
-    framesPerSecond: 60,
-    showCursor: true,
-    highlightClicks: true,
-    videoCodec: .h264,
-    losslessAudio: true,
-    recordSystemAudio: true,
-    microphoneDeviceID: microphone.id,
-  )
+try await recorder.start(
+	target: .window,
+	options: Aperture.RecordingOptions(
+		destination: fileURL,
+		targetID: window.id,
+		framesPerSecond: 60,
+		showCursor: true,
+		highlightClicks: true,
+		videoCodec: .h264,
+		losslessAudio: true,
+		recordSystemAudio: true,
+		microphoneDeviceID: microphone.id,
+	)
 )
 ```
 
@@ -183,14 +185,14 @@ Use [`Aeprture.Devices.audio`](#audio-devices) to discover the available audio d
 And then start recording with `target: .audioOnly`
 
 ```swift
-try await recorder.startRecording(
-  target: .audioOnly,
-  options: Aperture.RecordingOptions(
-    destination: fileURL,
-    losslessAudio: true,
-    recordSystemAudio: true,
-    microphoneDeviceID: microphone.id,
-  )
+try await recorder.start(
+	target: .audioOnly,
+	options: Aperture.RecordingOptions(
+		destination: fileURL,
+		losslessAudio: true,
+		recordSystemAudio: true,
+		microphoneDeviceID: microphone.id,
+	)
 )
 ```
 
@@ -203,17 +205,17 @@ Use [`Aeprture.Devices.iOS`](#external-devices) to discover the available extern
 And then start recording with `target: .externalDevice`
 
 ```swift
-try await recorder.startRecording(
-  target: .externalDevice,
-  options: Aperture.RecordingOptions(
-    destination: fileURL,
-    targetID: device.id,
-    framesPerSecond: 60,
-    videoCodec: .h264,
-    losslessAudio: true,
-    recordSystemAudio: true,
-    microphoneDeviceID: microphone.id,
-  )
+try await recorder.start(
+	target: .externalDevice,
+	options: Aperture.RecordingOptions(
+		destination: fileURL,
+		targetID: device.id,
+		framesPerSecond: 60,
+		videoCodec: .h264,
+		losslessAudio: true,
+		recordSystemAudio: true,
+		microphoneDeviceID: microphone.id,
+	)
 )
 ```
 
@@ -226,7 +228,6 @@ Accepts the base [video](#base-video-options) options except for cursor related 
 ```swift
 let screens = try await Aperture.Devices.screen()
 ```
-<!-- Aperture.Devices.window(excludeDesktopWindows: false, onScreenWindowsOnly: false) -->
 #### Windows
 
 ```swift
