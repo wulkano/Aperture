@@ -2,37 +2,49 @@ import Foundation
 import AVFoundation
 import Aperture
 
-func delay(seconds: TimeInterval, closure: @escaping () -> Void) {
-	DispatchQueue.main.asyncAfter(deadline: .now() + seconds, execute: closure)
-}
+let url = URL(filePath: "../screen-recording.mp4")
+do {
+	let recorder = Aperture.Recorder()
 
-let url = URL(fileURLWithPath: "../screen-recording.mp4")
-let aperture = try! Aperture(destination: url)
+	let screens = try await Aperture.Devices.screen()
 
-aperture.onFinish = {
-	switch $0 {
-	case .success(let warning):
-		print("Finished recording:", url.path)
-
-		if let warning = warning {
-			print("Warning:", warning.localizedDescription)
-		}
-
-		exit(0)
-	case .failure(let error):
-		print(error)
+	guard let screen = screens.first else {
+		print("Could not find any screens")
 		exit(1)
 	}
+
+	print("Available screens:", screens.map(\.name).joined(separator: ", "))
+
+	try await recorder.start(
+		target: .screen,
+		options: Aperture.RecordingOptions(
+			destination: url,
+			targetID: screen.id,
+			losslessAudio: true,
+			recordSystemAudio: true,
+			microphoneDeviceID: "BuiltInMicrophoneDevice" //Aperture.Devices.audio().first?.id
+		)
+	)
+	print("Recording screen for 5 seconds")
+
+	try await Task.sleep(for: .seconds(5))
+	print("Pausing for 5 seconds")
+	try recorder.pause()
+
+	try await Task.sleep(for: .seconds(5))
+	print("Resuming for 5 seconds")
+	try await recorder.resume()
+
+	try await Task.sleep(for: .seconds(5))
+	print("Stopping recording")
+
+	try await recorder.stop()
+	print("Finished recording:", url.path)
+	exit(0)
+} catch let error as Aperture.Error {
+	print("Aperture Error: \(error.localizedDescription)")
+	exit(1)
+} catch {
+	print("Unknown Error: \(error.localizedDescription)")
+	exit(1)
 }
-
-aperture.start()
-
-print("Available screens:", Aperture.Devices.screen().map(\.name).joined(separator: ", "))
-print("Recording screen for 5 seconds")
-
-delay(seconds: 5) {
-	aperture.stop()
-}
-
-setbuf(__stdoutp, nil)
-RunLoop.current.run()

@@ -1,98 +1,150 @@
-import AppKit
 import AVFoundation
+import ScreenCaptureKit
 
-
-extension CMTimeScale {
-	/**
-	This is what Apple recommends.
-	*/
-	static let video: CMTimeScale = 600
+internal func initializeCGS() {
+	CGMainDisplayID()
 }
 
-
-extension CMTime {
-	init(videoFramesPerSecond: Int) {
-		self.init(seconds: 1 / Double(videoFramesPerSecond), preferredTimescale: .video)
+extension Aperture {
+	/**
+	Whether Aperture has the necessary permissions to capture the screen.
+	*/
+	public static var hasPermissions: Bool {
+		get async {
+			do {
+				_ = try await SCShareableContent.current
+				return true
+			} catch {
+				return false
+			}
+		}
 	}
 }
 
-
-extension CGDirectDisplayID {
-	public static let main = CGMainDisplayID()
-}
-
-
-extension NSScreen {
-	private func infoForCGDisplay(_ displayID: CGDirectDisplayID, options: Int) -> [AnyHashable: Any]? {
-		var iterator: io_iterator_t = 0
-
-		let result = IOServiceGetMatchingServices(kIOMasterPortDefault, IOServiceMatching("IODisplayConnect"), &iterator)
-		guard result == kIOReturnSuccess else {
-			print("Could not find services for IODisplayConnect: \(result)")
+extension CMSampleBuffer {
+	public func adjustTime(by offset: CMTime) -> CMSampleBuffer? {
+		guard self.formatDescription != nil, offset.value > 0 else {
 			return nil
 		}
 
-		var service = IOIteratorNext(iterator)
-		while service != 0 {
-			let info = IODisplayCreateInfoDictionary(service, IOOptionBits(options)).takeRetainedValue() as! [AnyHashable: Any]
+		do {
+			var timingInfo = try self.sampleTimingInfos()
 
-			guard
-				let vendorID = info[kDisplayVendorID] as! UInt32?,
-				let productID = info[kDisplayProductID] as! UInt32?
-			else {
-				continue
+			for index in 0..<timingInfo.count {
+				// swiftlint:disable:next shorthand_operator
+				timingInfo[index].decodeTimeStamp = timingInfo[index].decodeTimeStamp - offset
+				// swiftlint:disable:next shorthand_operator
+				timingInfo[index].presentationTimeStamp = timingInfo[index].presentationTimeStamp - offset
 			}
 
-			if
-				vendorID == CGDisplayVendorNumber(displayID),
-				productID == CGDisplayModelNumber(displayID)
-			{
-				return info
-			}
-
-			service = IOIteratorNext(iterator)
+			return try .init(copying: self, withNewTiming: timingInfo)
+		} catch {
+			return nil
 		}
-
-		return nil
-	}
-
-	var id: CGDirectDisplayID {
-		deviceDescription[NSDeviceDescriptionKey("NSScreenNumber")] as! CGDirectDisplayID
-	}
-
-	// TODO: Use the built-in `.localizedName` property instead when targeting macOS 10.15. I can then drop this and `infoForCGDisplay`.
-	var name: String {
-		if #available(macOS 10.15, *) {
-			return localizedName
-		}
-
-		guard let info = infoForCGDisplay(id, options: kIODisplayOnlyPreferredName) else {
-			return "Unknown screen"
-		}
-
-		guard
-			let localizedNames = info[kDisplayProductName] as? [String: Any],
-			let name = localizedNames.values.first as? String
-		else {
-			return "Unnamed screen"
-		}
-
-		return name
 	}
 }
 
+extension Aperture.Error {
+	public var localizedDescription: String {
+		switch self {
+		case .couldNotStartStream(let error):
+			let errorReason: String
 
-extension Optional {
-	func unwrapOrThrow(_ errorExpression: @autoclosure () -> Error) throws -> Wrapped {
-		guard let value = self else {
-			throw errorExpression()
+			if let error = error as? Aperture.Error {
+				errorReason = ": \(error.localizedDescription)"
+			} else if let error {
+				errorReason = ": \(error.localizedDescription)"
+			} else {
+				errorReason = "."
+			}
+
+			return "Could not start recording\(errorReason)"
+		case .unsupportedFileExtension(let fileExtension, let isAudioOnly):
+			if isAudioOnly {
+				return "Invalid file extension. Only .m4a is supported for audio recordings. Got \(fileExtension)."
+			}
+
+			return "Invalid file extension. Only .mp4, .mov and .m4v are supported for video recordings. Got \(fileExtension)."
+		case .invalidFileExtension(let fileExtension, let videoCodec):
+			return "Invalid file extension. .\(fileExtension) does not support \(videoCodec)."
+		case .microphoneNotFound(let microphoneId):
+			return "Microphone with id \(microphoneId) not found"
+		case .noDisplaysConnected:
+			return "At least one display must be connected."
+		case .noTargetProvided:
+			return "No target provider."
+		case .recorderAlreadyStarted:
+			return "Recorder has already started. Each recorder instance can only be started once."
+		case .recorderNotStarted:
+			return "Recorder needs to be started first."
+		case .targetNotFound(let targetId):
+			return "Target with id \(targetId) not found."
+		case .noPermissions:
+			return "Missing screen capture permissions."
+		case .unsupportedVideoCodec:
+			return "VideoCodec not supported."
+		case .couldNotAddInput(let inputType):
+			return "Could not add \(inputType) input."
+		case .unknown(let error):
+			return "An unknown error has occurred: \(error.localizedDescription)"
 		}
-
-		return value
 	}
 }
 
+extension Aperture.VideoCodec {
+	public static func fromRawValue(_ rawValue: String) throws -> Aperture.VideoCodec {
+		switch rawValue {
+		case "h264":
+			return .h264
+		case "hevc":
+			return .hevc
+		case "proRes422":
+			return .proRes422
+		case "proRes4444":
+			return .proRes4444
+		default:
+			throw Aperture.Error.unsupportedVideoCodec
+		}
+	}
 
-func sleep(for duration: TimeInterval) {
-	usleep(useconds_t(duration * Double(USEC_PER_SEC)))
+	var asString: String {
+		switch self {
+		case .h264:
+			return "h264"
+		case .hevc:
+			return "hevc"
+		case .proRes422:
+			return "proRes422"
+		case .proRes4444:
+			return "proRes4444"
+		}
+	}
+
+	var asAVVideoCodec: AVVideoCodecType {
+		switch self {
+		case .h264:
+			return .h264
+		case .hevc:
+			return .hevc
+		case .proRes422:
+			return .proRes422
+		case .proRes4444:
+			return .proRes4444
+		}
+	}
+}
+
+final class Activity {
+	private let activity: NSObjectProtocol
+
+	init(
+		_ options: ProcessInfo.ActivityOptions = [],
+		reason: String
+	) {
+		self.activity = ProcessInfo.processInfo.beginActivity(options: options, reason: reason)
+	}
+
+	deinit {
+		ProcessInfo.processInfo.endActivity(activity)
+	}
 }

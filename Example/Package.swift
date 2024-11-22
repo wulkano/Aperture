@@ -1,10 +1,10 @@
-// swift-tools-version:5.5
+// swift-tools-version:6.0.2
 import PackageDescription
 
 let package = Package(
 	name: "Example",
 	platforms: [
-		.macOS(.v10_13)
+		.macOS(.v13)
 	],
 	dependencies: [
 		.package(path: "..")
